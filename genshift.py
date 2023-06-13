@@ -25,18 +25,18 @@ class GenShift:
 
     def read(self, addr):
         return self.dev.read(self.base+addr)
-        
-    # The clock is already prescaled by 4.
-    # So if the base clock is 40 MHz, running with a prescale
-    # value of 0 gets you a 10 MHz serial output clock
-    # If disable tristate is 1, the interface will always be driven. 
-    def setup(self, prescale, disableTris=0x0):
+
+    # disableTris forces specified interfaces to remain driven
+    def setup(self, disableTris=0x0):
         modconf = bf(0)
-        modconf[7:0] = prescale
+        modconf[7:0] = 0
         modconf[15:8] = disableTris
         self.write(self.map['MODCONF'], int(modconf))
 
-    def enable(self, interfaceNumber):
+    def enable(self, interfaceNumber, prescale=0):
+        modconf = bf(self.read(self.map['MODCONF']))
+        modconf[7:0] = prescale
+        self.write(self.map['MODCONF'], int(modconf))
         devconf = bf(self.read(self.map['DEVCONF']))
         devconf[7:0] = (1<<interfaceNumber)
         self.write(self.map['DEVCONF'], int(devconf))
