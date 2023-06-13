@@ -83,7 +83,11 @@ class PueoTURFIO:
         # Clock monitor needs to be calibrated to 1/256th of a second period.
         # Assume the input clock is 40 MHz.
         self.clockMonValue = (1<<24) - int(40000000/256)
-
+        self.write(self.map['SYSCLKMON'], self.clockMonValue)
+        time.sleep(0.1)
+        # Set up the LMK interface as permanently driven.
+        self.genshift.setup(disableTris=(1<<self.SHIFT_LMK_DEV))
+        
     def dna(self):
         self.write(self.map['DNA'], 0x80000000)
         dnaval=0
@@ -114,9 +118,6 @@ class PueoTURFIO:
 
     def status(self):
         self.identify()
-        print("Calibrating clock monitor...");
-        self.write(self.map['SYSCLKMON'], self.clockMonValue)
-        time.sleep(0.1);
         print("SYSCLK:", self.read(self.map['SYSCLKMON']))
         print("GTPCLK:", self.read(self.map['GTPCLKMON']))
         print("RXCLK:", self.read(self.map['RXCLKMON']))
@@ -134,38 +135,51 @@ class PueoTURFIO:
 
         
     def program_sysclk(self, source=ClockSource.TURF):        
-        self.genshift.enable(self.SHIFT_LMK_DEV)
+        self.genshift.enable(self.SHIFT_LMK_DEV, prescale=1)
         reg = bf(0)
         reg[31] = 1
+        print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg)
         # OK now program each one in turn
         reg[31] = 0       # no reset
         reg[18:17] = 1    # output is divided
         reg[15:8] = 8     # divide by 16
         reg[16] = 1       # enabled
+        print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg) # R0
         reg[3:0] = 1
+        print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg) # R1
         reg[3:0] = 2
+        print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg) # R2
         reg[3:0] = 4
+        print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg) # R4
         reg[3:0] = 5
+        print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg) # R5
         reg[3:0] = 6
+        print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg) # R6
         reg[3:0] = 7
+        print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg) # R7
+        reg = bf(0)
+        reg[16] = 1
         reg[18:17] = 0    # bypass
         reg[3:0] = 3
+        print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg) # R3
         reg = bf(0)
         reg[27] = 1  # global enable
         reg[30] = 1  # must be 1
         reg[29] = source.value # clock source
+        reg[3:0] = 14 # register
+        print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg)
 
-        self.genshift.gpio(self.SHIFT_LMKOE_GPIO, dev.genshift.GpioState.GPIO_HIGH)
+        self.genshift.gpio(self.SHIFT_LMKOE_GPIO, self.genshift.GpioState.GPIO_HIGH)
 
         self.genshift.disable()
         
