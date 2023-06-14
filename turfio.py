@@ -80,9 +80,9 @@ class PueoTURFIO:
         self.SHIFT_LMKOE_GPIO = 3
         self.SHIFT_SPICSB_GPIO = 4
         
-        # Clock monitor needs to be calibrated to 1/256th of a second period.
-        # Assume the input clock is 40 MHz.
-        self.clockMonValue = (1<<24) - int(40000000/256)
+        # Clock monitor calibration value is now just
+        # straight frequency thanks to silly DSP tricks.
+        self.clockMonValue = 40000000
         self.write(self.map['SYSCLKMON'], self.clockMonValue)
         time.sleep(0.1)
         # Set up the LMK interface as permanently driven.
@@ -118,6 +118,9 @@ class PueoTURFIO:
 
     def status(self):
         self.identify()
+        # N.B.: These values are actually only 16 bit, but they're
+        # shifted so they're read out in Hz. If you really want
+        # to save space when storing the only non-zero bits are [29:14].
         print("SYSCLK:", self.read(self.map['SYSCLKMON']))
         print("GTPCLK:", self.read(self.map['GTPCLKMON']))
         print("RXCLK:", self.read(self.map['RXCLKMON']))
