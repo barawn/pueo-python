@@ -36,7 +36,12 @@ class PueoTURFIO:
             'GTPCLKMON' : 0x44,
             'RXCLKMON' : 0x48,
             'HSRXCLKMON' : 0x4C,
-            'CLK200MON' : 0x50 }
+            'CLK200MON' : 0x50,
+            'TURFCTLRESET' : 0x2000,
+            'TURFCTLIDELAY': 0x2004,
+            'TURFCTLBITERR': 0x2008,
+            'TURFCTLBITSLP': 0x200C
+           }
         
     class AccessType(Enum):
         SERIAL = 'Serial'
@@ -181,13 +186,114 @@ class PueoTURFIO:
         reg[3:0] = 14 # register
         print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg)
-
         self.genshift.gpio(self.SHIFT_LMKOE_GPIO, self.genshift.GpioState.GPIO_HIGH)
-
         self.genshift.disable()
+
+    # Perform an eye scan on an ISERDES: run over its IDELAY values and get bit
+    # error rates. slptime needs to be larger than the acquisition interval
+    # programmed in.
+    def eyescan(self, slptime):
+        sc = []
+        for i in range(32):
+            self.write(self.map['TURFCTLIDELAY'], i)
+            time.sleep(slptime)
+            sc.append(self.read(self.map['TURFCTLBITERR']))
+        return sc
+
+    # Processes an eyescan and returns a list of putative eyes and their widths.
+    # Note that because of the way the bit error test works, eyes may
+    # not be correct. That's where they're putative. You need to plop
+    # the IDELAY value there, and see if it matches one of the
+    # training patterns:
+    # 0xA55A6996
+    # 0x52AD34CB
+    # 0xA9569A65
+    # 0xD4AB4D32
+    # or their nybble-rotated patterns.
+    def process_eyescan(self, scan):
+        # We start off by assuming we're not in an eye.
+        in_eye = False
+        eye_start = 0
+        eyes = []
+        for i in range(32):
+            if scan[i] == 0 and not in_eye:
+                eye_start = i
+                in_eye = True
+            elif scan[i] > 0 and in_eye:
+                eye = [ int(eye_start+(i-eye_start)/2), i-eye_start ]
+                eyes.append(eye)
+                in_eye = False
+        # we exited the loop without finding the end of the eye
+        if in_eye:
+            eye = [ int(eye_start+(32-eye_start)/2), 32-eye_start ]
+            eyes.append( eye )
+
+        return eyes
+            
+    # This returns either None (incorrect eye value)
+    # or the number of bit-slips required to match up.
+    # Training pattern is 0xA55A6996. The bit-slipped
+    # versions of that are:
+    # 0xA55A6996 (0 bitslips needed)
+    # 0x52AD34CB (1 bitslip  needed)
+    # 0xA9569A65 (2 bitslips needed)
+    # 0xD4AB4D32 (3 bitslips needed)
+    # Note that we ALSO need to check all the nybble-rotated
+    # versions of this
+    def check_eye(self, eye_val):
+        trainValue = 0xA55A6996
+        testVal = int(eye_val)
+        def rightRotate(n, d):
+            return (n>>d)|(n<<(32-d)) & 0xFFFFFFFF
+        for i in range(32):
+            if testVal == rightRotate(trainValue, i):
+                return i
+        return None
+
+    # This is the TURF->TURFIO alignment procedure
+    # This doesn't include the RXCLK->SYSCLK alignment
+    # yet, which actually happens *first* using the
+    # MMCM's fine phase shift controls.
+    def align_turfctl(self):
+        # Eye scanning with a quick period
+        # seems pretty robust.
+        self.write(self.map['TURFCTLBITERR'], 131072)
+        sc = self.eyescan(0.01)
+        eyes = self.process_eyescan(sc)
+        # Check each of the eyes and choose the best one.
+        bestEye = None
+        for eye in eyes:
+            self.write(self.map['TURFCTLIDELAY'], eye[0])
+            testVal = self.read(self.map['TURFCTLBITSLP'])
+            nbits = self.check_eye(testVal)
+            if nbits is None:
+                print("False eye at", eye[0], "skipped")
+            else:
+                eye.append(nbits)
+                if bestEye is not None:
+                    print("Eye at", eye[0],"read",hex(testVal),"(", eye[2] % 4, "slips) ", end='')
+                    if eye[1] > bestEye[1]:
+                        print("has better width (",eye[1],")")
+                        bestEye = eye
+                    else:
+                        print("has worse width (", eye[1],"), skipped")
+                else:
+                    print("First valid eye at", eye[0], "(", eye[2] % 4,"slips), width:", eye[1])
+                    bestEye = eye
+        if bestEye is None:
+            print("No valid eyes found!! Alignment FAILED.")
+            return
         
-        
-        
-        
-        
-    
+        print("Using eye at", bestEye[0])
+        self.write(self.map['TURFCTLIDELAY'], bestEye[0])
+        slipFix = bestEye[2] % 4
+        print("Performing", slipFix, "slips")
+        for i in range(slipFix):
+            self.write(self.map['TURFCTLBITSLP'], 1)
+        val = self.read(self.map['TURFCTLBITSLP'])
+        checkVal = self.check_eye(val)
+        print("Readback pattern is now", hex(val),"with", checkVal % 4, "slips")
+        if checkVal % 4:
+            print("Alignment failed?!?")
+        else:
+            print("Alignment succeeded.")
