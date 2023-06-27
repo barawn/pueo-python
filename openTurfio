@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+
+from turfio import PueoTURFIO
+import code
+import sys
+
+port = '/dev/ttyS13'
+
+if len(sys.argv) > 1:
+   port = sys.argv[1]
+
+dev = PueoTURFIO(port)
+# change this if you want to use local clock
+sysclk_source = dev.ClockSource.TURF
+
+print("Opened TURFIO on port", port)
+sysclk = dev.read(dev.map['SYSCLKMON'])
+if sysclk < 120000000 or sysclk > 130000000:
+   # program it, it's not programmed
+   dev.program_sysclk(sysclk_source)
+rxclk = dev.read(dev.map['RXCLKMON'])  
+if rxclk > 120000000 and rxclk < 130000000:
+   print("RXCLK is present, aligning TURF control interface")
+   dev.align_turfctl()
+
+code.interact(local=locals())
+
+   
