@@ -40,7 +40,8 @@ class PueoTURFIO:
             'TURFCTLRESET' : 0x2000,
             'TURFCTLIDELAY': 0x2004,
             'TURFCTLBITERR': 0x2008,
-            'TURFCTLBITSLP': 0x200C
+            'TURFCTLBITSLP': 0x200C,
+            'TURFCTLSYSERR': 0x201C
            }
         
     class AccessType(Enum):
@@ -191,7 +192,7 @@ class PueoTURFIO:
 
     # Perform an eye scan on an ISERDES: run over its IDELAY values and get bit
     # error rates. slptime needs to be larger than the acquisition interval
-    # programmed in.
+    # programmed in. N.B. FIX THIS TO BE AUTOMATICALLY PROGRAMMED
     def eyescan(self, slptime):
         sc = []
         for i in range(32):
@@ -200,22 +201,35 @@ class PueoTURFIO:
             sc.append(self.read(self.map['TURFCTLBITERR']))
         return sc
 
+    def eyescan_rxclk(self, period=1024):
+        slptime = period*8E-9
+        sc = []
+        # Reset to 0 phase shift because it makes the
+        # scan quicker.
+        self.write(self.map['TURFCTLRESET'], 0<<16)
+        # Set the scan period
+        self.write(self.map['TURFCTLSYSERR'], period)
+        for i in range(448):
+            self.write(self.map['TURFCTLRESET'], i<<16)
+            time.sleep(slptime)
+            sc.append(self.read(self.map['TURFCTLSYSERR']))
+        return sc
+            
     # Processes an eyescan and returns a list of putative eyes and their widths.
-    # Note that because of the way the bit error test works, eyes may
-    # not be correct. That's where they're putative. You need to plop
-    # the IDELAY value there, and see if it matches one of the
-    # training patterns:
-    # 0xA55A6996
-    # 0x52AD34CB
-    # 0xA9569A65
-    # 0xD4AB4D32
-    # or their nybble-rotated patterns.
-    def process_eyescan(self, scan):
+    # NOTE NOTE NOTE:
+    #
+    # This function needs a "wraparound" option so that if we are
+    # passed an eyescan that fully wraps around (like a phase scan)
+    # this function can "merge" eyes at the beginning/end of the scan.
+    # Other scans (like delay scans) do not actually wrap around and
+    # just have to treat the beginning/end of the eye scan as endings.
+    # MAYBE IMPROVE THIS LATER EVEN WITH DELAY SCANS
+    def process_eyescan(self, scan, width=32):
         # We start off by assuming we're not in an eye.
         in_eye = False
         eye_start = 0
         eyes = []
-        for i in range(32):
+        for i in range(width):
             if scan[i] == 0 and not in_eye:
                 eye_start = i
                 in_eye = True
@@ -225,11 +239,11 @@ class PueoTURFIO:
                 in_eye = False
         # we exited the loop without finding the end of the eye
         if in_eye:
-            eye = [ int(eye_start+(32-eye_start)/2), 32-eye_start ]
+            eye = [ int(eye_start+(width-eye_start)/2), width-eye_start ]
             eyes.append( eye )
 
         return eyes
-            
+
     # This returns either None (incorrect eye value)
     # or the number of bit-slips required to match up.
     # Training pattern is 0xA55A6996. The bit-slipped
@@ -249,17 +263,53 @@ class PueoTURFIO:
             if testVal == rightRotate(trainValue, i):
                 return i
         return None
-
+    
     # This is the TURF->TURFIO alignment procedure
-    # This doesn't include the RXCLK->SYSCLK alignment
-    # yet, which actually happens *first* using the
-    # MMCM's fine phase shift controls.
     def align_turfctl(self):
+        # Check to see if the interface is already aligned.
+        rv = bf(self.read(self.map['TURFCTLRESET']))
+        if rv[9]:
+            print("TURFCTL is already aligned, skipping.")
+            return
+
+        # First we need to align RXCLK->SYSCLK. Reset everything first
+
+        # uh... I haven't written that part
+
+        # This currently takes a loong time just due to
+        # how slow the interface is.
+        print("Scanning RXCLK->SYSCLK transition.")
+        rxsc = self.eyescan_rxclk()
+        eyes = self.process_eyescan(rxsc, 448)
+        bestEye = None
+        for eye in eyes:
+            if bestEye is not None:
+                print("Second RXCLK->SYSCLK eye found at", eye[0], "possible glitch")
+                if eye[1] > bestEye[1]:
+                    print("Eye at", eye[0], "has width", eye[1], "better than", bestEye[1])
+                    bestEye = eye
+                else:
+                    print("Eye at", eye[0], "has width", eye[1], "worse than", bestEye[1], "skipping")
+            else:
+                print("First eye at", eye[0], "width", eye[1])
+                bestEye = eye
+
+        if bestEye is None:
+            print("No valid RXCLK->SYSCLK eye found!! Check if clocks are present and correct frequency!")
+            return
+        print("Using eye at", bestEye[0])
+        # n.b. this needs to be a read-modify-write register after this point!!
+        self.write(self.map['TURFCTLRESET'], bestEye[0]<<16)
+
+        # RXCLK is aligned, now scan the IDELAY region
+        # I really, really hope that we don't get a case
+        # where the entire IDELAY region looks clean.
+        
         # Eye scanning with a quick period
         # seems pretty robust.
         self.write(self.map['TURFCTLBITERR'], 131072)
         sc = self.eyescan(0.01)
-        eyes = self.process_eyescan(sc)
+        eyes = self.process_eyescan(sc, 32)
         # Check each of the eyes and choose the best one.
         bestEye = None
         for eye in eyes:
@@ -295,5 +345,24 @@ class PueoTURFIO:
         print("Readback pattern is now", hex(val),"with", checkVal % 4, "slips")
         if checkVal % 4:
             print("Alignment failed?!?")
+            return
         else:
             print("Alignment succeeded.")
+        # Now we need to enable the interface to lock.
+        st = bf(self.read(self.map['TURFCTLRESET']))
+        # Set bit 8 (enable lock)
+        st[8] = 1
+        self.write(self.map['TURFCTLRESET'], int(st))
+        # Read back to see if it actually locked. This happens almost instantly.
+        rb = bf(self.read(self.map['TURFCTLRESET']))
+        # actually return something indicating a failure!!
+        if rb[9]:
+            print("TURFIO TURFCTL interface is now locked and running.")
+        else:
+            print("Interface did not lock?!")
+        
+        return
+        
+
+
+
