@@ -1,7 +1,8 @@
 from bf import bf
 from enum import Enum
+from dev_submod import dev_submod
 
-class GenShift:
+class GenShift(dev_submod):
     map = { 'MODCONF' : 0x0,
             'DEVCONF' : 0x4,
             'DATA'    : 0x8 }
@@ -17,14 +18,8 @@ class GenShift:
         MSB_FIRST = 1
         
     def __init__(self, dev, base):
-        self.dev = dev
-        self.base = base
+        super().__init__(dev, base)
 
-    def write(self, addr, data):
-        return self.dev.write(self.base+addr, data)
-
-    def read(self, addr):
-        return self.dev.read(self.base+addr)
 
     # disableTris forces specified interfaces to remain driven
     def setup(self, disableTris=0x0):
