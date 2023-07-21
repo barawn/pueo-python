@@ -2,12 +2,15 @@
 
 from turfio import PueoTURFIO
 import code
-import sys
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("port", help="TURFIO debug serial port path", default="/dev/ttyS13")
+parser.add_argument("--turfctlreset",
+                    help="forcibly reset TURFCTL path",
+                    action="store_true")
+args = parser.parse_args()
 
-port = '/dev/ttyS13'
-
-if len(sys.argv) > 1:
-   port = sys.argv[1]
+port = args.port
 
 dev = PueoTURFIO(port)
 # change this if you want to use local clock
@@ -20,6 +23,9 @@ if sysclk < 120000000 or sysclk > 130000000:
    dev.program_sysclk(sysclk_source)
 rxclk = dev.read(dev.map['RXCLKMON'])  
 if rxclk > 120000000 and rxclk < 130000000:
+   if args.turfctlreset:
+      print("Forcibly resetting TURF interface first")
+      dev.reset_turfctl()
    print("RXCLK is present, aligning TURF control interface")
    dev.align_turfctl()
 
