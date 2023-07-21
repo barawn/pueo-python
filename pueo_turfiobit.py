@@ -47,6 +47,31 @@ class PueoTURFIOBit(dev_submod):
     # we set PDLYCNTA = 239
     #        PDLYCNTB = 0
 
+    # process a coarse eyescan
+    @staticmethod
+    def process_coarse(scan):
+        # A coarse eyescan gives you a list of triplets:
+        # index, number of errors, and bit offset #
+        # We need to process it to find where the bit changes
+        start = None
+        stop = None
+        curBitno = None
+        for val in scan:
+            if val[1] == 0 and val[2] is not None:
+                # no errors
+                if curBitno is None:
+                    curBitno = val[2]
+                    start = val[0]
+                elif val[2] != curBitno:
+                    stop = val[0]
+                    break
+                else:
+                    start = val[0]
+        if start is not None and stop is not None:
+            print("start is", start, "stop is", stop)
+            return (start, stop)
+        return None
+
     # coarse eye scan
     def coarse_eyescan(self):
         Align_Delay, ps_per_tap = self.getParameters()
@@ -73,6 +98,58 @@ class PueoTURFIOBit(dev_submod):
                 sc.append((i, errcnt, None))
         return sc
 
+    # Fine scan. This only returns the biterrs, and it runs fast.
+    # Start/stop is in time here, but we step over index.
+    def fine_eyescan(self, start, stop):
+        Align_Delay, ps_per_tap = self.getParameters()
+        startIdx = Align_Delay + round(start/ps_per_tap)
+        stopIdx = Align_Delay + round(stop/ps_per_tap)
+        sc = []
+        self.write(self.map['INTERVAL'], 1024)
+        for i in range(startIdx, stopIdx):
+            self.setDelay(i, useRaw=True)
+            time.sleep(0.001)
+            sc.append(self.read(self.map['BITERR']))
+        return sc    
+
+    # good enough!!
+    # So the overall procedure is
+    # sc = coarse_eyescan()
+    # ss = process_coarse()
+    # coarseCenter = ((ss[0]+ss[1])/2)*200.0
+    # fs = fine_eyescan(coarseCenter-200.0, coarseCenter + 200.0)
+    # fineCenter = find_eyeedge(fs)
+    # targetValue = (coarseCenter-200.0)+(fineCenter*ps_per_tap)-1000.0
+    # if this takes you below 1000.0 add 1000.0 instead
+    @staticmethod
+    def find_eyeedge(scan):
+        return scan.index(max(scan))
+
+    def locate_eyecenter(self):
+        pars = self.getParameters()
+        sc = self.coarse_eyescan()
+        ss = self.process_coarse(sc)
+        if ss is None:
+            print("Eye scan failed!")
+            print("Coarse scan:")
+            print(sc)
+            return
+        coarseEdge = ((ss[0] + ss[1])/2)*200.0
+        print("Coarse eye edge is at", coarseEdge)
+        fs = self.fine_eyescan(coarseEdge-200.0, coarseEdge+200.0)
+        fineEdgeIdx = self.find_eyeedge(fs)
+        fineEdge = (coarseEdge-200.0)+(fineEdgeIdx*pars[1])
+        print("Fine eye edge is at", fineEdge, end='')        
+        eye = []
+        if fineEdge < 1000.0:
+            # move into the stop-side eye
+            eye = (fineEdge+1000.0, sc[ss[1]][2])
+        else:
+            eye = (fineEdge-1000.0, sc[ss[0]][2])
+        print("sample center is at", eye[0], "with bit offset", eye[1])
+        return eye
+            
+    
     def getParameters(self):
         # The monitor delay is "close enough" to the
         # cell above it that we can use it as the basis.
@@ -83,11 +160,12 @@ class PueoTURFIOBit(dev_submod):
         return (madly-mbdly, 700.0/mbdly)
 
     # target here is in **time**
-    def setDelay(self, target, Align_Delay = None, ps_per_tap = None):
-        if Align_Delay is None or ps_per_tap is None:
-            Align_Delay, ps_per_tap = self.getParameters()
-        # ok now figure out how to distribute this stuff
-        totdly = round(target/ps_per_tap) + Align_Delay
+    def setDelay(self, target, Align_Delay = None, ps_per_tap = None, useRaw=False):
+        totdly = target
+        if not useRaw:
+            if Align_Delay is None or ps_per_tap is None:
+                Align_Delay, ps_per_tap = self.getParameters()            
+            totdly = round(target/ps_per_tap) + Align_Delay
         pdlya = totdly
         pdlyb = 0
         if pdlya > 511:
