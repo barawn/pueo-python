@@ -77,13 +77,14 @@ class PueoTURFIOBit(dev_submod):
         Align_Delay, ps_per_tap = self.getParameters()
         # Because the eyes are so wide open, finding
         # the transition point is tough. So we do a very coarse
-        # scan first in 200 ps steps (11 total, over a full eye)
+        # scan first in 200 ps steps (12 total, over a full eye)
         # set the error count interval (~1 millisecond)
         self.write(self.map['INTERVAL'], 131072)
         # What we're looking for is a change in the bit number.
         # Just do the scan first
         sc = []
-        for i in range(11):
+        # This goes up to the full guaranteed max (2200 ps)
+        for i in range(12):
             bitno = None
             self.setDelay(200.0*i, Align_Delay, ps_per_tap)
             time.sleep(0.002)
