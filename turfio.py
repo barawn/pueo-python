@@ -246,6 +246,25 @@ class PueoTURFIO:
 
         return eyes
 
+    # forcibly reset TURFCTL interface
+    def reset_turfctl(self):
+        rv = bf(self.read(self.map['TURFCTLRESET']))
+        rv[3] = 1
+        rv[8] = 0
+        self.write(self.map['TURFCTLRESET'], int(rv))
+        rv = bf(self.read(self.map['TURFCTLRESET']))
+        rv[3] = 0
+        self.write(self.map['TURFCTLRESET'], int(rv))
+
+    # enable TURF training
+    def turf_train(self, enable):
+        rv = bf(self.read(self.map['TURFCTLRESET']))
+        if enable:
+            rv[10] = 1
+        else:
+            rv[10] = 0
+        self.write(self.map['TURFCTLRESET'], int(rv))
+        
     # This is the TURF->TURFIO alignment procedure
     def align_turfctl(self):
         # Check to see if the interface is already aligned.
@@ -254,10 +273,15 @@ class PueoTURFIO:
             print("TURFCTL is already aligned, skipping.")
             return
 
-        # First we need to align RXCLK->SYSCLK. Reset everything first
-
-        # uh... I haven't written that part
-
+        # It's not aligned. First, let's reset the OSERDES.
+        print("Resetting OSERDES.")
+        rv[4] = 1;
+        self.write(self.map['TURFCTLRESET'], int(rv))
+        rv[4] = 0
+        self.write(self.map['TURFCTLRESET'], int(rv))
+        
+        # First we need to align RXCLK->SYSCLK.
+        
         # This currently takes a loong time just due to
         # how slow the interface is.
         print("Scanning RXCLK->SYSCLK transition.")
@@ -283,9 +307,27 @@ class PueoTURFIO:
         # n.b. this needs to be a read-modify-write register after this point!!
         self.write(self.map['TURFCTLRESET'], bestEye[0]<<16)
 
-        # RXCLK is aligned, now scan the IDELAY region
+        # RXCLK is aligned. Now reset the ISERDES.
+        print("Resetting ISERDES.")
+        rv = bf(self.read(self.map['TURFCTLRESET']))
+        rv[2] = 1
+        self.write(self.map['TURFCTLRESET'], int(rv))
+        rv[2] = 0
+        self.write(self.map['TURFCTLRESET'], int(rv))
+        
         # I really, really hope that we don't get a case
         # where the entire IDELAY region looks clean.
+
+        # NOTE NOTE NOTE NOTE NOTE
+        # This SHOULD BE REDONE to be more similar
+        # to the TURF case
+        #
+        # We DO NOT WANT to try to locate the center
+        # of the eye directly: we want to find the eye TRANSITION
+        # from one bit to the next, and then BACK OFF
+        # (or forward) by 1 ns (around 13 taps).
+        # This is because we CANNOT SEE the start and stop of any
+        # individual eye since the total delay length is too short.
         
         # Eye scanning with a quick period
         # seems pretty robust.
