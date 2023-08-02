@@ -92,7 +92,7 @@ class PueoTURFIO:
         
         # Clock monitor calibration value is now just
         # straight frequency thanks to silly DSP tricks.
-        self.clockMonValue = 40000000
+        self.clockMonValue = 80000000
         self.write(self.map['SYSCLKMON'], self.clockMonValue)
         time.sleep(0.1)
         # Set up the LMK interface as permanently driven.
