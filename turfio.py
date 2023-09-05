@@ -66,7 +66,7 @@ class PueoTURFIO:
         
     def __init__(self, accessInfo, type=AccessType.SERIAL):
         if type == self.AccessType.SERIAL:
-            self.dev = SerialCOBSDevice(accessInfo, 115200)
+            self.dev = SerialCOBSDevice(accessInfo, 115200, 3)
             self.reset = self.dev.reset
             self.read = self.dev.read
             self.write = self.dev.write
@@ -74,7 +74,31 @@ class PueoTURFIO:
 
             self.dev.reset()
         elif type == self.AccessType.TURFGTP:
-            raise Exception("TURF GTP connection is a Work In Progress")
+            turf = accessInfo[0]
+            ionum = accessInfo[1]
+            # check to see if Aurora is up
+            linkstat = turf.aurora.linkstat(ionum)
+            # low 2 bits are up
+            if linkstat & 0x3 != 0x3:
+                raise Exception("GTP link %d is not up" % ionum)
+            # configure bridge
+            brctl = bf(turf.read(turf.map['BRIDGECTRL']))
+            brctl[8*(ionum+1)-1:8*ionum] = 1
+            turf.write(turf.map['BRIDGECTRL'], int(brctl))
+            print("Bridge is: %8.8x" % turf.read(turf.map['BRIDGECTRL']))
+            # reset bridge status
+            turf.write(turf.map['BRIDGESTAT'], 0)
+
+            self.dev = turf.crate.link[ionum]            
+            self.read = self.dev.read
+            self.write = self.dev.write
+            self.writeto = self.dev.writeto
+            # Test the bridge. Issue a read.
+            id = self.read(0)
+            # Now check to see if the read completed.
+            st = turf.read(turf.map['BRIDGESTAT'])
+            if st != 0:
+                raise Exception("TURFIO bridge error: %8.8x", st)            
         elif type == self.AccessType.TURFCTL:
             raise Exception("TURF CTL connection is a Work In Progress")
         elif type == self.AccessType.HSK:

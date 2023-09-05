@@ -3,6 +3,8 @@ from enum import Enum
 from bf import bf
 from dev_submod import dev_submod
 from pueo_turfctl import PueoTURFCTL
+from pueo_turfaurora import PueoTURFAurora
+from pueo_cratebridge import PueoCrateBridge
 
 class PueoTURF:
     class DateVersion:
@@ -23,7 +25,9 @@ class PueoTURF:
 
     map = { 'FPGA_ID' : 0x0,
             'FPGA_DATEVERSION' : 0x4,
-            'DNA' : 0x8 }
+            'DNA' : 0x8,
+            'BRIDGECTRL' : 0x1000,
+            'BRIDGESTAT' : 0x1004}
 
     class AccessType(Enum):
         SERIAL = 'Serial'
@@ -32,13 +36,15 @@ class PueoTURF:
     
     def __init__(self, accessInfo, type=AccessType.SERIAL):
         if type == self.AccessType.SERIAL:
-            self.dev = SerialCOBSDevice(accessInfo, 115200)
+            self.dev = SerialCOBSDevice(accessInfo, 115200, addrbytes=4)
             self.reset = self.dev.reset
             self.read = self.dev.read
             self.write = self.dev.write
             self.writeto = self.dev.writeto
             self.dev.reset()
         self.ctl = PueoTURFCTL(self.dev, 0x10000)
+        self.aurora = PueoTURFAurora(self.dev, 0x8000)
+        self.crate = PueoCrateBridge(self.dev, (1<<27))
 
     def identify(self):
         def str4(num):

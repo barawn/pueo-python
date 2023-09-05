@@ -1,18 +1,30 @@
 #!/usr/bin/env python3
 
+from turf import PueoTURF
 from turfio import PueoTURFIO
 import code
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument("port", help="TURFIO debug serial port path", default="/dev/ttyS13")
+parser.add_argument("port", help="TURF/TURFIO debug serial port path", default="/dev/ttyS13")
 parser.add_argument("--turfctlreset",
                     help="forcibly reset TURFCTL path",
                     action="store_true")
+parser.add_argument("--turflink", default=None,
+                    help="if specified, use TURF bridge with this link # [0-3]")
 args = parser.parse_args()
 
 port = args.port
 
-dev = PueoTURFIO(port)
+dev = None
+if args.turflink is None:
+   dev = PueoTURFIO(port)
+else:
+   print("Bridging to TURFIO", args.turflink, "via TURF at", port)
+   turf = PueoTURF(port)
+   link = int(args.turflink)
+   params = [ turf, link ]
+   dev = PueoTURFIO(params, type=PueoTURFIO.AccessType.TURFGTP)
+   
 # change this if you want to use local clock
 sysclk_source = dev.ClockSource.TURF
 

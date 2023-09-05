@@ -20,6 +20,7 @@ class PueoTURFIOBit(dev_submod):
             'MDLYCNTA' : 0x88, # monitor delay count A (first delay val)
             'MDLYCNTB' : 0x8C, # monitor delay count B (second delay val)
             'BITSLIP' : 0xC0,  # capture and bitslip register
+            'RNDTRIP' : 0xC4,  # round trip delay calculation
             'INTERVAL' : 0xE0  # bit error interval count
             }
         
