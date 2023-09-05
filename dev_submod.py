@@ -8,8 +8,12 @@ class dev_submod:
         self.base = base
 
     def read(self, addr):
+#        print("dev_submod: addr", hex(addr+self.base))
         return self.dev.read(addr + self.base)
 
     def write(self, addr, val):
         return self.dev.write(addr + self.base, val)
+    
+    def writeto(self, addr, val):
+        return self.dev.writeto(addr + self.base, val)
     
