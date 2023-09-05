@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+
+# This program uses the debug serial port on the TURF to reprogram the BOOT.BIN
+# file on the TURF. Later there will be a high-speed method to replace the upgrade
+# file and methods to kickstart into the upgrade file as well.
+
+from turf import PueoTURF
+import sys
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("port", help="TURF debug serial port path", default="/dev/ttyS11")
+parser.add_argument("bootfile", help="file to program", default="BOOT.BIN")
+parser.add_argument("target", help="name of file on TURF", default="BOOT.BIN")
+
+args = parser.parse_args()
+
+port = args.port
+bootfile = args.bootfile
+tgt = args.target
+print(type(tgt))
+tgtb = bytes(tgt, encoding='utf-8')
+
+dev = PueoTURF(port)
+id = dev.read(0x00)
+if id != 0x54555246:
+   print("Device does not appear to be TURF: %8.8x" % id)
+   sys.exit(1)
+
+r = dev.dev._SerialCOBSDevice__listfiles()
+print("File list")
+for f in r:
+    print(f)
+    
+for f in r:
+    print(f[0])
+    print("Comparing", f[0], "to", tgtb)
+    if f[0] == tgtb:
+       print("File exists, deleting first.")
+       dev.dev._SerialCOBSDevice__delfile(tgt)
+       rr = dev.dev._SerialCOBSDevice__listfiles()
+       print("New file list")
+       for ff in rr:
+       	   print(ff)
+       break
+
+print("Switching to high baud rate")
+dev.dev._SerialCOBSDevice__setBaud(2000000)
+
+fh = open(bootfile, 'rb')
+ba = bytearray(fh.read())
+print("File is", len(ba), "bytes long")
+dev.dev._SerialCOBSDevice__writefile(tgt, ba)
+
+print("Done - swapping back to low baud rate")
+dev.dev._SerialCOBSDevice__setBaud(115200)
+print("Files on device:")
+r = dev.dev._SerialCOBSDevice_listfiles()
+for f in r:
+    print(f)
