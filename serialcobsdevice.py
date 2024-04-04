@@ -2,11 +2,12 @@ from cobs import cobs
 import serial
 from time import sleep
 
-# This is updated now to allow for wider address spaces.
+# This is updated now to allow for wider address spaces and address-mode
 class SerialCOBSDevice:
-        def __init__(self, port, baudrate, addrbytes=3):
+        def __init__(self, port, baudrate, addrbytes=3, devAddress=None):
                 self.dev = serial.Serial(port, baudrate)
                 self.addrbytes = addrbytes
+                self.address = devAddress
                 self.reset()
 
         def reset(self):                
@@ -17,7 +18,11 @@ class SerialCOBSDevice:
                 # and dump
                 if rx:
                         self.dev.read(rx)
-
+                        
+        # this is used if we have a multidrop bus and are using addressing
+        def setAddress(self, addr):
+                self.address = addr
+                        
         def __setBaud(self, bd):
                 tx = bytearray('\x00B\x00\x00\x00\x00', encoding='utf-8');
                 tx[0] = 0xFF
@@ -258,6 +263,9 @@ class SerialCOBSDevice:
                 # kill the top bit
                 tx[0] = tx[0] & 0x7F
                 tx[self.addrbytes] = num - 1
+                # are we using addressing?
+                if self.address is not None:
+                        tx.insert(0, self.address)
                 toWrite = cobs.encode(tx)
                 # print(toWrite)
                 self.dev.write(toWrite)
@@ -297,6 +305,9 @@ class SerialCOBSDevice:
                 # set top bit in addr for write
                 tx[0] |= 0x80
                 tx.extend(data)
+                # are we using addressing?
+                if self.address is not None:
+                        tx.insert(0, self.address)
                 self.dev.write(cobs.encode(tx))
                 self.dev.write(b'\x00')
                 
