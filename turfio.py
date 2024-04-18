@@ -161,6 +161,18 @@ class PueoTURFIO:
         print("HSRXCLK:", self.read(self.map['HSRXCLKMON']))
         print("CLK200:", self.read(self.map['CLK200MON']))
 
+    def jtag_setup(self, chainEnable):
+        high = self.genshift.GpioState.GPIO_HIGH
+        low = self.genshift.GpioState.GPIO_LOW
+        self.genshift.gpio(self.SHIFT_TCTRLB_GPIO, low)
+        self.genshift.enable(self.SHIFT_JTAG_DEV, prescale=5)
+        self.genshift.gpio(self.SHIFT_JTAGOE_GPIO, low)
+        self.genshift.shift(chainEnable,
+                            bitOrder=self.genshift.BitOrder.MSB_FIRST)
+        self.genshift.gpio(self.SHIFT_TCTRLB_GPIO, high)
+        self.genshift.gpio(self.SHIFT_JTAGOE_GPIO, high)
+        self.genshift.disable()
+        
     def program_lmk(self, reg):
         order=self.genshift.BitOrder.MSB_FIRST
         self.genshift.shift(reg[31:24], bitOrder=order)
