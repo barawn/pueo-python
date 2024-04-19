@@ -161,13 +161,16 @@ class PueoTURFIO:
         print("HSRXCLK:", self.read(self.map['HSRXCLKMON']))
         print("CLK200:", self.read(self.map['CLK200MON']))
 
-    def jtag_setup(self, chainEnable):
+    # auxVal is for debugging, it's *totally* not needed
+    # just makes it easier to check that all bits are working
+    def jtag_setup(self, chainEnable, auxVal=0):
         high = self.genshift.GpioState.GPIO_HIGH
         low = self.genshift.GpioState.GPIO_LOW
         self.genshift.gpio(self.SHIFT_TCTRLB_GPIO, low)
         self.genshift.enable(self.SHIFT_JTAG_DEV, prescale=5)
         self.genshift.gpio(self.SHIFT_JTAGOE_GPIO, low)
         self.genshift.shift(chainEnable,
+                            auxVal=auxVal,
                             bitOrder=self.genshift.BitOrder.MSB_FIRST)
         self.genshift.gpio(self.SHIFT_TCTRLB_GPIO, high)
         self.genshift.gpio(self.SHIFT_JTAGOE_GPIO, high)
