@@ -24,11 +24,11 @@ class PueoTURFIO:
             self.year = (val >> 25) & 0x7F
             
         def __str__(self):
-            return f'v{self.major}.{self.minor}.{self.rev} {self.mon}/{self.day}/{self.year}'
-
+            return "v%d.%d.%d %d/%d/%d" % (self.major, self.minor, self.rev, self.mon, self.day, self.year)
+            
         def __repr__(self):
             val = (self.year << 25) | (self.mon << 21) | (self.day << 16) | (self.major<<12) | (self.minor<<8) | self.rev
-            return f'TURFIO.DateVersion({val})'
+            return "TURFIO.DateVersion(%d)" % val        
 
     map = { 'FPGA_ID' : 0x0,
             'FPGA_DATEVERSION' : 0x4,
