@@ -105,14 +105,17 @@ class I2cAccess(object):
         ack = self.txByte(addr)
         if not ack:
             print("no acknowledge at addr")
+            self.stop()
             return True
         i = 0
         if txd is None or len(txd) == 0:
+            self.stop()
             return False
         for byte in txd:
             ack = self.txByte(byte)
             if not ack:
                 print("no acknowledge at byte %d" % i)
+                self.stop()
                 return True
             i = i + 1
         self.stop()
