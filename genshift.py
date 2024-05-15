@@ -78,6 +78,7 @@ class GenShift(dev_submod):
                 # already set
                 return devconf[16+num]
             else:
+                devconf[8+num] = 1
                 self.write(self.map['DEVCONF'], int(devconf))
                 devconf[31:0] = self.read(self.map['DEVCONF'])
                 return devconf[16+num]
