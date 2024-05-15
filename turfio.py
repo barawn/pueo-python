@@ -545,3 +545,46 @@ class PueoTURFIO:
         else:
             print("Interface did not lock?!")
         return
+
+    def monitor(self, verbose=True):
+        self.i2c.write(0x48, [0x5])
+        time.sleep(0.5)
+        stat = True
+        while stat:
+            stat,v = self.i2c.read(0x48, 3)
+        volt = (v[0] << 4) + ((v[2] & 0xF0)>>4)
+        curr = (v[1] << 4) + (v[2] & 0xF)
+        if verbose:
+            print(hex(v[0]),hex(v[1]),hex(v[2]))
+            print(volt, curr)
+            print((volt/4095.)*26.35,"V",(curr*105.84/4096/0.125),"mA")
+        return (volt, curr)
+    
+    def surfMonitor(self, addr, verbose=True):
+        r, vinb = self.i2c.readFrom(addr, 0x88, 2)
+        if r:
+            if verbose:
+                print("SURF at", hex(addr),"did not ack")
+            return None
+        r, voutb = self.i2c.readFrom(addr, 0x8B, 2)
+        r, ioutb = self.i2c.readFrom(addr, 0x8C, 2)
+        
+        vin = vinb[0] + (vinb[1]<<8)
+        vout = voutb[0] + (voutb[1]<<8)
+        iout = ioutb[0] + (ioutb[1]<<8)
+        if verbose:
+            print("Vin:", (vin+0.5)*5.104)
+            print("Vout:", (vout+0.5)*5.104)
+            print("Iout:", (iout-2048)*(12.51E-6)/(4.762*0.001))
+        return (vin, vout, iout)
+    
+    def surfReset(self, addr):
+        # toggle the GPO pin on the power monitor
+        r = self.i2c.write(addr, [0xD8, 0x8D, 0x1])
+        if r:
+            print("error resetting SURF: no I2C ack")
+            return
+        self.i2c.write(addr, [0xd8, 0xd, 0x1])
+        self.i2c.write(addr, [0xd8, 0x8d, 0x1])
+        
+        
