@@ -7,5 +7,6 @@ class PueoTURFIOI2C:
                              sda=GenShiftGPIO(dev,5))
         self.write = self.i2c.write
         self.read = self.i2c.read
+        self.readFrom = self.i2c.readFrom
         self.i2c.stop()
         
