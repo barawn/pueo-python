@@ -82,4 +82,20 @@ class GenShift(dev_submod):
                 devconf[31:0] = self.read(self.map['DEVCONF'])
                 return devconf[16+num]
     
-            
+class GenShiftGPIO:
+    def __init__(self, dev, num):
+        self.dev = dev
+        self.num = num
+
+    def hiz(self):
+        self.dev.gpio(self.num, self.dev.GpioState.GPIO_TRI)
+
+    def hi(self):
+        self.dev.gpio(self.num, self.dev.GpioState.GPIO_HIGH)
+
+    def lo(self):
+        self.dev.gpio(self.num, self.dev.GpioState.GPIO_LOW)
+
+    def value(self):
+        return self.dev.gpio(self.num, self.dev.GpioState.GPIO_TRI)
+    
