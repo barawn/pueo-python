@@ -11,7 +11,7 @@ import time
 from bf import bf
 from genshift import GenShift
 import pueo_utils
-
+from turfio_i2c_bb import PueoTURFIOI2C
 
 class PueoTURFIO:
     class DateVersion:
@@ -45,7 +45,12 @@ class PueoTURFIO:
             'TURFCTLIDELAY': 0x2004,
             'TURFCTLBITERR': 0x2008,
             'TURFCTLBITSLP': 0x200C,
-            'TURFCTLSYSERR': 0x201C
+            'TURFCTLSYSERR': 0x201C,
+            # 7 of these at 0x40 spacing
+            'SURFCTLRESET' : 0x2040,
+            'SURFCTLIDELAY' : 0x2044,
+            'SURFCTLBITERR' : 0x2048,
+            'SURFCTLBITSLP' : 0x204C
            }
         
     class AccessType(Enum):
@@ -113,6 +118,8 @@ class PueoTURFIO:
         self.SHIFT_LMKLE_GPIO = 2
         self.SHIFT_LMKOE_GPIO = 3
         self.SHIFT_SPICSB_GPIO = 4
+
+        self.i2c = PueoTURFIOI2C(self.genshift)
         
         # Clock monitor calibration value is now just
         # straight frequency thanks to silly DSP tricks.
@@ -175,6 +182,19 @@ class PueoTURFIO:
         self.genshift.gpio(self.SHIFT_TCTRLB_GPIO, high)
         self.genshift.gpio(self.SHIFT_JTAGOE_GPIO, high)
         self.genshift.disable()
+
+    def crate_control(self, crateOnOff):
+        ctrlstat = bf(self.read(self.map['CTRLSTAT']))
+        ctrlstat[2] = crateOnOff
+        self.write(self.map['CTRLSTAT'], int(ctrlstat))
+
+    # enable SURF training
+    def surf_train(self, enable, num):
+        rv = bf(self.read(self.map['SURFCTLRESET']+0x40*num))
+        if enable:
+            rv[10] = 1
+        else:
+            rv[10] = 0
         
     def program_lmk(self, reg):
         order=self.genshift.BitOrder.MSB_FIRST
