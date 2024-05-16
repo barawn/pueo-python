@@ -561,22 +561,26 @@ class PueoTURFIO:
         return (volt, curr)
     
     def surfMonitor(self, addr, verbose=True):
-        r, vinb = self.i2c.readFrom(addr, 0x88, 2)
+        # this is technically only a one-time thing but WHATEVER
+        r = self.i2c.write(addr, [0xd4, 0x1E, 0x07])
         if r:
             if verbose:
                 print("SURF at", hex(addr),"did not ack")
             return None
+        r, vinb = self.i2c.readFrom(addr, 0x88, 2)
         r, voutb = self.i2c.readFrom(addr, 0x8B, 2)
         r, ioutb = self.i2c.readFrom(addr, 0x8C, 2)
-        
+        r, tempb = self.i2c.readFrom(addr, 0x8D, 2)
         vin = vinb[0] + (vinb[1]<<8)
         vout = voutb[0] + (voutb[1]<<8)
         iout = ioutb[0] + (ioutb[1]<<8)
+        temp = tempb[0] + (tempb[1]<<8)        
         if verbose:
             print("Vin:", (vin+0.5)*5.104)
             print("Vout:", (vout+0.5)*5.104)
             print("Iout:", (iout-2048)*(12.51E-6)/(4.762*0.001))
-        return (vin, vout, iout)
+            print("Temp:", (temp*10-31880)/42)
+        return (vin, vout, iout, temp)
     
     def surfReset(self, addr):
         # toggle the GPO pin on the power monitor
