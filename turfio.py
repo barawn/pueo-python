@@ -195,6 +195,7 @@ class PueoTURFIO:
             rv[10] = 1
         else:
             rv[10] = 0
+        self.write(self.map['SURFCTLRESET']+0x40*num)
         
     def program_lmk(self, reg):
         order=self.genshift.BitOrder.MSB_FIRST
