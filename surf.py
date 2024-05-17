@@ -140,6 +140,9 @@ class PueoSURF:
     # the skew between all of the SURFs is small enough.
     # So we just *randomly* pick the first eye.
     # returns measured skew or None on error
+    # After we find the eye, we have to align IFCLK
+    # to RXCLK as well. We do that by forcibly
+    # resetting the PLL until it aligns properly.
     def align_rxclk(self, verbose=False):
         sc = self.eyescan_rxclk()
         eyes = self.process_eyescan(sc)
@@ -148,9 +151,29 @@ class PueoSURF:
                 print("RXCLK alignment failed, no eyes found!")
                 return None
         thisEye =  eyes[0]
+        if verbose:
+            print("Eyes:", eyes)
+            print("Choosing eye at",thisEye[0],"with width",thisEye[1])
         self.rxclkShift(thisEye[0])
         shift = thisEye[0] if abs(thisEye[0]-672)>thisEye[0] else (thisEye[0]-672)
         skew = (shift/672)*8
+        # Now we need to check the alignment
+        r = bf(self.read(self.map['TIOCTRL']))
+        nreset = 0
+        while r[15]:
+            if verbose:
+                print("IFCLK/RXCLK are misaligned, resetting PLLs")
+            r[13] = 1
+            self.write(self.map['TIOCTRL'], int(r))
+            r[13] = 0
+            A
+            self.write(self.map['TIOCTRL'], int(r))
+            r = bf(self.read(self.map['TIOCTRL']))
+            nreset = nreset + 1
+        if verbose:
+            print("RXCLK alignment complete after", nreset,
+            "resets" if nreset != 1 else "reset",
+            "skew:", skew)
         return skew     
     
     def eyescan_rxclk(self, period=1024):
