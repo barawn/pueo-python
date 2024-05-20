@@ -11,7 +11,7 @@
 
 from serialcobsdevice import SerialCOBSDevice
 from enum import Enum
-
+import pueo_utils
 import time
 from bf import bf
 
@@ -49,6 +49,8 @@ class PueoSURF:
             'IFCLKMON' : 0x50,
             'TIOCTRL' : 0x800,
             'TIORXERR' : 0x840,
+            'TIOCAPTURE': 0x844,
+            'TIOBITERR': 0x848,
             'TIOPDLYCNTA' : 0x880,
             'TIOPDLYCNTB' : 0x884,
             'TIOMDLYCNTA' : 0x888,
@@ -166,7 +168,6 @@ class PueoSURF:
             r[13] = 1
             self.write(self.map['TIOCTRL'], int(r))
             r[13] = 0
-            A
             self.write(self.map['TIOCTRL'], int(r))
             r = bf(self.read(self.map['TIOCTRL']))
             nreset = nreset + 1
@@ -305,4 +306,112 @@ class PueoSURF:
             pass
         # reenable VTC
         self.vtc(True)
-        
+
+    # zip through the range of delays to find boundaries
+    def coarse_eyescan(self):
+        Align_Delay, ps_per_tap = self.getDelayParameters()
+        self.write(self.map['TIOBITERR'], 131072)
+        sc = []
+        for i in range(12):
+            bitno = None
+            self.setDelay(200*i, Align_Delay, ps_per_tap)
+            time.sleep(0.002)
+            errcnt = self.read(self.map['TIOBITERR'])
+            if errcnt == 0:
+                val = self.read(self.map['TIOCAPTURE'])
+                bitno = pueo_utils.check_eye(val)
+                if bitno is not None:
+                    bitno = bitno % 4
+                sc.append((i, errcnt, bitno))
+            else:
+                sc.append((i, errcnt, None))
+        return sc
+    
+    # locate the boundaries
+    @staticmethod
+    def process_coarse(scan, verbose=False):
+        start = None
+        stop = None
+        curBitno = None
+        for val in scan:
+            if val[1] == 0 and val[2] is not None:
+                if curBitno is None:
+                    curBitno = val[2]
+                    start = val[0]
+                elif val[2] != curBitno:
+                    stop = val[0]
+                    break
+                else:
+                    start = val[0]
+        if start is not None and stop is not None:
+            if verbose:
+                print("start is", start, "stop is", stop)
+            return (start, stop)
+        if verbose:
+            print("no start and stop found!")
+        return None
+    
+    # Fine scan. At this point we know there's a transition
+    # between these 2 points, so locate the ideal point.
+    # Here instead of stepping over delays, we're going
+    # tap by tap.
+    def fine_eyescan(self, start, stop):
+        Align_Delay, ps_per_tap = self.getDelayParameters()
+        startIdx = Align_Delay + round(start/ps_per_tap)
+        stopIdx = Align_Delay + round(stop/ps_per_tap)
+        sc = []
+        self.write(self.map['TIOBITERR'], 1024)
+        for i in range(startIdx, stopIdx):
+            self.setDelay(i, useRaw=True)
+            time.sleep(0.001)
+            sc.append(self.read(self.map['TIOBITERR']))
+        return sc
+    
+    # sleazeball
+    # I should probably get all of the possible maxes
+    # and average it or something
+    @staticmethod
+    def find_eyeedge(scan, verbose=True):
+        mx = max(scan)
+        st = scan.index(mx)
+        if scan.count(mx) > 1:
+            if verbose:
+                print("there are", scan.count(mx), "max points")
+            scan.reverse()
+            sp = len(scan) - scan.index(mx)
+            scan.reverse()
+            mid = round((st+sp)/2)
+            if verbose:
+                print("first:", st, "last:", sp, "avg:", mid)
+            return mid
+        else:
+            return st
+    
+    def locate_eyecenter(self, verbose=True):
+        pars = self.getDelayParameters()
+        sc = self.coarse_eyescan()
+        ss = self.process_coarse(sc, verbose=verbose)
+        if ss is None:
+            if verbose:
+                print("Eye scan failed!")
+                print("Coarse scan:")
+                print(sc)
+            return None
+        coarseEdge = ((ss[0]+ss[1])/2)*200.0
+        if verbose:
+            print("Coarse eye edge is at", coarseEdge)
+        fs = self.fine_eyescan(coarseEdge-200.0, coarseEdge+200.0)
+        fineEdgeIdx = self.find_eyeedge(fs)
+        fineEdge = (coarseEdge-200.0)+(fineEdgeIdx*pars[1])
+        if verbose:
+            print("Fine eye edge is at", fineEdge, end='')
+        eye = []
+        if fineEdge < 1000.0:
+            # move into the stop-side eye
+            eye = (fineEdge + 1000.0, sc[ss[1]][2])
+        else:
+            eye = (fineEdge - 1000.0, sc[ss[0]][2])
+        if verbose:
+            print("sample center is at", eye[0], "with bit offset", eye[1])
+        return eye
+    
