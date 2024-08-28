@@ -12,8 +12,16 @@ from bf import bf
 from genshift import GenShift
 import pueo_utils
 from turfio_i2c_bb import PueoTURFIOI2C
+from pueo_hsalign import PueoHSAlign
 
 class PueoTURFIO:
+    # the TURFIO debug interface has to muck around to get the upper bits (bits 24-21).
+    # Note the SURF space is actually 24-22, so upper address handling can be tested
+    # purely at the TURFIO by reading (1<<21) (0x20_0000)
+    dbgUpperMask = (0xF << 21)
+    # Bit to set to swap in upper bits.
+    dbgUpperBit = (1<<21)
+    
     class DateVersion:
         def __init__(self, val):
             self.major = (val >> 12) & 0xF
@@ -36,21 +44,28 @@ class PueoTURFIO:
             'CTRLSTAT' : 0xC,
             'SYNCCTRL' : 0x10,
             'CLKOFFSET': 0x14,
+            'BMDBGCTRL': 0x18,
             'SYSCLKMON' : 0x40,
             'GTPCLKMON' : 0x44,
             'RXCLKMON' : 0x48,
             'HSRXCLKMON' : 0x4C,
             'CLK200MON' : 0x50,
-            'TURFCTLRESET' : 0x2000,
-            'TURFCTLIDELAY': 0x2004,
-            'TURFCTLBITERR': 0x2008,
-            'TURFCTLBITSLP': 0x200C,
-            'TURFCTLSYSERR': 0x201C,
+            'SURFTURF' : 0x2000,
+            'SURFDOUT' : 0x2050
+            # these have been replaced by the PueoHSAligns
+            #'TURFCTLRESET' : 0x2000,
+            #'TURFCTLIDELAY': 0x2004,
+            #'TURFCTLBITERR': 0x2008,
+            #'TURFCTLBITSLP': 0x200C,
+            #'TURFCTLSYSERR': 0x201C,
             # 7 of these at 0x40 spacing
-            'SURFCTLRESET' : 0x2040,
-            'SURFCTLIDELAY' : 0x2044,
-            'SURFCTLBITERR' : 0x2048,
-            'SURFCTLBITSLP' : 0x204C
+            #'SURFCTLRESET' : 0x2040,
+            #'SURFCTLIDELAY' : 0x2044,
+            #'SURFCTLBITERR' : 0x2048,
+            #'SURFCTLBITSLP' : 0x204C,
+            #'SURFDATIDELAY' : 0x2054,
+            #'SURFDATBITERR' : 0x2058,
+            #'SURFDATBITSLP' : 0x205C            
            }
         
     class AccessType(Enum):
@@ -68,16 +83,19 @@ class PueoTURFIO:
     class ClockSource(Enum):
         INTERNAL = 0
         TURF = 1
-        
+
     def __init__(self, accessInfo, type=AccessType.SERIAL):
         if type == self.AccessType.SERIAL:
             self.dev = SerialCOBSDevice(accessInfo, 115200, 3)
             self.reset = self.dev.reset
-            self.read = self.dev.read
-            self.write = self.dev.write
+            self.read = self._dbgRead
+            self.write = self._dbgWrite
+            # NOTE: THERE IS NO UPPER ADDRESS HANDLING IN WRITETO!
+            # DO IT YOURSELF!!
             self.writeto = self.dev.writeto
-
             self.dev.reset()
+            self._setUpperBits(0)
+            
         elif type == self.AccessType.TURFGTP:
             turf = accessInfo[0]
             ionum = accessInfo[1]
@@ -104,8 +122,6 @@ class PueoTURFIO:
             st = turf.read(turf.map['BRIDGESTAT'])
             if st != 0:
                 raise Exception("TURFIO bridge error: %8.8x", st)            
-        elif type == self.AccessType.TURFCTL:
-            raise Exception("TURF CTL connection is a Work In Progress")
         elif type == self.AccessType.HSK:
             raise Exception("HSK connection is a Work In Progress")
 
@@ -120,6 +136,20 @@ class PueoTURFIO:
         self.SHIFT_SPICSB_GPIO = 4
 
         self.i2c = PueoTURFIOI2C(self.genshift)
+
+        # set up the HSAligns
+        # first, the COUTs
+        self.calign = []
+        for i in range(8):
+            self.calign.append(PueoHSAlign(self, self.map['SURFTURF']+0x40*i,
+                                           lockable=False,
+                                           bw=PueoHSAlign.BitWidth.BITWIDTH_32))
+        # now the DOUTs
+        self.dalign = []
+        for i in range(7):
+            self.dalign.append(PueoHSAlign(self, self.map['SURFDOUT']+0x40*i,
+                                           lockable=False,
+                                           bw=PueoHSAlign.BitWidth.BITWIDTH_8))
         
         # Clock monitor calibration value is now just
         # straight frequency thanks to silly DSP tricks.
@@ -128,7 +158,34 @@ class PueoTURFIO:
         time.sleep(0.1)
         # Set up the LMK interface as permanently driven.
         self.genshift.setup(disableTris=(1<<self.SHIFT_LMK_DEV))
-        
+
+    # Private function for handling upper bits in debug mode.
+    def _setUpperBits(self, upperAddr):
+        self.dev.write(self.map['BMDBGCTRL'], upperAddr)
+        # store it so we don't have to do it a bunch of times if it doesn't change
+        self.upperBits = upperAddr & self.dbgUpperMask        
+
+    # Private function for testing upper bits.
+    def _handleUpperAddr(self, addr):
+        if addr & self.dbgUpperMask:
+            if self.upperBits != addr & self.dbgUpperMask:
+                print("switching upper bits to", hex(addr & self.dbgUpperMask), "from", hex(self.upperBits))
+                self._setUpperBits(addr)
+            addr = (addr & ~self.dbgUpperMask) | self.dbgUpperBit
+        return addr
+    
+    # Debug read function. This is needed to expand the address space.
+    def _dbgRead(self, addr):
+        addr = self._handleUpperAddr(addr)
+        return self.dev.read(addr)
+
+    # Debug write function. Same as above.
+    def _dbgWrite(self, addr, value):
+        addr = self._handleUpperAddr(addr)
+        return self.dev.write(addr, value)
+
+    # There is no dbgWriteto function.
+
     def dna(self):
         self.write(self.map['DNA'], 0x80000000)
         dnaval=0
@@ -188,15 +245,6 @@ class PueoTURFIO:
         ctrlstat[2] = crateOnOff
         self.write(self.map['CTRLSTAT'], int(ctrlstat))
 
-    # enable SURF training
-    def surf_train(self, enable, num):
-        rv = bf(self.read(self.map['SURFCTLRESET']+0x40*num))
-        if enable:
-            rv[10] = 1
-        else:
-            rv[10] = 0
-        self.write(self.map['SURFCTLRESET']+0x40*num, int(rv))
-        
     def program_lmk(self, reg):
         order=self.genshift.BitOrder.MSB_FIRST
         self.genshift.shift(reg[31:24], bitOrder=order)
@@ -260,15 +308,21 @@ class PueoTURFIO:
     #
     # The "getBitno" shifts this from "old-style" (just bit error count)
     # to "new-style" (bit error count and bit offset number)
-    def eyescan(self, slptime, getBitno=False):
+    #
+    # All the eye control stuff is aligned such that +0x4 is IDELAY, +0x8 is BITERR,
+    # +0xC is BITSLP.
+    def eyescan(self, slptime, base=None, getBitno=False):
+        idelayAddr = base + 0x4
+        biterrAddr = base + 0x8
+        bitslipAddr = base + 0xC
         sc = []
         for i in range(32):
-            self.write(self.map['TURFCTLIDELAY'], i)
+            self.write(idelayAddr, i)
             time.sleep(slptime)
-            biterr = self.read(self.map['TURFCTLBITERR'])
+            biterr = self.read(biterrAddr)
             if getBitno:
                 if biterr == 0: # This is a new-style eyescan, including bitnos
-                    testVal = self.read(self.map['TURFCTLBITSLP'])
+                    testVal = self.read(bitslipAddr)
                     nbits = pueo_utils.check_eye(testVal)
                     sc.append((biterr, nbits % 4))
                 else:
@@ -447,7 +501,7 @@ class PueoTURFIO:
             # Eye scanning with a quick period
             # seems pretty robust.
             self.write(self.map['TURFCTLBITERR'], 131072)
-            sc = self.eyescan(0.01)            
+            sc = self.eyescan(0.01, base=self.map['TURFCTLRESET'])            
             eyes = self.process_eyescan(sc, 32)
             # Check each of the eyes and choose the best one.
             bestEye = None
@@ -501,7 +555,7 @@ class PueoTURFIO:
 
             # Quick scans seem OK.
             self.write(self.map['TURFCTLBITERR'], 131072)
-            sc = self.eyescan(0.01, getBitno=True)            
+            sc = self.eyescan(0.01, base=self.map['TURFCTLRESET'], getBitno=True)            
             edge = self.process_eyescan_edge(sc)
             if edge is None:
                 print("Cannot find eye transition, abandoning!")
