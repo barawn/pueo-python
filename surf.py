@@ -415,3 +415,27 @@ class PueoSURF:
             print("sample center is at", eye[0], "with bit offset", eye[1])
         return eye
     
+    def turfioLock(self, enable):
+        r = bf(self.read(self.map['TIOCTRL']))        
+        if enable:
+            r[11] = 1
+        else:
+            r[10] = 1
+        self.write(self.map['TIOCTRL'], int(r))
+    
+    def turfioLocked(self):
+        r = bf(self.read(self.map['TIOCTRL']))
+        return r[12]
+    
+    # set the bit offset to a value
+    def turfioSetOffset(self, val):
+        # both bitslip reset and bitslip are flags
+        # so don't need to clear them
+        r = bf(self.read(self.map['TIOCTRL']))
+        r[8] = 1
+        self.write(self.map['TIOCTRL'], int(r))
+        r[8] = 0
+        r[9] = 1
+        for i in range(val):
+            self.write(self.map['TIOCTRL'], int(r))
+            
