@@ -49,3 +49,6 @@ class bf(object):
     
     def __int__(self):
         return self._d
+
+    def __str__(self):
+        return str(self._d)
