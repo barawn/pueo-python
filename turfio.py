@@ -13,6 +13,7 @@ from genshift import GenShift
 import pueo_utils
 from turfio_i2c_bb import PueoTURFIOI2C
 from pueo_hsalign import PueoHSAlign
+from surfbridge import SURFBridge
 
 class PueoTURFIO:
     # the TURFIO debug interface has to muck around to get the upper bits (bits 24-21).
@@ -50,29 +51,21 @@ class PueoTURFIO:
             'RXCLKMON' : 0x48,
             'HSRXCLKMON' : 0x4C,
             'CLK200MON' : 0x50,
+            # this is the base for the COUTs (includes TURF)
             'SURFTURF' : 0x2000,
-            'SURFDOUT' : 0x2050
-            # these have been replaced by the PueoHSAligns
-            #'TURFCTLRESET' : 0x2000,
-            #'TURFCTLIDELAY': 0x2004,
-            #'TURFCTLBITERR': 0x2008,
-            #'TURFCTLBITSLP': 0x200C,
-            #'TURFCTLSYSERR': 0x201C,
-            # 7 of these at 0x40 spacing
-            #'SURFCTLRESET' : 0x2040,
-            #'SURFCTLIDELAY' : 0x2044,
-            #'SURFCTLBITERR' : 0x2048,
-            #'SURFCTLBITSLP' : 0x204C,
-            #'SURFDATIDELAY' : 0x2054,
-            #'SURFDATBITERR' : 0x2058,
-            #'SURFDATBITSLP' : 0x205C            
+            # this is the base for the DOUTs (does not include TURF)
+            'SURFDOUT' : 0x2050,
+            # this is the base for the SURFbridges
+            'SURFBRIDGE' : 0x400000
            }
-        
-    class AccessType(Enum):
-        SERIAL = 'Serial'
-        TURFGTP = 'TURF GTP'
-        TURFCTL = 'TURF CTL'
-        HSK = 'Housekeeping'
+
+    # allow autocomparison/string generation/etc. w/o StrEnum    
+    class AccessType(str, Enum):
+        SERIAL = 'SERIAL'
+        TURFGTP = 'TURFGTP'
+
+        def __str__(self) -> str:
+            return self.value
 
     class Position(Enum):
         LV = 'Left Vpol'
@@ -150,6 +143,12 @@ class PueoTURFIO:
             self.dalign.append(PueoHSAlign(self, self.map['SURFDOUT']+0x40*i,
                                            lockable=False,
                                            bw=PueoHSAlign.BitWidth.BITWIDTH_8))
+
+        # now the SURFbridges
+        self.surfbridge = []
+        for i in range(7):
+            self.surfbridge.append(SURFBridge(self,
+                                              self.map['SURFBRIDGE']+0x400000*i))        
         
         # Clock monitor calibration value is now just
         # straight frequency thanks to silly DSP tricks.
