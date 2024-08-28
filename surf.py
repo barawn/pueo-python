@@ -36,8 +36,10 @@ class PueoSURF:
             val = (self.brev << 31) | (self.year << 25) | (self.mon << 21) | (self.day << 16) | (self.major<<12) | (self.minor<<8) | self.rev
             return "SURF.DateVersion(%d)" % val        
                         
-    class AccessType(Enum):
-        SERIAL = 'Serial'
+    # subclassing from str and Enum allows passing the string
+    class AccessType(str, Enum):
+        SERIAL = 'SERIAL'
+        TURFIO = 'TURFIO'
 
     map = { 'FPGA_ID' : 0x0,
             'FPGA_DATEVERSION' : 0x4,
@@ -69,7 +71,16 @@ class PueoSURF:
             self.writeto = self.dev.writeto
 
             self.reset()
-
+        elif type == self.AccessType.TURFIO:
+            turfio = accessInfo[0]
+            slot = accessInfo[1]
+            # I dunno, test something here.
+            # Probably check the errors or something
+            self.dev = turfio.surfbridge[slot]
+            self.read = self.dev.read
+            self.write = self.dev.write
+            # CRAP I MIGHT NEED TO IMPLEMENT WRITETO OR SOMETHING??
+            
         # clock monitor calibration
         self.clockMonValue = 100000000
         self.write(self.map['ACLKMON'], self.clockMonValue)
