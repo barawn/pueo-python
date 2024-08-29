@@ -61,21 +61,44 @@ class PueoTURFIO:
 
     # allow autocomparison/string generation/etc. w/o StrEnum    
     class AccessType(str, Enum):
+        """
+        Describes how we're accessing the TURFIO, either
+        through serial ('SERIAL') or via the TURF ('TURFGTP')
+        """
+        
         SERIAL = 'SERIAL'
+        """
+        TURFIO access directly through the debug serial port.
+        """
         TURFGTP = 'TURFGTP'
+        """
+        TURFIO access via the bridge on the TURF using the GTP.
+        """
 
         def __str__(self) -> str:
             return self.value
 
     class Position(Enum):
+        """
+        Describes which TURFIO position this is.
+        """
         LV = 'Left Vpol'
         RV = 'Right Vpol'
         LH = 'Left Hpol'
         RH = 'Right Hpol'
         
     class ClockSource(Enum):
+        """
+        Determines where the system clock comes from.
+        """
         INTERNAL = 0
+        """
+        Use the TURFIO onboard clock (for testing only)
+        """
         TURF = 1
+        """
+        Use the clock from the TURF (normal operation).
+        """
 
     def __init__(self, accessInfo, type=AccessType.SERIAL):
         if type == self.AccessType.SERIAL:
