@@ -102,7 +102,7 @@ class PueoTURFIO:
 
     def __init__(self, accessInfo, type=AccessType.SERIAL):
         if type == self.AccessType.SERIAL:
-            self.dev = SerialCOBSDevice(accessInfo, 115200, 3)
+            self.dev = SerialCOBSDevice(accessInfo, 1000000, 3)
             self.reset = self.dev.reset
             self.read = self._dbgRead
             self.write = self._dbgWrite
