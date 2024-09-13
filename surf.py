@@ -49,6 +49,7 @@ class PueoSURF:
             'RXCLKMON' : 0x48,
             'CLK300MON' : 0x4C,
             'IFCLKMON' : 0x50,
+            'RACKCLKMON' : 0x54,
             'TIOCTRL' : 0x800,
             'TIORXERR' : 0x840,
             'TIOCAPTURE': 0x844,
@@ -120,7 +121,7 @@ class PueoSURF:
         print("RXCLK:", self.read(self.map['RXCLKMON']))
         print("CLK300:", self.read(self.map['CLK300MON']))
         print("IFCLK:", self.read(self.map['IFCLKMON']))
-
+        print("RACKCLK:", self.read(self.map['RACKCLKMON']))
         
     def getDelayParameters(self):
         # the '700.0' here is the value we spec'd
