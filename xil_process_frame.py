@@ -39,12 +39,19 @@
 # read 23,808 32-bit integers (or 95,232 bytes),
 # slice them up by frame, and call this.
 #
-# To do this with the hacked-up modified readback,
-# you need to increase the read length because of
-# God Knows What The Hell.
+# Finding the exact frame with the partial readback hack is
+# relatively simple: you get the frame address from the LL file,
+# write ((frame address << 1) | 1) to readback_type, and
+# set the readback length to (256 frames + required dummy words).
 #
-# Trial-and-error says there's a 472-byte offset, so you need
-# to read 95,704 bytes.
+# The "required dummy words" isn't really mentioned in the TRM,
+# but you can guess it from the UltraScale Configuration Guide:
+# this is an UltraScale+ (usp), so it has 1 dummy frame (due to the
+# frame buffer, so 93 words) + 25 additional words for pipelining
+# = (93+25)*4 = 472 bytes.
+#
+# Therefore, you read
+# (256 frames)*(93 u32/frame)*(4 bytes/u32)+472 = 95704 bytes. 
 #
 # You can then just read in from numpy:
 # bramOffset = 240
