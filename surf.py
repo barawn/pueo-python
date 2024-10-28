@@ -1,15 +1,13 @@
 # SURF device and methods.
-# Note that this is NOT the Overlay module that runs on Pynq!
-# That module configures and programs the hardware and sets
-# it up to be commanded by *this* module.
-# That module is called surf6, this module is called PueoSURF
-# to match PueoTURFIO/PueoTURF.
+# This module can run on either the SURF or remotely:
+# if it runs on the SURF, it needs the wbspi module.
 #
 # Like the TURFIO, it has multiple access methods:
-# direct serial, or TURFIO bridged (which itself can be
-# TURF bridged).
+# direct serial (to be deprecated), SPI, or TURFIO
+# bridged (which itself can be TURF bridged).
 
 from serialcobsdevice import SerialCOBSDevice
+from wbspi import WBSPI
 from enum import Enum
 import pueo_utils
 import time
@@ -40,10 +38,12 @@ class PueoSURF:
     class AccessType(str, Enum):
         SERIAL = 'SERIAL'
         TURFIO = 'TURFIO'
+        SPI = 'SPI'
 
     map = { 'FPGA_ID' : 0x0,
             'FPGA_DATEVERSION' : 0x4,
             'DNA' : 0x8,
+            'CTRLSTAT' : 0xC,
             'ACLKMON' : 0x40,
             'GTPCLKMON' : 0x44,
             'RXCLKMON' : 0x48,
@@ -60,7 +60,12 @@ class PueoSURF:
             'TIOMDLYCNTB' : 0x88C}
         
     def __init__(self, accessInfo, type=AccessType.SERIAL):
-        if type == self.AccessType.SERIAL:
+        if type == self.AccessType.SPI:
+            self.dev = WBSPI(path=accessInfo,
+                             speed=10000000)
+            self.read = self.dev.read
+            self.write = self.dev.write                             
+        elif type == self.AccessType.SERIAL:
             # need to think about a way to spec the address here?
             self.dev = SerialCOBSDevice(accessInfo,
                                         baudrate=1000000,
@@ -157,20 +162,29 @@ class PueoSURF:
     # After we find the eye, we have to align IFCLK
     # to RXCLK as well. We do that by forcibly
     # resetting the PLL until it aligns properly.
-    def align_rxclk(self, verbose=False):
-        sc = self.eyescan_rxclk()
-        eyes = self.process_eyescan(sc)
-        if len(sc) == 0:
+    def align_rxclk(self, userSkew=None, verbose=False):
+        if userSkew is None:
+            sc = self.eyescan_rxclk()
+            eyes = self.process_eyescan(sc)
+            if len(sc) == 0:
+                if verbose:
+                    print("RXCLK alignment failed, no eyes found!")
+                    return None
+            thisEye =  eyes[0]
             if verbose:
-                print("RXCLK alignment failed, no eyes found!")
-                return None
-        thisEye =  eyes[0]
-        if verbose:
-            print("Eyes:", eyes)
-            print("Choosing eye at",thisEye[0],"with width",thisEye[1])
-        self.rxclkShift(thisEye[0])
-        shift = thisEye[0] if abs(thisEye[0]-672)>thisEye[0] else (thisEye[0]-672)
-        skew = (shift/672)*8
+                print("Eyes:", eyes)
+                print("Choosing eye at",thisEye[0],"with width",thisEye[1])
+            self.rxclkShift(thisEye[0])
+            # wtf does this even do???
+            shift = thisEye[0] if abs(thisEye[0]-672)>thisEye[0] else (thisEye[0]-672)
+            if shift != thisEye[0]:
+                print("WARNING: WE FELL INTO THE WEIRD IF CLAUSE")
+                print("WARNING: thisEye[0]: %d" % thisEye[0])
+                print("WARNING: shift: %d" % shift)
+                print("WARNING: eyes:", eyes)
+            skew = (shift/672)*8
+        else:
+            self.rxclkShift(int(userSkew*672/8))
         # Now we need to check the alignment
         r = bf(self.read(self.map['TIOCTRL']))
         nreset = 0

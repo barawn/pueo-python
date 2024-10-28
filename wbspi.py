@@ -16,13 +16,14 @@ class WBSPI(spi.SPI)
         txn[2] |= 0x8
         return int.from_bytes(self.transfer(txn)[-4:], 'big')
 
-    def write(self, address, value):
-        txn = self._buildtxn(address, value)
+    # mask is a 16-bit write disable
+    def write(self, address, value, mask=0):
+        txn = self._buildtxn(address, value, mask)
         self.transfer(txn)
 
     @staticmethod
-    def _buildtxn(address, data=0):
-        address = (address >> 2) << 4
+    def _buildtxn(address, data=0, mask=0):
+        address = (((address & 0x3FFFFF) >> 2) << 4 | ((mask & 0x3) << 1)
         return address.to_bytes(3, 'big') + data.to_bytes(4, 'big')
         
     @staticmethod
