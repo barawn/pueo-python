@@ -279,7 +279,7 @@ class PueoTURFIO:
         self.genshift.gpio(self.SHIFT_LMKLE_GPIO, self.genshift.GpioState.GPIO_LOW)
 
         
-    def program_sysclk(self, source=ClockSource.TURF):        
+    def program_sysclk(self, source=ClockSource.TURF, boost=True):        
         self.genshift.enable(self.SHIFT_LMK_DEV, prescale=1)
         reg = bf(0)
         reg[31] = 1
@@ -310,6 +310,15 @@ class PueoTURFIO:
         reg[3:0] = 7
         print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg) # R7
+        reg = bf(0)
+        reg[17] = 1
+        reg[16] = 1 if boost else 0
+        reg[13] = 1
+        reg[11] = 1
+        reg[9] = 1
+        reg[3:0] = 9
+        print("LMK program: ", hex(int(reg)))
+        self.program_lmk(reg)
         reg = bf(0)
         reg[16] = 1
         reg[18:17] = 0    # bypass
@@ -670,4 +679,11 @@ class PueoTURFIO:
         self.i2c.write(addr, [0xd8, 0xd, 0x1])
         self.i2c.write(addr, [0xd8, 0x8d, 0x1])
         
-        
+    # Locate a bridged SURF. Helpful if you forget.
+    # This is a silly method but sometimes I am a silly person
+    def getSurfSlot(self, surf):
+        # loop through the surfbridges
+        for i in range(len(self.surfbridge)):
+            if self.surfbridge[i] == surf.dev:
+                return i
+        return None
