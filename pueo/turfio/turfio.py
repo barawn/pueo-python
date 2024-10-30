@@ -5,15 +5,17 @@
 # either the TURF or the housekeeping serial. Note that the TURF may
 # have multiple access methods, not sure about that yet.
 #
-from serialcobsdevice import SerialCOBSDevice
+from ..common.serialcobsdevice import SerialCOBSDevice
+from ..common.bf import bf
+from ..common.genshift import GenShift
+from ..common import pueo_utils
+
+from .pueo_hsalign import PueoHSAlign
+from .surfbridge import SURFBridge
+from .turfio_i2c_bb import PueoTURFIOI2C
+
 from enum import Enum
 import time
-from bf import bf
-from genshift import GenShift
-import pueo_utils
-from turfio_i2c_bb import PueoTURFIOI2C
-from pueo_hsalign import PueoHSAlign
-from surfbridge import SURFBridge
 
 class PueoTURFIO:
     # the TURFIO debug interface has to muck around to get the upper bits (bits 24-21).

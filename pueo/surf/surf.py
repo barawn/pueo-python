@@ -6,12 +6,12 @@
 # direct serial (to be deprecated), SPI, or TURFIO
 # bridged (which itself can be TURF bridged).
 
-from serialcobsdevice import SerialCOBSDevice
-from wbspi import WBSPI
+from ..common.serialcobsdevice import SerialCOBSDevice
+from ..common import pueo_utils
+from ..common import bf
 from enum import Enum
-import pueo_utils
 import time
-from bf import bf
+
 
 class PueoSURF:
     class DateVersion:
@@ -61,6 +61,8 @@ class PueoSURF:
         
     def __init__(self, accessInfo, type=AccessType.SERIAL):
         if type == self.AccessType.SPI:
+            from ..common.wbspi import WBSPI
+            
             self.dev = WBSPI(path=accessInfo,
                              speed=10000000)
             self.read = self.dev.read

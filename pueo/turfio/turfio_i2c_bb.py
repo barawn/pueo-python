@@ -1,5 +1,5 @@
-from genshift import GenShiftGPIO
-from i2caccess import I2cAccess
+from ..common.genshift import GenShiftGPIO
+from ..common.i2caccess import I2cAccess
 
 class PueoTURFIOI2C:
     def __init__(self, dev):

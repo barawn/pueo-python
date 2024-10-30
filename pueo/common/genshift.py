@@ -1,6 +1,7 @@
-from bf import bf
+from .bf import bf
+from .dev_submod import dev_submod
+
 from enum import Enum
-from dev_submod import dev_submod
 
 class GenShift(dev_submod):
     map = { 'MODCONF' : 0x0,

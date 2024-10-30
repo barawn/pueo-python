@@ -1,11 +1,12 @@
 # This class is used IN THE TURF because it's
 # AN INPUT BIT from a TURFIO
 
+from ..common.bf import bf
+from ..common.dev_submod import dev_submod
+from ..common import pueo_utils
+
 from enum import Enum
-from bf import bf
-from dev_submod import dev_submod
 import time
-import pueo_utils
 
 # Each TURFIO input bit has an 8-bit address space.
 # It's partitioned up to make the logic easier: anything

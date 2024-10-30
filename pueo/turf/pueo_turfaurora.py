@@ -1,6 +1,7 @@
+from ..common.bf import bf
+from ..common.dev_submod import dev_submod
+
 from enum import Enum
-from bf import bf
-from dev_submod import dev_submod
 
 # Module structure (referenced from base)
 # 0x0000 - 0x3FFF : Control/status space

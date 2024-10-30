@@ -1,7 +1,9 @@
+from ..common.bf import bf
+from ..common.dev_submod import dev_submod
+
+from .pueo_turfif import PueoTURFIF
+
 from enum import Enum
-from bf import bf
-from dev_submod import dev_submod
-from pueo_turfif import PueoTURFIF
 import time
 
 class PueoTURFCTL(dev_submod):

@@ -1,7 +1,9 @@
+from ..common.bf import bf
+from ..common.dev_submod import dev_submod
+
+from .pueo_turfiobit import PueoTURFIOBit
+
 from enum import Enum
-from bf import bf
-from dev_submod import dev_submod
-from pueo_turfiobit import PueoTURFIOBit
 
 # This is a single PUEO TURFIO interface.
 # Global controls

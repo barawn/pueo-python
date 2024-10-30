@@ -4,7 +4,7 @@
 # file on the TURF. Later there will be a high-speed method to replace the upgrade
 # file and methods to kickstart into the upgrade file as well.
 
-from turf import PueoTURF
+from pueo.turf.turf import PueoTURF
 import sys
 import argparse
 parser = argparse.ArgumentParser()

@@ -1,7 +1,8 @@
 # Generic high-speed align and biterr module.
-from bf import bf
+from ..common.bf import bf
+from ..common.dev_submod import dev_submod
+
 from enum import Enum
-from dev_submod import dev_submod
 import time
 
 # Support module for PUEO high speed serial alignment.

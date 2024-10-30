@@ -1,5 +1,5 @@
 # General common PUEO utility functions
-from bf import bf
+from .bf import bf
 
 train32 = 0xA55A6996
 train8 = 0x6A

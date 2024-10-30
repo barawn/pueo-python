@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
-from turf import PueoTURF
-from turfio import PueoTURFIO
+from pueo.turf.turf import PueoTURF
+from pueo.turfio.turfio import PueoTURFIO
+
 import code
 import argparse
+
 parser = argparse.ArgumentParser()
 parser.add_argument("port", help="TURF/TURFIO debug serial port path", default="/dev/ttyS13")
 parser.add_argument("--turfctlreset",
