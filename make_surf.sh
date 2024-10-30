@@ -24,3 +24,4 @@ cp ${SCRIPT_DIR}/pueo/surf/*.py $DEST/pueo/surf/
 cp ${SCRIPT_DIR}/pueo/common/__init__.py $DEST/pueo/common/
 for p in ${COMMON_FILES} ; do
     cp ${SCRIPT_DIR}/pueo/common/$p $DEST/pueo/common/
+done
