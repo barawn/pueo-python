@@ -691,7 +691,7 @@ class PueoTURFIO:
     # class method to locate all USB-connected TURFIOs and return ttys/sns
     # only works if you have pyusb installed and are on Linux and have
     @classmethod
-    def find_serial_devices(cls, board = -1):
+    def find_serial_devices(cls, board = -1, verbose=False):
         try:
             import usb
         except ImportError:
@@ -724,22 +724,25 @@ class PueoTURFIO:
                 if thisType == 'TI':
                     if board == -1 or board == thisBoard:
                         devs.append((dev, thisBoard))
-                        print("found TURFIO%d at bus %d dev %d" % (thisBoard, dev.bus, dev.address))
+                        if verbose:
+                            print("found TURFIO%d at bus %d dev %d" % (thisBoard, dev.bus, dev.address))
             except ValueError:
                 pass
             
         # now we can zip through the ftdi_sio devices
         # and find All The Guys
         matchedDevices = []
-        for p in Path('/sys/bus/spi/devices').glob('*'):
-            if not os.path.isdir(p) or os.path.basename(p) == 'module':
-                pass
+        for p in Path('/sys/bus/usb/drivers/ftdi_sio').glob('*'):
+            if (not os.path.isdir(p)) or os.path.basename(p) == 'module':
+                continue
             bus = int(( p / '..' / 'busnum').read_text().rstrip('\x00\n'))
             address = int(( p / '..' / 'devnum').read_text().rstrip('\x00\n'))
             ttyPath = '/dev/' + os.path.basename( (p.glob('tty*')).__next__() )
+            if verbose:
+                print("path %s (tty %s) has bus %d/addr %d" % (p, ttyPath, bus, address))
             for devt in devs:
                 thisDev = devt[0]
                 thisBoard = devt[1]
                 if thisDev.bus == bus and thisDev.address == address:
-                    matchedDevices.append( (ttyPath, board) )
+                    matchedDevices.append( (ttyPath, thisBoard) )
         return matchedDevices
