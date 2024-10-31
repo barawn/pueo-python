@@ -24,7 +24,7 @@ class WBSPI(spi.SPI):
     @staticmethod
     def _buildtxn(address, data=0, mask=0):
         address = (((address & 0x3FFFFF) >> 2) << 4 | ((mask & 0x3) << 1))
-        return address.to_bytes(3, 'big') + data.to_bytes(4, 'big')
+        return bytearray(address.to_bytes(3, 'big') + data.to_bytes(4, 'big'))
         
     @staticmethod
     def find_device(compatstr):
