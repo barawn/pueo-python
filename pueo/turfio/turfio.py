@@ -686,4 +686,60 @@ class PueoTURFIO:
         for i in range(len(self.surfbridge)):
             if self.surfbridge[i] == surf.dev:
                 return i
-        return None
+        return None        
+
+    # class method to locate all USB-connected TURFIOs and return ttys/sns
+    # only works if you have pyusb installed and are on Linux and have
+    @classmethod
+    def find_serial_devices(cls, board = -1):
+        try:
+            import usb
+        except ImportError:
+            print("find_serial_devices() needs pyusb")
+            return
+        import os
+        if os.uname().sysname != 'Linux':
+            print("find_serial_devices() only works on Linux right now (need sysfs)")
+            return
+        
+        # pathlib is super fantastic for traversing sysfs
+        from pathlib import Path
+
+        # find FT2232 devices
+        devs = []
+        for dev in usb.core.find(find_all=True,
+                                 idVendor=0x0403,
+                                 idProduct=0x6010):
+            # check their serial number
+            # if for some reason it's not there, pyusb throws
+            # ValueError
+            try:
+                sn = dev.serial_number
+                # we know where we stored stuff
+                typeboard = sn[-6:]
+                typeStr = typeboard[:-2]
+                boardStr = typeboard[-2:]
+                thisType = chr(int(typeStr[0:2],16))+chr(int(typeStr[2:],16))
+                thisBoard = int(boardStr, 16)
+                if thisType == 'TI':
+                    if board == -1 or board == thisBoard:
+                        devs.append((dev, thisBoard))
+                        print("found TURFIO%d at bus %d dev %d" % (thisBoard, dev.bus, dev.address))
+            except ValueError:
+                pass
+            
+        # now we can zip through the ftdi_sio devices
+        # and find All The Guys
+        matchedDevices = []
+        for p in Path('/sys/bus/spi/devices').glob('*'):
+            if not os.path.isdir(p) or os.path.basename(p) == 'module':
+                pass
+            bus = int(( p / '..' / 'busnum').read_text().rstrip('\x00\n'))
+            address = int(( p / '..' / 'devnum').read_text().rstrip('\x00\n'))
+            ttyPath = '/dev/' + os.path.basename( (p.glob('tty*')).__next__() )
+            for devt in devs:
+                thisDev = devt[0]
+                thisBoard = devt[1]
+                if thisDev.bus == bus and thisDev.address == address:
+                    matchedDevices.append( (ttyPath, board) )
+        return matchedDevices
