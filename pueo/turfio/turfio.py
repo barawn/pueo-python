@@ -57,6 +57,8 @@ class PueoTURFIO:
             'SURFTURF' : 0x2000,
             # this is the base for the DOUTs (does not include TURF)
             'SURFDOUT' : 0x2050,
+            # this is the base for the surfturf common
+            'SURFTURFCOMMON' : 0x2800,
             # this is the base for the SURFbridges
             'SURFBRIDGE' : 0x400000
            }
@@ -335,6 +337,14 @@ class PueoTURFIO:
         self.genshift.gpio(self.SHIFT_LMKOE_GPIO, self.genshift.GpioState.GPIO_HIGH)
         self.genshift.disable()
 
+    def enable_rxclk(self, on=True):
+        rv = bf(self.read(self.map['SURFTURFCOMMON']))
+        if on:
+            rv[31] = 0
+        else:
+            rv[31] = 1
+        self.write(self.map['SURFTURFCOMMON'], int(rv))
+        
     # Perform an eye scan on an ISERDES: run over its IDELAY values and get bit
     # error rates. slptime needs to be larger than the acquisition interval
     # programmed in. N.B. FIX THIS TO BE AUTOMATICALLY PROGRAMMED
