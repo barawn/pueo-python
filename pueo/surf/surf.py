@@ -8,7 +8,7 @@
 
 from ..common.serialcobsdevice import SerialCOBSDevice
 from ..common import pueo_utils
-from ..common import bf
+from ..common.bf import bf
 from enum import Enum
 import time
 
