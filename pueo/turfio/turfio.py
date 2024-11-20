@@ -13,6 +13,7 @@ from ..common import pueo_utils
 from .pueo_hsalign import PueoHSAlign
 from .surfbridge import SURFBridge
 from .turfio_i2c_bb import PueoTURFIOI2C
+from .surfturf import SURFTURF
 
 from enum import Enum
 import time
@@ -176,7 +177,10 @@ class PueoTURFIO:
         for i in range(7):
             self.surfbridge.append(SURFBridge(self,
                                               self.map['SURFBRIDGE']+0x400000*i))        
+        # and common
+        self.surfturf = SURFTURF(self.dev, self.map['SURFTURFCOMMON'])
         
+            
         # Clock monitor calibration value is now just
         # straight frequency thanks to silly DSP tricks.
         self.clockMonValue = 80000000
