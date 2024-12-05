@@ -68,7 +68,7 @@ class SURFTURF(dev_submod):
                 fmt = ">%dI" % (len(d) // 4)
                 il = struct.unpack(fmt, d)
                 # check to see if that bank is ready
-                testIdx = bank + 6
+                testIdx = bank + 14
                 for s in surf:
                     rv = bf(s.read(0xC))
                     while not rv[testIdx]:
