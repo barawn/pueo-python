@@ -41,18 +41,21 @@ class SURFTURF(dev_submod):
     # returns the bank that it ended up in.
     # "surf" here can be an individual SURF or all of 'em
     # if you want to be pedantic.
-    def upload(self, surf, fn, bank=0, verbose=False):
+    def upload(self, surf, fn, destfn=None, bank=0, verbose=False):
         if not isinstance(surf, list):
             surf = [surf]
+        if not destfn:
+            destfn = fn
         # ALL OF THIS could be done ahead of time, like you
         # literally break the entire file up into bank chunks.
         # But whatever. We'll see. Through the TURFIO
         # this is obviously going to be slow.
         if not os.path.isfile(fn):
             raise ValueError("%s is not a regular file" % fn)
-        hdr, flen = self.fwupdHeader(fn)
+        hdr, flen = self.fwupdHeader(destfn)
         toRead = self.BANKLEN - len(hdr)
         toRead = flen if flen < toRead else toRead
+        print("Uploading %s to %s" % (fn, destfn))
         print("Header is %d bytes, reading %d bytes from file" % (len(hdr), toRead))
         # these are here to make the loop work
         d = hdr
@@ -60,8 +63,8 @@ class SURFTURF(dev_submod):
         with open(fn, "rb") as f:
             while written < flen:
                 if verbose:
-                    print("%s : writing %d bytes into bank %d, %d written" %
-                          (fn, toRead, bank, written))
+                    print("%s -> %s : writing %d bytes into bank %d, %d/%d written" %
+                          (fn, destfn, toRead, bank, written, flen))
                 d += f.read(toRead)
                 padBytes = len(d) % 4
                 d += padBytes*b'\x00'
@@ -80,6 +83,8 @@ class SURFTURF(dev_submod):
                 written += toRead
                 remain = flen - written
                 toRead = remain if remain < self.BANKLEN else self.BANKLEN
+                # empty d b/c we add to it above
+                d = b''
         return bank
     
     # need to add runmode/trigger            
