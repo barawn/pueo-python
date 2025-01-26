@@ -27,7 +27,7 @@ class GenSPI:
 
     def command(self,
                 val,
-                num_dummy_bytes, num_read_bytes, data_in_bytes=None):
+                num_dummy_bytes, num_read_bytes, data_in_bytes=bytes()):
         order = self.dev.BitOrder.MSB_FIRST
         self.chipselect(True)
         # first send command
