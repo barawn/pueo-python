@@ -31,17 +31,17 @@ class GenSPI:
         order = self.dev.BitOrder.MSB_FIRST
         self.chipselect(True)
         # first send command
-        self.dev.shift(val, bitorder=order)
+        self.dev.shift(val, bitOrder=order)
         # next send data_in_bytes
         for b in data_in_bytes:
-            self.dev.shift(b, bitorder=order)
+            self.dev.shift(b, bitOrder=order)
         # next send dummy bytes
         for d in range(num_dummy_bytes):
-            self.dev.shift(0x00, bitorder=order)
+            self.dev.shift(0x00, bitOrder=order)
         # next send bytes to read
         r = []
         for r in range(num_read_bytes):
-            r.append(self.dev.shift(0x00, bitorder=order))
+            r.append(self.dev.shift(0x00, bitOrder=order))
         self.chipselect(False)
         return r
     
