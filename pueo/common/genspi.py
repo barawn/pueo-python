@@ -39,9 +39,9 @@ class GenSPI:
         for d in range(num_dummy_bytes):
             self.dev.shift(0x00, bitOrder=order)
         # next send bytes to read
-        r = []
+        rv = []
         for r in range(num_read_bytes):
-            r.append(self.dev.shift(0x00, bitOrder=order))
+            rv.append(self.dev.shift(0x00, bitOrder=order))
         self.chipselect(False)
-        return r
+        return rv
     
