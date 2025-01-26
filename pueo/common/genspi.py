@@ -12,12 +12,18 @@
 # magic speedup provided by bursts since we're sending 4x the data
 # note you need to do enable() first
 class GenSPI:
-    def __init__(self, genshift, ifnum, cspin, prescale=0):
+    def __init__(self, genshift, ifnum, cspin, prescale=0, invertcs=True):
         self.dev = genshift
         self.shift = self.dev.shift
 
-        high = genshift.GpioState.GPIO_HIGH
-        low = genshift.GpioState.GPIO_LOW
+        # I *THINK* our "INVERT_GPIO" parameter in genshift
+        # isn't actually implemented so do it here
+        if invertcs:
+            high = genshift.GpioState.GPIO_LOW
+            low = genshift.GpioState.GPIO_HIGH
+        else:
+            high = genshift.GpioState.GPIO_HIGH
+            low = genshift.GpioState.GPIO_LOW
         self.chipselect = lambda v : self.dev.gpio(cspin,
                                                    high if v else low)
         en = self.dev.enable
