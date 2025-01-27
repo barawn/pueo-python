@@ -114,6 +114,9 @@ class SPIFlash:
         elif self.memory_capacity == 2**20:
             sector_size = 64*1024
             total_size = self.memory_capacity
+        elif self.memory_capacity == 2**18:            
+            sector_size = 64*1024
+            total_size = self.memory_capacity
         else:
             print("Don't know how to program flash with capacity %d" % self.memory_capacity)
             return

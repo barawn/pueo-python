@@ -1,3 +1,5 @@
+from .spiflash import SPIFlash
+
 # wrapper for a SPIFlash object using
 # the GenShift module
 # the SPIFlash object expects
@@ -31,6 +33,14 @@ class GenSPI:
         
         self.enable = lambda v : en(ifnum, prescale) if (v) else dis()        
 
+    def __enter__(self):
+        self.enable(True)
+        return SPIFlash(self)
+
+    def __exit__(self, type, value, traceback):
+        self.enable(False)
+        return None
+        
     def command(self,
                 val,
                 num_dummy_bytes, num_read_bytes, data_in_bytes=bytes()):
