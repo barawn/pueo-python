@@ -8,6 +8,7 @@
 from ..common.serialcobsdevice import SerialCOBSDevice
 from ..common.bf import bf
 from ..common.genshift import GenShift
+from ..common.genspi import GenSPI
 from ..common import pueo_utils
 
 from .pueo_hsalign import PueoHSAlign
@@ -158,6 +159,11 @@ class PueoTURFIO:
 
         self.i2c = PueoTURFIOI2C(self.genshift)
 
+        self.genspi = GenSPI(self.genshift,
+                             self.SHIFT_SPI_DEV,
+                             self.SHIFT_SPICSB_GPIO,
+                             prescale=2)
+        
         # set up the HSAligns
         # first, the COUTs
         self.calign = []
