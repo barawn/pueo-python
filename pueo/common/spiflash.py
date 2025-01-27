@@ -2,7 +2,7 @@ import struct
 import sys
 import time
 import hexfile
-from bf import * 
+from .bf import * 
 
 
 # This pulls out the SPI flash stuff from the old spi.py.
