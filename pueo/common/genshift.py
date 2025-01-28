@@ -70,9 +70,19 @@ class GenShift(dev_submod):
         dat[29] = bitOrder.value
         return dat
     
-    # shift in a block of data after a single pre-prepped command
-    # ignore waits, just assume we're too slow for it to be a problem
-    # ignore return data. 
+    # Transferring LOTS of data on the serial connection
+    # is best done with blockshiftin.
+    # blockshiftin does NOT prepare bit order, or
+    # nbits, or anything like that. You HAVE
+    # to do that yourself.
+    # You can do that with one single shiftin/shift
+    # yourself, for instance.
+    #
+    # To get the LAST BYTE you can call "blocklastout()"
+    # and it will just pluck out the last read value.
+    #
+    # The combined speedup here for the SPIFlash stuff
+    # is decent.
     def blockshiftin(self, prepareVal, data):
         if self.dev.multiwrite is None:
             # sigh, we don't have multiwrite capability
@@ -82,10 +92,28 @@ class GenShift(dev_submod):
             for b in data:
                 dat[7:0] = b
                 self.write(self.map['DATA'], int(dat))
-        else:
+        else:            
             multiwriteAddr = (self.base + self.map['DATA']) | (1<<22)
-            self.write(self.map['DATA'], int(prepareVal))
-            self.dev.multiwrite(multiwriteAddr, data)                
+            toWrite = bytearray([prepareVal & 0xFF]) + data
+            self.dev.multiwrite(multiwriteAddr, data)
+
+    def blocklastout(self):
+        r = bf(self.read(self.map['DATA']))
+        return r[23:16]
+        
+    # these are fast set fns: call prepare_set_gpio once, then you
+    # you can just call set_gpio after that
+    def prepare_set_gpio(self, num):
+        prep = bf(self.read(self.map['DEVCONF']))
+        prep[8+num] = 0
+        return prep
+
+    def set_gpio(self, prep, num, hilo):
+        if int(hilo):
+            prep[24+num] = 1
+        elif
+            prep[24+num] = 0
+        self.write(self.map['DEVCONF'], int(prep))
     
     def gpio(self, num, state):
         devconf = bf(self.read(self.map['DEVCONF']))

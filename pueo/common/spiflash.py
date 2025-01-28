@@ -166,7 +166,6 @@ class SPIFlash:
             self.dev.command(self.cmd["4PP"],0,0,towrite)
         else:
             self.dev.command(self.cmd["3PP"],0,0,towrite)
-        res = self.status()
         trials = 0
         while trials < 10:
             res = self.status()

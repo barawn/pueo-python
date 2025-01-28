@@ -17,28 +17,52 @@ class GenSPI:
     def __init__(self, genshift, ifnum, cspin, prescale=0, invertcs=True):
         self.dev = genshift
         self.shift = self.dev.shift
+        self.cspin = cspin
 
+        if self.dev.dev.multiwrite:
+            print("Using multiwrite capability")
+            self.burst = True
+        else:
+            print("Using slow single writes")
+            self.burst = False
         # I *THINK* our "INVERT_GPIO" parameter in genshift
         # isn't actually implemented so do it here
         if invertcs:
-            high = genshift.GpioState.GPIO_LOW
-            low = genshift.GpioState.GPIO_HIGH
+            self.high = genshift.GpioState.GPIO_LOW
+            self.low = genshift.GpioState.GPIO_HIGH
         else:
-            high = genshift.GpioState.GPIO_HIGH
-            low = genshift.GpioState.GPIO_LOW
-        self.chipselect = lambda v : self.dev.gpio(cspin,
-                                                   high if v else low)
+            self.high = genshift.GpioState.GPIO_HIGH
+            self.low = genshift.GpioState.GPIO_LOW
+
         en = self.dev.enable
         dis = self.dev.disable
         
         self.enable = lambda v : en(ifnum, prescale) if (v) else dis()        
 
+    # gpio_prep is used with enter/exit because the assumption is nothing
+    # else will use it between then and we can use Fast Stuff
+    def chipselect(self, val):
+        if self.gpio_prep:
+            self.dev.set_gpio(self.gpio_prep, self.cspin,
+                              self.high if v else self.low)
+        else:
+            self.dev.gpio(self.cspin,
+                          self.high if v else self.low)
+        
     def __enter__(self):
         self.enable(True)
+        self.gpio_prep = self.dev.prepare_set_gpio(self.cspin)
+        # shift once pointlessly
+        self.prep = self.dev.shiftin(0x00,
+                                     0x00,
+                                     bitOrder=self.dev.BitOrder.MSB_FIRST,
+                                     numBits=8)                    
         return SPIFlash(self)
 
     def __exit__(self, type, value, traceback):
         self.enable(False)
+        self.gpio_prep = None
+        self.prep = None
         return None
 
     # we seriously need to speed this up if we're
@@ -51,16 +75,35 @@ class GenSPI:
     def command(self,
                 val,
                 num_dummy_bytes, num_read_bytes, data_in_bytes=bytes()):
-        order = self.dev.BitOrder.MSB_FIRST
-        # don't really know why I bother having a length cut here but
-        # WHATEVER
-        if num_read_bytes == 0 and len(data_in_bytes) > 4:
-            self.chipselect(True)
-            prep = self.dev.prepare(val, 0x00, order, 8)
-            self.dev.blockshiftin(prep, data_in_bytes)
-            self.chipselect(False)
-            return []
+        if self.burst:
+            if num_read_bytes < 2:
+                self.chipselect(True)
+                txd = bytearray([val])
+                txd += data_in_bytes
+                txd += bytes(num_dummy_bytes + num_read_bytes)
+                self.dev.blockshiftin(self.prep, txd)
+                self.chipselect(False)
+                if (num_read_bytes > 0):
+                    return [self.dev.blocklastout()]
+                else:
+                    return []
+            else:
+                rv = []
+                txd = bytearray([val])
+                txd += data_in_bytes
+                txd += bytes(num_dummy_bytes + 1)
+                self.dev.blockshiftin(self.prep, txd)
+                rv.append(self.dev.blocklastout())
+                num_read_bytes = num_read_bytes - 1
+                while num_read_bytes > 0:
+                    self.dev.blockshiftin(self.prep, b'\x00')
+                    rv.append(self.dev.blocklastout())
+                    num_read_bytes = num_read_bytes - 1
+                self.chipselect(False)
+                return rv
         else:
+            order = self.dev.BitOrder.MSB_FIRST
+            # le sigh
             self.chipselect(True)
             # first send command
             self.dev.shiftin(val, bitOrder=order)
@@ -75,5 +118,6 @@ class GenSPI:
             for r in range(num_read_bytes):
                 rv.append(self.dev.shift(0x00, bitOrder=order))
             self.chipselect(False)
-            return rv
+            return rv           
+
         
