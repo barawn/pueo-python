@@ -41,7 +41,7 @@ class GenSPI:
 
     # gpio_prep is used with enter/exit because the assumption is nothing
     # else will use it between then and we can use Fast Stuff
-    def chipselect(self, val):
+    def chipselect(self, v):
         if self.gpio_prep:
             self.dev.set_gpio(self.gpio_prep, self.cspin,
                               self.high if v else self.low)
