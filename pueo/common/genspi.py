@@ -98,7 +98,7 @@ class GenSPI:
                 rv.append(self.dev.blocklastout())
                 num_read_bytes = num_read_bytes - 1
                 while num_read_bytes > 0:
-                    self.dev.blockshiftin(b'\x00', b'')
+                    self.dev.blockshiftin(0, b'')
                     rv.append(self.dev.blocklastout())
                     num_read_bytes = num_read_bytes - 1
                 self.chipselect(False)
