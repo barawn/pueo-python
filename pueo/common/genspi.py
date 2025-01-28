@@ -52,19 +52,28 @@ class GenSPI:
                 val,
                 num_dummy_bytes, num_read_bytes, data_in_bytes=bytes()):
         order = self.dev.BitOrder.MSB_FIRST
-        self.chipselect(True)
-        # first send command
-        self.dev.shift(val, bitOrder=order)
-        # next send data_in_bytes
-        for b in data_in_bytes:
-            self.dev.shift(b, bitOrder=order)
-        # next send dummy bytes
-        for d in range(num_dummy_bytes):
-            self.dev.shift(0x00, bitOrder=order)
-        # next send bytes to read
-        rv = []
-        for r in range(num_read_bytes):
-            rv.append(self.dev.shift(0x00, bitOrder=order))
-        self.chipselect(False)
-        return rv
-    
+        # don't really know why I bother having a length cut here but
+        # WHATEVER
+        if num_read_bytes == 0 and len(data_in_bytes) > 4:
+            self.chipselect(True)
+            prep = self.dev.prepare(val, 0x00, order, 8)
+            self.dev.blockshiftin(prep, data_in_bytes)
+            self.chipselect(False)
+            return []
+        else:
+            self.chipselect(True)
+            # first send command
+            self.dev.shiftin(val, bitOrder=order)
+            # next send data_in_bytes
+            for b in data_in_bytes:
+                self.dev.shiftin(b, bitOrder=order)
+            # next send dummy bytes
+            for d in range(num_dummy_bytes):
+                self.dev.shiftin(0x00, bitOrder=order)
+            # next send bytes to read
+            rv = []
+            for r in range(num_read_bytes):
+                rv.append(self.dev.shift(0x00, bitOrder=order))
+            self.chipselect(False)
+            return rv
+        
