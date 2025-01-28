@@ -43,7 +43,7 @@ class GenShift(dev_submod):
         self.write(self.map['DEVCONF'], int(devconf))
 
     # shift in data, and don't care about return value
-    def shiftin(self, val, auxVal=0, bitorder=BitOrder.LSB_FIRST, numBits=8):
+    def shiftin(self, val, auxVal=0, bitOrder=BitOrder.LSB_FIRST, numBits=8):
         dat = self.prepare(val, auxVal, bitOrder, numBits)
         self.write(self.map['DATA'], int(dat))
         return dat
