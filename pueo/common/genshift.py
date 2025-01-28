@@ -95,7 +95,7 @@ class GenShift(dev_submod):
         else:            
             multiwriteAddr = (self.base + self.map['DATA']) | (1<<22)
             toWrite = bytearray([int(prepareVal) & 0xFF]) + data
-            self.dev.multiwrite(multiwriteAddr, data)
+            self.dev.multiwrite(multiwriteAddr, toWrite)
 
     def blocklastout(self):
         r = bf(self.read(self.map['DATA']))
