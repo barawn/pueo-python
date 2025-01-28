@@ -82,10 +82,9 @@ class GenSPI:
         if self.burst:
             if num_read_bytes < 2:
                 self.chipselect(True)
-                txd = bytearray([val])
-                txd += data_in_bytes
+                txd = data_in_bytes
                 txd += bytes(num_dummy_bytes + num_read_bytes)
-                self.dev.blockshiftin(self.prep, txd)
+                self.dev.blockshiftin(val, txd)
                 self.chipselect(False)
                 if (num_read_bytes > 0):
                     return [self.dev.blocklastout()]
@@ -93,14 +92,13 @@ class GenSPI:
                     return []
             else:
                 rv = []
-                txd = bytearray([val])
-                txd += data_in_bytes
+                txd = data_in_bytes
                 txd += bytes(num_dummy_bytes + 1)
-                self.dev.blockshiftin(self.prep, txd)
+                self.dev.blockshiftin(val, txd)
                 rv.append(self.dev.blocklastout())
                 num_read_bytes = num_read_bytes - 1
                 while num_read_bytes > 0:
-                    self.dev.blockshiftin(self.prep, b'\x00')
+                    self.dev.blockshiftin(b'\x00', b'')
                     rv.append(self.dev.blocklastout())
                     num_read_bytes = num_read_bytes - 1
                 self.chipselect(False)
