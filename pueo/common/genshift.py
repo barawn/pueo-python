@@ -109,10 +109,7 @@ class GenShift(dev_submod):
         return prep
 
     def set_gpio(self, prep, num, hilo):
-        if int(hilo):
-            prep[24+num] = 1
-        elif
-            prep[24+num] = 0
+        prep[24+num] = 1 if int(hilo) else 0
         self.write(self.map['DEVCONF'], int(prep))
     
     def gpio(self, num, state):
