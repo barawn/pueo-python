@@ -85,7 +85,7 @@ class GenShift(dev_submod):
         else:
             multiwriteAddr = (self.base + self.map['DATA']) | (1<<22)
             self.write(self.map['DATA'], int(prepareVal))
-            self.multiwrite(multiwriteAddr, data)                
+            self.dev.multiwrite(multiwriteAddr, data)                
     
     def gpio(self, num, state):
         devconf = bf(self.read(self.map['DEVCONF']))
