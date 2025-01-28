@@ -29,10 +29,14 @@ class GenSPI:
         # isn't actually implemented so do it here
         if invertcs:
             self.high = genshift.GpioState.GPIO_LOW
+            self.highint = 0
             self.low = genshift.GpioState.GPIO_HIGH
+            self.lowint = 1
         else:
             self.high = genshift.GpioState.GPIO_HIGH
+            self.highint = 1
             self.low = genshift.GpioState.GPIO_LOW
+            self.lowint = 0
 
         en = self.dev.enable
         dis = self.dev.disable
@@ -44,7 +48,7 @@ class GenSPI:
     def chipselect(self, v):
         if self.gpio_prep:
             self.dev.set_gpio(self.gpio_prep, self.cspin,
-                              self.high if v else self.low)
+                              self.highint if v else self.lowint)
         else:
             self.dev.gpio(self.cspin,
                           self.high if v else self.low)
