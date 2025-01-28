@@ -41,16 +41,16 @@ class GenShift(dev_submod):
         devconf = bf(self.read(self.map['DEVCONF']))
         devconf[7:0] = 0
         self.write(self.map['DEVCONF'], int(devconf))
-        
-    def shift(self, val, auxVal=0, bitOrder=BitOrder.LSB_FIRST, numBits=8):
-        dat = bf(0)
-        dat[26:24] = numBits-1
-        dat[15:8] = auxVal
-        dat[7:0] = val
-        dat[30] = 1
-        dat[29] = bitOrder.value
-        
+
+    # shift in data, and don't care about return value
+    def shiftin(self, val, auxVal=0, bitorder=BitOrder.LSB_FIRST, numBits=8):
+        dat = self.prepare(val, auxVal, bitOrder, numBits)
         self.write(self.map['DATA'], int(dat))
+        return dat
+
+    # shift in and get return value
+    def shift(self, val, auxVal=0, bitOrder=BitOrder.LSB_FIRST, numBits=8):
+        dat = self.shiftin(val, auxVal, bitOrder, numBits)
         ntries = 0
         dat[31:0] = self.read(self.map['DATA'])
         while (dat[31] == 1 and ntries < 100):
@@ -60,7 +60,33 @@ class GenShift(dev_submod):
             print("Sequence did not complete?!?")
             return 0
         return dat[23:16]
-        
+
+    def prepare(self, val, auxVal, bitOrder, numBits):
+        dat = bf(0)
+        dat[26:24] = numBits-1
+        dat[15:8] = auxVal
+        dat[7:0] = val
+        dat[30] = 1
+        dat[29] = bitOrder.value
+        return dat
+    
+    # shift in a block of data after a single pre-prepped command
+    # ignore waits, just assume we're too slow for it to be a problem
+    # ignore return data. 
+    def blockshiftin(self, prepareVal, data):
+        if self.dev.multiwrite is None:
+            # sigh, we don't have multiwrite capability
+            # so hack it ourselves
+            self.write(self.map['DATA'], int(prepareVal))
+            dat = bf(prepareVal)
+            for b in data:
+                dat[7:0] = b
+                self.write(self.map['DATA'], int(dat))
+        else:
+            multiwriteAddr = (self.base + self.map['DATA']) | (1<<22)
+            self.write(self.map['DATA'], int(prepareVal))
+            self.multiwrite(multiwriteAddr, data)                
+    
     def gpio(self, num, state):
         devconf = bf(self.read(self.map['DEVCONF']))
         

@@ -26,6 +26,8 @@ class PueoTURFIO:
     dbgUpperMask = (0xF << 21)
     # Bit to set to swap in upper bits.
     dbgUpperBit = (1<<21)
+    # Bit to set to burst
+    dbgBurstBit = (1<<22)
     
     class DateVersion:
         def __init__(self, val):
@@ -137,6 +139,8 @@ class PueoTURFIO:
             self.dev = turf.crate.link[ionum]            
             self.read = self.dev.read
             self.write = self.dev.write
+            # not implemented now
+            self.multiwrite = None
             self.writeto = self.dev.writeto
             # Test the bridge. Issue a read.
             id = self.read(0)

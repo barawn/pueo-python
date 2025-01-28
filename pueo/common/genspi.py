@@ -40,7 +40,14 @@ class GenSPI:
     def __exit__(self, type, value, traceback):
         self.enable(False)
         return None
-        
+
+    # we seriously need to speed this up if we're
+    # in serial mode.
+    # we can speed it up by a factor of 2 or more
+    # by adding a shiftin() command to genshift
+    # which bypasses the read return
+    # for faster than that we need to set up
+    # burst writes.
     def command(self,
                 val,
                 num_dummy_bytes, num_read_bytes, data_in_bytes=bytes()):
