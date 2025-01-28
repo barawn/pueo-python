@@ -91,6 +91,7 @@ class GenSPI:
                 else:
                     return []
             else:
+                self.chipselect(True)
                 rv = []
                 txd = data_in_bytes
                 txd += bytes(num_dummy_bytes + 1)
