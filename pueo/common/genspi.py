@@ -20,10 +20,8 @@ class GenSPI:
         self.cspin = cspin
 
         if self.dev.dev.multiwrite:
-            print("Using multiwrite capability")
             self.burst = True
         else:
-            print("Using slow single writes")
             self.burst = False
         # I *THINK* our "INVERT_GPIO" parameter in genshift
         # isn't actually implemented so do it here
