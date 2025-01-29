@@ -183,8 +183,8 @@ class SPIFlash:
                 progbar = pb2.ProgressBar( widgets = widgets,
                                            max_value=seg.size,
                                            redirect_stdout=True).start()
-                update = lambda s, e, t : pb2.update(t)
-                finish = pb2.finish
+                update = lambda s, e, t : progbar.update(t)
+                finish = progbar.finish
             else:
                 update = lambda s, e, t : print("Programming %d-%d" % (s, e))
                 finish = lambda : None
