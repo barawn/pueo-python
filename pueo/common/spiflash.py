@@ -4,9 +4,15 @@ import time
 import hexfile
 from .bf import * 
 
+# let's prettify this
+try:
+    import progressbar2 as pb2
+except ImportError:
+    pb2 = None
 
 # This pulls out the SPI flash stuff from the old spi.py.
 class SPIFlash:
+    
     cmd = { 'RES'        : 0xAB ,
             'RDID'       : 0x9F ,
             'WREN'       : 0x06 ,
@@ -77,7 +83,7 @@ class SPIFlash:
             result = self.dev.command(self.cmd['3READ'], 0, length, data_in)
         return result 
 
-	
+    # sometimes write enable takes an extra tick
     def write_enable(self):
         enable = self.dev.command(self.cmd["WREN"], 0, 0)
         trials = 0
@@ -86,14 +92,15 @@ class SPIFlash:
             if not res & 0x2:
                 trials = trials + 1
             else:
-                print("Write enable succeeded (%d) after %d trials." % (res, trials))
-                break
+                return
+        raise IOError("Write enable latch did not go high (%d)!" % res)    
 
+    # never seen write disable fail to be immediate
     def write_disable(self):
         disable = self.dev.command(self.cmd["WRDI"], 0, 0)
         res = self.status()
         if res & 0x2:
-            print("Write disable failed (%d)!" % res)
+            raise IOError("Write disable failed (%d)!" % res)
 
     def program_mcs(self, filename):
         f = hexfile.load(filename)
@@ -118,7 +125,10 @@ class SPIFlash:
             sector_size = 64*1024
             total_size = self.memory_capacity
         else:
-            print("Don't know how to program flash with capacity %d" % self.memory_capacity)
+            print("Unknown flash. Add sector size to program_mcs()")
+            print("Capacity %d" % self.memory_capacity)
+            print("Manufacturer ID %2.2x type %2.2x" %
+                  (self.manufacturer_id, self.memory_type))
             return
         erase_sectors = [0]*int(total_size/sector_size)
         sector_list = []
@@ -136,21 +146,60 @@ class SPIFlash:
                     erase_sectors[end_sector] = 1
                     sector_list.append(end_sector)
                 end_sector = end_sector + 1
+        # prep the erasebar
+        if pb2:
+            widgets = [ "Erasing: ",
+                        " ", pb2.Percentage(),
+                        " ", pb2.GranularBar(),
+                        " ", pb2.AdaptiveETA() ]
+            erasebar = pb2.ProgressBar( widgets=widgets,
+                                        max_value=len(sector_list),
+                                        redirect_stdout=True ).start()
+            update = lambda v, n : erasebar.update(v)
+            finish = erasebar.finish
+        else:
+            update = lambda v, n : print("Erasing sector %d" % n)
+            finish = lambda : None
+            
+        idx=0
         for erase in sector_list:
-            print("I think I should erase sector %d" % erase)
+            update(idx, erase)
             self.erase(erase*sector_size)
+            idx = idx + 1
+        finish()
+
+        idx = 1
+        maxIdx = len(f.segments)
         for seg in f.segments:
+            print("Segment %d/%d" % (idx, maxIdx))
             start = seg.start_address
             end = 0
+            tot = 0
+            if pb2:
+                widgets = [ "Programming: ",
+                            " ", pb2.Percentage(),
+                            " ", pb2.GranularBar(),
+                            " ", pb2.AdaptiveETA() ]
+                progbar = pb2.ProgressBar( widgets = widgets,
+                                           max_value=seg.size,
+                                           redirect_stdout=True).start()
+                update = lambda s, e, t : pb2.update(t)
+                finish = pb2.finish
+            else:
+                update = lambda s, e, t : print("Programming %d-%d" % (s, e))
+                finish = lambda : None
+
             while start < seg.start_address + seg.size:
                 end = start + page_size
                 if end > seg.end_address:
                     end = seg.end_address
                 data = seg[start:end].data
-                print("Programming %d-%d" % (start, end))
+                update(start, end, tot)
                 self.page_program(start, bytes(data))
+                tot += page_size
                 start = end
-                
+            finish()
+            
         self.write_disable()
         print("Complete!")
 
