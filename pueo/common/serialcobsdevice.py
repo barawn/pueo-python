@@ -4,6 +4,71 @@ from time import sleep
 
 # This is updated now to allow for wider address spaces and address-mode
 class SerialCOBSDevice:
+    # searches for FT2232H-based devices only!!
+    @classmethod
+    def find_serial_devices(cls, board = -1, name=None, verbose=False):
+        try:
+            import usb
+        except ImportError:
+            print("find_serial_devices() needs pyusb")
+            return
+        import os
+        if os.uname().sysname != 'Linux':
+            print("find_serial_devices() only works on Linux right now (need sysfs)")
+            return
+        
+        # pathlib is super fantastic for traversing sysfs
+        from pathlib import Path
+
+        # find FT2232 devices
+        devs = []
+        for dev in usb.core.find(find_all=True,
+                                 idVendor=0x0403,
+                                 idProduct=0x6010):
+            # check their serial number
+            # if for some reason it's not there, pyusb throws
+            # ValueError
+            try:
+                sn = dev.serial_number
+                # we know where we stored stuff
+                typeboard = sn[-6:]
+                typeStr = typeboard[:-2]
+                boardStr = typeboard[-2:]
+                thisType = chr(int(typeStr[0:2],16))+chr(int(typeStr[2:],16))
+                thisBoard = int(boardStr, 16)
+                if name is None or thisType == name:
+                    if board == -1 or board == thisBoard:
+                        devs.append((dev, thisBoard, thisType))
+                        if verbose:
+                            if name is None:
+                                print("found FTDI device (%s #%d) at bus %d dev %d" % (thisType, thisBoard, dev.bus, dev.address))
+                            else:
+                                print("found %s #%d at bus %d dev %d" % (thisType, thisBoard, dev.bus, dev.address))
+            except ValueError:
+                pass
+            
+        # now we can zip through the ftdi_sio devices
+        # and find All The Guys
+        matchedDevices = []
+        for p in Path('/sys/bus/usb/drivers/ftdi_sio').glob('*'):
+            if (not os.path.isdir(p)) or os.path.basename(p) == 'module':
+                continue
+            bus = int(( p / '..' / 'busnum').read_text().rstrip('\x00\n'))
+            address = int(( p / '..' / 'devnum').read_text().rstrip('\x00\n'))
+            ttyPath = '/dev/' + os.path.basename( (p.glob('tty*')).__next__() )
+            if verbose:
+                print("path %s (tty %s) has bus %d/addr %d" % (p, ttyPath, bus, address))
+            for devt in devs:
+                thisDev = devt[0]
+                thisBoard = devt[1]
+                thisType = devt[2]
+                if thisDev.bus == bus and thisDev.address == address:
+                    if name is None:
+                        matchedDevices.append( (ttyPath, thisBoard, thisType) )
+                    else:
+                        matchedDevices.append( (ttyPath, thisBoard) )
+        return matchedDevices    
+    
         def __init__(self, port, baudrate, addrbytes=3, devAddress=None):
                 self.dev = serial.Serial(port, baudrate)
                 self.addrbytes = addrbytes
