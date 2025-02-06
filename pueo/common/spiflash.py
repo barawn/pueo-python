@@ -1,7 +1,7 @@
 import struct
 import sys
 import time
-import hexfile
+from .hexfile import load as hexload
 from .bf import * 
 
 # let's prettify this
@@ -103,7 +103,8 @@ class SPIFlash:
             raise IOError("Write disable failed (%d)!" % res)
 
     def program_mcs(self, filename):
-        f = hexfile.load(filename)
+        # hexload is hexfile.load
+        f = hexload(filename)
         # Figure out what sectors we need to erase.
         sector_size = 0
         total_size = 0
