@@ -38,7 +38,22 @@ class PueoTURF:
         SERIAL = 'Serial'
         ETH = 'Ethernet'
         MEM = 'Memory'
+
+    DEVMEM_PATH = "/dev/mem"
+    DT_PATH = "/sys/firmware/devicetree/base/axi/"
+    BRIDGE_GLOB = "axilite_bridge@*"
+    REG_PATH = "reg"
     
+    @classmethod
+    def axilite_bridge(cls):
+        for br in Path(DT_PATH).glob(BRIDGE_GLOB):
+            brp = br
+        rp = brp / REG_PATH
+        vals = rp.read_bytes()
+        base , = struct.unpack(">Q", vals[0:8])
+        size , = struct.unpack(">Q", vals[8:16])
+        return (base, size, DEVMEM_PATH)
+        
     def __init__(self, accessInfo, type=AccessType.SERIAL):
         if type == self.AccessType.SERIAL:
             self.dev = SerialCOBSDevice(accessInfo, 115200, addrbytes=4)
