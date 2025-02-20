@@ -6,6 +6,8 @@ from .pueo_turfctl import PueoTURFCTL
 from .pueo_turfaurora import PueoTURFAurora
 from .pueo_cratebridge import PueoCrateBridge
 
+from ..common.pyaxibridge import PyAXIBridge
+
 import mmap
 import struct
 import os
@@ -37,22 +39,22 @@ class PueoTURF:
     class AccessType(Enum):
         SERIAL = 'Serial'
         ETH = 'Ethernet'
-        MEM = 'Memory'
+        AXI = 'AXI'
 
-    DEVMEM_PATH = "/dev/mem"
+    # search device tree nodes to grab base/size
     DT_PATH = "/sys/firmware/devicetree/base/axi/"
     BRIDGE_GLOB = "axilite_bridge@*"
     REG_PATH = "reg"
     
     @classmethod
     def axilite_bridge(cls):
-        for br in Path(DT_PATH).glob(BRIDGE_GLOB):
+        for br in Path(cls.DT_PATH).glob(cls.BRIDGE_GLOB):
             brp = br
-        rp = brp / REG_PATH
+        rp = brp / cls.REG_PATH
         vals = rp.read_bytes()
         base , = struct.unpack(">Q", vals[0:8])
         size , = struct.unpack(">Q", vals[8:16])
-        return (base, size, DEVMEM_PATH)
+        return (base, size)
         
     def __init__(self, accessInfo, type=AccessType.SERIAL):
         if type == self.AccessType.SERIAL:
@@ -63,28 +65,12 @@ class PueoTURF:
             self.writeto = self.dev.writeto
             self.dev.reset()
         elif type == self.AccessType.MEM:
-            # oh I am so going to regret this
-            # these are searchable:
-            # for br in Path("/sys/firmware/devicetree/base/axi/").glob("axilite_bridge@*"):
-            #     brp = br
-            # rp = brp / "reg"
-            # vals = rp.read_bytes()
-            # base ,  = struct.unpack(">Q", vals[0:8])
-            # size ,  = struct.unpack(">Q", vals[8:16])            
-            base = accessInfo[0]
-            size = accessInfo[1]
-            fn = accessInfo[2]
-
-            devt = ( None, None )
-            devt[0] = os.open(fn, os.O_RDWR | os.O_SYNC )
-            devt[1] = mmap.mmap(devt[0], size, mmap.MAP_SHARED, mmap.PROT_READ | mmap.PROT_WRITE, offset = base)
-            # lololol
-            self.dev = devt
-            self.read = lambda x : struct.unpack("<I", self.dev[1][x:x+4])[0]
-            self.write = lambda x, y : self.dev[1].__setitem__(slice(x, x+4, None), struct.pack("<I", y))
+            self.dev = PyAXIBridge(accessInfo[0], accessInfo[1])
             self.reset = lambda : None
-            self.writeto = self.write
-            
+            self.read = self.dev.read
+            self.write = self.dev.write
+            self.writeto = self.dev.writeto
+                        
         self.ctl = PueoTURFCTL(self.dev, 0x10000)
         self.aurora = PueoTURFAurora(self.dev, 0x8000)
         self.crate = PueoCrateBridge(self.dev, (1<<27))
