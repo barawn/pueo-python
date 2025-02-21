@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # for now just friggin grab everything
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASE_SOURCE[0]}" )" &> /dev/null && pwd )
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 DEST=$1
 
