@@ -11,6 +11,7 @@ from ..common.pyaxibridge import PyAXIBridge
 import mmap
 import struct
 import os
+import time
 from enum import Enum
 
 class PueoTURF:
@@ -33,10 +34,16 @@ class PueoTURF:
     map = { 'FPGA_ID' : 0x0,
             'FPGA_DATEVERSION' : 0x4,
             'DNA' : 0x8,
+            'SYSCLKMON' : 0x800,
+            'GBECLKMON' : 0x804,
+            'DDR0CLKMON' : 0x808,
+            'DDR1CLKMON' : 0x80C,
+            'AURCLKMON' : 0x810,
             'BRIDGECTRL' : 0x1000,
             'BRIDGESTAT' : 0x1004}
 
-    class AccessType(Enum):
+    # subclassing from str and Enum allows passing the string    
+    class AccessType(str, Enum):
         SERIAL = 'Serial'
         ETH = 'Ethernet'
         AXI = 'AXI'
@@ -48,6 +55,8 @@ class PueoTURF:
     
     @classmethod
     def axilite_bridge(cls):
+        from pathlib import Path
+        
         for br in Path(cls.DT_PATH).glob(cls.BRIDGE_GLOB):
             brp = br
         rp = brp / cls.REG_PATH
@@ -64,17 +73,43 @@ class PueoTURF:
             self.write = self.dev.write
             self.writeto = self.dev.writeto
             self.dev.reset()
-        elif type == self.AccessType.MEM:
+        elif type == self.AccessType.AXI:
             self.dev = PyAXIBridge(accessInfo[0], accessInfo[1])
             self.reset = lambda : None
             self.read = self.dev.read
             self.write = self.dev.write
-            self.writeto = self.dev.writeto
-                        
+            self.writeto = self.dev.write
+        elif type == self.AccessType.ETH:
+            raise Exception("Ethernet is a Work in Progress")
+        else:
+            raise Exception("type must be one of",
+                            [e.value for e in self.AccessType])
+            
         self.ctl = PueoTURFCTL(self.dev, 0x10000)
         self.aurora = PueoTURFAurora(self.dev, 0x8000)
         self.crate = PueoCrateBridge(self.dev, (1<<27))
 
+        self.clockMonValue = 100000000
+        self.write(self.map['SYSCLKMON'], self.clockMonValue)
+        time.sleep(0.1)
+        
+    def dna(self):
+        self.write(self.map['DNA'], 0x80000000)
+        dnaval = 0
+        for i in range(57):
+            r = self.read(self.map['DNA'])
+            val = r & 0x1
+            dnaval = (dnaval << 1) | val
+        return dnaval
+
+    def status(self):
+        self.identify()
+        print("SYSCLK:", self.read(self.map['SYSCLKMON']))
+        print("GBECLK:", self.read(self.map['GBECLKMON']))
+        print("DDR0CLK:", self.read(self.map['DDR0CLKMON']))
+        print("DDR1CLK:", self.read(self.map['DDR1CLKMON']))
+        print("AURCLK:", self.read(self.map['AURCLKMON']))
+    
     def identify(self):
         def str4(num):
             id = str(chr((num>>24)&0xFF))
@@ -87,7 +122,9 @@ class PueoTURF:
         print("FPGA:", fid, end=' ')
         if fid == "TURF":
             fdv = self.DateVersion(self.read(self.map['FPGA_DATEVERSION']))
-            print(fdv)
+            print(fdv, end=' ')
+            dna = self.dna()
+            print(hex(dna))
         else:
             print('')
             
