@@ -151,6 +151,9 @@ class PueoTURFIO:
                 raise Exception("TURFIO bridge error: %8.8x", st)            
         elif type == self.AccessType.HSK:
             raise Exception("HSK connection is a Work In Progress")
+        else:
+            raise Exception("type must be one of",
+                            [e.value for e in self.AccessType])
 
         self.genshift = GenShift(self.dev, 0x1000)
         self.SHIFT_JTAG_DEV = 0

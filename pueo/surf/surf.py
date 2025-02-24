@@ -88,6 +88,9 @@ class PueoSURF:
             self.read = self.dev.read
             self.write = self.dev.write
             # CRAP I MIGHT NEED TO IMPLEMENT WRITETO OR SOMETHING??
+        else:
+            raise Exception("type must be one of",
+                            [e.value for e in self.AccessType])
             
         # clock monitor calibration
         self.clockMonValue = 100000000
