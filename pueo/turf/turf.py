@@ -4,6 +4,7 @@ from ..common.dev_submod import dev_submod
 
 from .pueo_turfctl import PueoTURFCTL
 from .pueo_turfaurora import PueoTURFAurora
+from .pueo_turfgbe import PueoTURFGBE
 from .pueo_cratebridge import PueoCrateBridge
 
 from ..common.pyaxibridge import PyAXIBridge
@@ -87,6 +88,7 @@ class PueoTURF:
             
         self.ctl = PueoTURFCTL(self.dev, 0x10000)
         self.aurora = PueoTURFAurora(self.dev, 0x8000)
+        self.gbe = PueoTURFGBE(self.dev, 0x4000)
         self.crate = PueoCrateBridge(self.dev, (1<<27))
 
         self.clockMonValue = 100000000
