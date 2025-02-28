@@ -153,7 +153,7 @@ class PueoTURFAurora(dev_submod):
     # yup that looks sweet
     def pretty_eyescan(self, linkno):
         def ber(v):
-            return (v[0])/(v[1]*self.prescale)
+            return (v[0])/((v[1]+0.5)*self.prescale)
         verts = [ -96, -48, 0, 48, 96 ]
         horzs = [ -24, -12, 0, 12, 24 ]
         for v in verts:

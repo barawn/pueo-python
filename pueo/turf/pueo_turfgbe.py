@@ -44,7 +44,8 @@ class PueoTURFGBE(dev_submod):
 
 
     def reset(self):
-        return
+        self.write(0, 1)
+        self.write(0, 0)
     
     # hoff is "normal-ish", it just goes from -32*rxrate to +32*rxrate
     # voff seems "weird". let's see what other software does
@@ -139,8 +140,9 @@ class PueoTURFGBE(dev_submod):
     #
     # yup that looks sweet
     def pretty_eyescan(self, linkno):
+        # exact numbers don't matter that much
         def ber(v):
-            return (v[0])/(v[1]*self.prescale)
+            return (v[0])/((v[1]+0.5)*self.prescale)
         verts = [ -96, -48, 0, 48, 96 ]
         horzs = [ -24, -12, 0, 12, 24 ]
         for v in verts:
@@ -165,7 +167,7 @@ class PueoTURFGBE(dev_submod):
     def eyescan_setup(self, es_prescale=9):
         rxr = []
         rxw = []
-        for linkno in [0,1,2,3]:
+        for linkno in [0,1]:
             rxr.append(self.eyescan_get_rxrate(linkno))
             rxw.append(self.eyescan_get_dwidth(linkno))
             self.drpwrite(linkno, self.drp['ES_CONTROL'], 0x300 | es_prescale)
@@ -203,12 +205,12 @@ class PueoTURFGBE(dev_submod):
     
     # DRP read of drpaddr from GBE idx gbe
     def drpread(self, gbe, drpaddr):
-        addr = gbe*(0x1000) + (drpaddr << 2)
+        addr = gbe*(0x1000) + 0x2000 + (drpaddr << 2)
         return self.read(addr)
 
     # DRP write of value to drpaddr at GBE idx gbe
     def drpwrite(self, gbe, drpaddr, value):
-        addr = gbe*(0x1000) + (drpaddr << 2)
+        addr = gbe*(0x1000) + 0x2000 + (drpaddr << 2)
         return self.write(addr, value)
 
     # DRP read-modify-write of value to drpaddr given mask at GBE idx gbe
