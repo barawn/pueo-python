@@ -40,6 +40,8 @@ class PueoTURF:
             'DDR0CLKMON' : 0x808,
             'DDR1CLKMON' : 0x80C,
             'AURCLKMON' : 0x810,
+            'GRXCLKMON' : 0x814,
+            'GTXCLKMON' : 0x818,
             'BRIDGECTRL' : 0x1000,
             'BRIDGESTAT' : 0x1004}
 
@@ -111,7 +113,9 @@ class PueoTURF:
         print("DDR0CLK:", self.read(self.map['DDR0CLKMON']))
         print("DDR1CLK:", self.read(self.map['DDR1CLKMON']))
         print("AURCLK:", self.read(self.map['AURCLKMON']))
-    
+        print("GRXCLK:", self.read(self.map['GRXCLKMON']))
+        print("GTXCLK:", self.read(self.map['GTXCLKMON']))
+        
     def identify(self):
         def str4(num):
             id = str(chr((num>>24)&0xFF))
