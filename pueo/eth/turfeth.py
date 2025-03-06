@@ -8,6 +8,8 @@ class TURFEth:
 
     # these ports are fixed
     UDP_CTRL = 21603
+    UDP_RD = 21618
+    UDP_WR = 21623
     
     def __init__(self,
                  turf = "192.168.1.128",
@@ -17,16 +19,27 @@ class TURFEth:
         self.cs_ip = ipaddress.ip_address(cs_ip)
         self.cs_port = cs_port
         self.turf_ip = ipaddress.ip_address(turf)
-        self.turf_port = self.UDP_CTRL
+        self.turf_csp = self.UDP_CTRL
+        self.turf_rdp = self.UDP_RD
+        self.turf_wrp = self.UDP_WR
         
         self.cs = socket.socket(socket.AF_INET,
                                 socket.SOCK_DGRAM)
         self.cs.bind( (str(cs_ip), cs_port) )
-
+        # open the read/write interface to set tag to 0
+        msg = b'\x00'*4
+        self.cs.sendto( msg[::-1], (str(self.turf_ip), self.turf_rdp))
+        data, addr = self.cs.recvfrom(1024)
+        resp = data[::-1]
+        print("Connected to device: ", resp[0:4].decode())
+        self.tag = 1
+        
     def ctrl_identify(self):
         msg = b'\x00'*6+b'ID'
-        self.cs.sendto( msg[::-1], (str(self.turf_ip), self.turf_port))
+        self.cs.sendto( msg[::-1], (str(self.turf_ip), self.turf_csp))
         data, addr = self.cs.recvfrom(1024)
-        resp = bytearray(data).reverse()
-        print("Response: ", resp.hex())
+        resp = data[::-1]
+        return resp[2:].hex(sep=':')
+        
+    def read(self, addr):
         
