@@ -25,7 +25,7 @@ class TURFEth:
 
     def ctrl_identify(self):
         msg = b'\x00'*6+b'ID'
-        self.cs.sendto( msg, (str(self.turf_ip), self.turf_port))
+        self.cs.sendto( msg[::-1], (str(self.turf_ip), self.turf_port))
         data, addr = self.cs.recvfrom(1024)
         resp = bytearray(data).reverse()
         print("Response: ", resp.hex())
