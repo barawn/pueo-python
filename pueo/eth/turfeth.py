@@ -12,7 +12,7 @@ class TURFEth:
     def __init__(self,
                  turf = "192.168.1.28",
                  cs_ip = "192.168.1.1",
-                 cs_port = 21347)
+                 cs_port = 21347):
         """ no event path right now """
         self.cs_ip = ipaddress.ip_address(cs_ip)
         self.cs_port = cs_port
