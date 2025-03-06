@@ -66,7 +66,7 @@ class TURFEth:
         # stuff.
 
         # we do NOT need to reverse bytes here
-        self.cs.sendto( msg, (str(self.turf_ip), self.turf_rdp))
+        self.cs.sendto( d, (str(self.turf_ip), self.turf_rdp))
         data, addr = self.cs.recvfrom(1024)
         resp = data[::-1]
         # this part is bullcrap for now
