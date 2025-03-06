@@ -10,7 +10,7 @@ class TURFEth:
     UDP_CTRL = 21603
     
     def __init__(self,
-                 turf = "192.168.1.28",
+                 turf = "192.168.1.128",
                  cs_ip = "192.168.1.1",
                  cs_port = 21347):
         """ no event path right now """
