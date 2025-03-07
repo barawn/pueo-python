@@ -23,7 +23,7 @@ class EthDevice:
         # open by reading ID register with tag 0
         msg = b'\x00'*4
         self.sock.sendto( msg[::-1],
-                          (str(self.remote_ip, self.remote_readport)))
+                          (str(self.remote_ip), self.remote_readport))
         data, addr = self.sock.recvfrom(1024)
         resp = data[::-1]
         print("Connected to device: ", resp[0:4].decode())
