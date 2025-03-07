@@ -69,10 +69,10 @@ class TURFEth:
         self.cs.sendto( d, (str(self.turf_ip), self.turf_rdp))
         data, addr = self.cs.recvfrom(1024)
         resp = data[::-1]
-        tag = (data[4] >> 4)
+        tag = (resp[4] >> 4)
         if tag != self.tag:
-            raise IOError("Incorrect tag received: expected %d got %d" %
+            raise IOError("Incorrect tag received: expected %d got %d:" %
                           (self.tag, tag))
         self.tag = (self.tag + 1) & 0xF
-        return struct.unpack(">I", r[0:4])[0]
+        return struct.unpack(">I", resp[0:4])[0]
         
