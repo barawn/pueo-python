@@ -54,8 +54,8 @@ class TURFEth:
         return resp[2:].hex(sep=':')
         
     def read(self, addr):
-        # encode the read directly - we don't need to swap it below
-        d = addr.to_bytes(3, 'little') + self.tag.to_bytes(1, 'little')
+        addr = (addr & 0xFFFFFFF) | (self.tag << 28)
+        d = addr.to_bytes(4, 'little')
 
         # this is the Be Bold method
         # the "correct" method here is to create a separate process/thread
@@ -63,12 +63,16 @@ class TURFEth:
         # We DO NOT have to use the cs port here, the read/write guys
         # respond to whatever port sent them data.
         # So it probably makes sense to completely farm off the event
-        # stuff.
+        # stuff too.
 
         # we do NOT need to reverse bytes here
         self.cs.sendto( d, (str(self.turf_ip), self.turf_rdp))
         data, addr = self.cs.recvfrom(1024)
         resp = data[::-1]
-        # this part is bullcrap for now
-        print("Response:", resp.hex(sep=' '))
+        tag = (data[4] >> 4)
+        if tag != self.tag:
+            raise IOError("Incorrect tag received: expected %d got %d" %
+                          (self.tag, tag))
+        self.tag = (self.tag + 1) & 0xF
+        return struct.unpack(">I", r[0:4])[0]
         
