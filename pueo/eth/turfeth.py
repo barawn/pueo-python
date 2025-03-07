@@ -45,7 +45,8 @@ class TURFEth:
         resp = data[::-1]
         print("Connected to device: ", resp[0:4].decode())
         self.tag = 1
-        
+
+    # MOVE THIS TO A DIFFERENT CLASS - NETWORKING IS COOL
     def ctrl_identify(self):
         msg = b'\x00'*6+b'ID'
         self.cs.sendto( msg[::-1], (str(self.turf_ip), self.turf_csp))
@@ -72,7 +73,21 @@ class TURFEth:
         tag = (resp[4] >> 4)
         if tag != self.tag:
             raise IOError("Incorrect tag received: expected %d got %d:" %
-                          (self.tag, tag))
+                          (self.tag, tag), data.hex())
         self.tag = (self.tag + 1) & 0xF
         return struct.unpack(">I", resp[0:4])[0]
+        
+    def write(self, addr, value):
+        addr = (addr & 0xFFFFFFF) | (self.tag << 28)
+        d = addr.to_bytes(4, 'little') + value.to_bytes(4, 'little')
+        self.cs.sendto( d, (str(self.turf_ip), self.turf_wrp))
+        data, addr = self.cs.recvfrom(1024)
+        resp = data[::-1]
+        tag = (resp[4] >> 4)
+        if tag != self.tag:
+            raise IOError("Incorrect tag received: expected %d got %d:" %
+                          (self.tag, tag), data.hex())
+        self.tag = (self.tag + 1) & 0xF
+        return 4
+    
         
