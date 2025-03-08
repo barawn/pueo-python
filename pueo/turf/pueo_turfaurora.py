@@ -11,9 +11,12 @@ from enum import Enum
 # 0x6000 - 0x6FFF : DRP 2
 # 0x7000 - 0x7FFF : DRP 3
 #
-# Because we have this 'mixed' structure
-# we just have functions take which Aurora link
-# to poke at.
+# The control/status space is further split as:
+# 0x0000 - 0x07FF : Aurora 0
+# 0x0800 - 0x0FFF : Aurora 1
+# 0x1000 - 0x17FF : Aurora 2
+# 0x1800 - 0x1FFF : Aurora 3
+# 0x2000 - 0x3FFF : GT Common
 
 class PueoTURFAurora(dev_submod):
     def __init__(self, dev, base):
@@ -32,12 +35,12 @@ class PueoTURFAurora(dev_submod):
             s.setup()
             
     def linkstat(self, linkno):
-        return self.read(0x1000*linkno + 0x4)
+        return self.read(0x800*linkno + 0x4)
 
     def eyescanreset(self, linkno, onoff):
-        rv = bf(self.read(0x1000*linkno))
+        rv = bf(self.read(0x800*linkno))
         rv[2] = 1 if onoff else 0
-        self.write(0x1000*linkno, int(rv))
+        self.write(0x800*linkno, int(rv))
     
     def reset(self):
         rv = bf(self.read(0))

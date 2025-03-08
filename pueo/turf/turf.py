@@ -8,6 +8,7 @@ from .pueo_turfgbe import PueoTURFGBE
 from .pueo_cratebridge import PueoCrateBridge
 
 from ..common.pyaxibridge import PyAXIBridge
+from ..common.ethdevice import EthDevice
 
 import mmap
 import struct
@@ -16,6 +17,8 @@ import time
 from enum import Enum
 
 class PueoTURF:
+    """ TURF device. Note that the current Serial access path is deprecated """
+    
     class DateVersion:
         def __init__(self, val):
             self.major = (val >> 12) & 0xF
@@ -83,7 +86,16 @@ class PueoTURF:
             self.write = self.dev.write
             self.writeto = self.dev.write
         elif type == self.AccessType.ETH:
-            raise Exception("Ethernet is a Work in Progress")
+            if accessInfo is not None:
+                self.dev = EthDevice(remote_ip = accessInfo[0],
+                                     local_ip = accessInfo[1])
+            else:
+                self.dev = EthDevice()
+                
+            self.read = self.dev.read
+            self.write = self.dev.write
+            self.writeto = self.dev.write
+            self.reset = lambda : None            
         else:
             raise Exception("type must be one of",
                             [e.value for e in self.AccessType])
