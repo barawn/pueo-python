@@ -19,6 +19,8 @@ class GenSPI:
         self.shift = self.dev.shift
         self.cspin = cspin
 
+        # self.dev is the genshift: to get access to the actual
+        # implementation, we need self.dev.dev
         if self.dev.dev.multiwrite:
             self.burst = True
         else:
