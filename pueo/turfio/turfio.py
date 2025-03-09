@@ -118,6 +118,9 @@ class PueoTURFIO:
             # NOTE: THERE IS NO UPPER ADDRESS HANDLING IN WRITETO!
             # DO IT YOURSELF!!
             self.writeto = self.dev.writeto
+            # NOTE: THERE IS NO UPPER ADDRESS HANDLING IN MULTIWRITE!
+            # DO IT YOURSELF!!
+            self.multiwrite = self.dev.multiwrite
             self.dev.reset()
             self._setUpperBits(0)
             
@@ -155,7 +158,7 @@ class PueoTURFIO:
             raise Exception("type must be one of",
                             [e.value for e in self.AccessType])
 
-        self.genshift = GenShift(self.dev, 0x1000)
+        self.genshift = GenShift(self, 0x1000)
         self.SHIFT_JTAG_DEV = 0
         self.SHIFT_LMK_DEV = 1
         self.SHIFT_SPI_DEV = 2
@@ -192,7 +195,7 @@ class PueoTURFIO:
             self.surfbridge.append(SURFBridge(self,
                                               self.map['SURFBRIDGE']+0x400000*i))        
         # and common
-        self.surfturf = SURFTURF(self.dev, self.map['SURFTURFCOMMON'])
+        self.surfturf = SURFTURF(self, self.map['SURFTURFCOMMON'])
         
             
         # Clock monitor calibration value is now just
