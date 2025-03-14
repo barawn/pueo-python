@@ -167,7 +167,7 @@ class USPEyeScan:
         self.vertoffset = 0
         self.prescale = 5
         ntrials = 0
-        while ntrials < 10:
+        while ntrials < 1000:
             self.start()
             while not self.complete():
                 pass
@@ -175,13 +175,15 @@ class USPEyeScan:
             if ev[0] == 0:
                 break
             else:
-                print("Eye scan has errors at zero offset: realigning")
+                # This is from Xilinx AR #70872
+                # There is no information on this in UG576. It's
+                # just magic.
                 v = self.read(0x4F) & 0xF
                 self.write(0x4F, 0x8800 | v)
                 self.reset(1)
                 self.write(0x4F, 0x8000 | v)
                 self.reset(0)
                 ntrials = ntrials + 1
-        if ntrials == 10:
+        if ntrials == 1000:
             print("Eye scan trial never had zero errors: failure!")
         
