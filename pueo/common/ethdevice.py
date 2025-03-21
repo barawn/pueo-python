@@ -5,10 +5,10 @@ import ipaddress
 
 class EthDevice:
     def __init__(self,
-                 remote_ip = "192.168.1.128",
+                 remote_ip = "10.68.65.81",
                  remote_rp = 21618,
                  remote_wp = 21623,
-                 local_ip = "192.168.1.1",
+                 local_ip = "10.68.65.1",
                  local_port = 21362):
 
         self.remote_ip = ipaddress.ip_address(remote_ip)
