@@ -41,7 +41,7 @@ class PueoTURFAurora(dev_submod):
             print(f'BUFG_GT in Reset: {r[11]}')
             print(f'Frame Err: {r[10]}')
             print(f'Soft Err: {r[9]}')
-            print(f'System in Reset: {r[7}')
+            print(f'System in Reset: {r[7]}')
             print(f'Link in Reset: {r[6]}')
             print(f'RX Reset Done: {r[5]}')
             print(f'TX Reset Done: {r[4]}')
