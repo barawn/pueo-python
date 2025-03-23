@@ -34,8 +34,22 @@ class PueoTURFAurora(dev_submod):
         for s in self.scanner:
             s.setup()
             
-    def linkstat(self, linkno):
-        return self.read(0x800*linkno + 0x4)
+    def linkstat(self, linkno, verbose=False):
+        rv = self.read(0x800*linkno + 0x4)
+        if verbose:
+            r = bf(rv)
+            print(f'BUFG_GT in Reset: {r[11]}')
+            print(f'Frame Err: {r[10]}')
+            print(f'Soft Err: {r[9]}')
+            print(f'System in Reset: {r[7}')
+            print(f'Link in Reset: {r[6]}')
+            print(f'RX Reset Done: {r[5]}')
+            print(f'TX Reset Done: {r[4]}')
+            print(f'TX Locked: {r[3]}')
+            print(f'GT Power Good: {r[2]}')
+            print(f'Channel Up: {r[1]}')
+            print(f'Lane Up: {r[0]}')
+        return rv
 
     def eyescanreset(self, linkno, onoff):
         rv = bf(self.read(0x800*linkno))
@@ -43,11 +57,11 @@ class PueoTURFAurora(dev_submod):
         self.write(0x800*linkno, int(rv))
     
     def reset(self):
-        rv = bf(self.read(0))
+        rv = bf(self.read(0x2000))
         rv[0] = 1
-        self.write(0, int(rv))
+        self.write(0x2000, int(rv))
         rv[0] = 0
-        self.write(0, int(rv))
+        self.write(0x2000, int(rv))
 
     def pretty_eyescan(self,
                        linkno,
