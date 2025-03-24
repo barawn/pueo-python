@@ -3,6 +3,7 @@ from ..common.dev_submod import dev_submod
 from ..common.uspeyescan import USPEyeScan
 
 from enum import Enum
+from functools import partial
 
 # Module structure (referenced from base)
 # 0x0000 - 0x3FFF : Control/status space
@@ -23,10 +24,14 @@ class PueoTURFAurora(dev_submod):
         super().__init__(dev, base)
         self.scanner = []
         for i in range(4):
-            self.scanner.append( USPEyeScan(lambda x : self.drpread(i, x),
-                                            lambda x, y : self.drpwrite(i, x, y),
-                                            lambda x : self.eyescanreset(i, x)) )
-
+            # partials are more appropriate than lambdas and avoid
+            # scoping issues in a loop.
+            self.scanner.append( USPEyeScan(partial(self.drpread, i),
+                                            partial(self.drpwrite, i),
+                                            partial(self.eyescanreset, i),
+                                            partial(self.up, i),
+                                            name="TURFIO"+str(i)))
+            
     def enableEyeScan(self):
         for s in self.scanner:
             s.enable(True)
@@ -51,6 +56,9 @@ class PueoTURFAurora(dev_submod):
             print(f'Lane Up: {r[0]}')
         return rv
 
+    def up(self, linkno):
+        return self.linkstat(i) & 0x1
+    
     def eyescanreset(self, linkno, onoff):
         rv = bf(self.read(0x800*linkno))
         rv[2] = 1 if onoff else 0

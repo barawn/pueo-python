@@ -3,6 +3,7 @@ from ..common.dev_submod import dev_submod
 from ..common.uspeyescan import USPEyeScan
 
 from enum import Enum
+from functools import partial
 
 # Module structure (referenced from base)
 # 0x0000 - 0x0FFF : DRP 0
@@ -20,12 +21,14 @@ class PueoTURFGBE(dev_submod):
     def __init__(self, dev, base):
         super().__init__(dev, base)
         # use the factored-out eye scan functions
-        self.scanner = [ USPEyeScan(lambda x : self.drpread(0, x),
-                                    lambda x, y : self.drpwrite(0, x, y),
-                                    lambda x : self.eyescanreset(0, x)),
-                         USPEyeScan(lambda x : self.drpread(1, x),
-                                    lambda x, y : self.drpwrite(1, x, y),
-                                    lambda x : self.eyescanreset(1, x)) ]
+        self.scanner = []
+        for i in range(2):
+            # partial is more appropriate here as we're in a loop
+            self.scanner.append(USPEyeScan( partial(self.drpread, i),
+                                            partial(self.drpwrite, i),
+                                            partial(self.eyescanreset, i),
+                                            partial(self.up, i),
+                                            "10GBE"+str(i)))
 
     def enableEyeScan(self):
         """ Enable the eye scan functionality. This WILL reset GBE link!! """
@@ -39,7 +42,10 @@ class PueoTURFGBE(dev_submod):
         rv = bf(self.read(0x4*linkno))
         rv[4] = 1 if onoff else 0
         self.write(0x4*linkno, int(rv))
-                
+
+    def up(self, linkno):
+        return self.read(linkno*0x4) & 0x4
+        
     def status(self):
         s0 = bf(self.read(0x0))
         s1 = bf(self.read(0x4))
