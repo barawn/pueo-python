@@ -3,7 +3,7 @@ from .bf import bf
 class USPEyeScan:
     """
     Eye Scan methods for an UltraScale+.
-    >>> scanner = USPEyeScan(read_fn, write_fn, eyescanreset_fn)
+    >>> scanner = USPEyeScan(read_fn, write_fn, eyescanreset_fn, up_fn, name=None)
     >>> scanner.enable(True)
     # now you need to reset the GTP: this might be a global reset
     # so it's factored out.
@@ -12,6 +12,14 @@ class USPEyeScan:
     # AND THIS ALONE will disturb reception of bits!!
     >>> scanner.setup()
     # you can now call any OTHER functions you want
+
+    read_fn : function of signature read(addr) -> int - DRP read
+    write_fn : function of signature write(addr, val) -> none - DRP write
+    eyescanreset_fn : function of signature reset(bool) -> none -
+                      set/reset EYESCANRESET
+    up_fn : function of signature up() -> bool - True if the MGT is
+            receiving what is thought to be valid data.
+    name : used for debugging prints
     """
     
     # DRP map
@@ -42,10 +50,17 @@ class USPEyeScan:
         8 : 128,
         9 : 160 }
     
-    def __init__(self, read_fn, write_fn, eyescanreset_fn):        
+    def __init__(self,
+                 read_fn,
+                 write_fn,
+                 eyescanreset_fn,
+                 up_fn,
+                 name="USPEyeScan"):
+        self.name = name
         self.read = read_fn
         self.write = write_fn
         self.reset = eyescanreset_fn
+        self.up = up_fn
         self._rxrate = None
         self._dwidth = None
         
@@ -129,6 +144,8 @@ class USPEyeScan:
     
     def setup(self):
         """ Call after enabling and reset. ** May disturb read data!! ** """
+        if not self.up():
+            print(self.name, ": not up, so not enabling eye scan")
         self._rxrate = self.rxrate
         self._dwidth = self.dwidth
         v = [0xFFFF]*10
@@ -185,5 +202,5 @@ class USPEyeScan:
                 self.reset(0)
                 ntrials = ntrials + 1
         if ntrials == 1000:
-            print("Eye scan trial never had zero errors: failure!")
+            print(self.name, ": Eye scan trial never had zero errors: failure!")
         
