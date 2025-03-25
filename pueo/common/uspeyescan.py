@@ -49,6 +49,31 @@ class USPEyeScan:
         7 : 80,
         8 : 128,
         9 : 160 }
+
+    # we need to compress the eyescan slightly when we store it:
+    # the first 4 bytes indicate which of the remaining ones
+    # have saturated errors (1) or saturated times (0).
+    # then we have 25*2 bytes, so 54 total.
+    # this obvs. only supports up to 32 results although I guess
+    # I could extend it or some'n
+    @staticmethod
+    def compress_results(res):
+        if len(res) > 32:
+            raise ValueError("max number of results is 32")
+        # first find the saturated errors
+        saturatedErrors = 0
+        for i in range(len(res)):
+            if res[i][0] == 65535:
+                saturatedErrors |= (1<<i)
+        rb = saturatedErrors.to_bytes(4, 'big')
+        for r in res:
+            if res[i][0] == 65535:
+                rb += res[i][1].to_bytes(2, 'big')
+            else:
+                rb += res[i][0].to_bytes(2, 'big')
+        return rb
+    
+
     
     def __init__(self,
                  read_fn,
