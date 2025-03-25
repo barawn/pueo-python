@@ -134,7 +134,7 @@ class PueoTURFIO:
                 raise Exception("GTP link %d is not up" % ionum)
             # configure bridge
             brctl = bf(turf.read(turf.map['BRIDGECTRL']))
-            brctl[8*(ionum+1)-1:8*ionum] = 1
+            brctl[4*(ionum+1)-1:4*ionum] = 1
             turf.write(turf.map['BRIDGECTRL'], int(brctl))
             print("Bridge is: %8.8x" % turf.read(turf.map['BRIDGECTRL']))
             # reset bridge status
