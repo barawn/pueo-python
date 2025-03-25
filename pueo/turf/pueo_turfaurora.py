@@ -4,6 +4,7 @@ from ..common.uspeyescan import USPEyeScan
 
 from enum import Enum
 from functools import partial
+import time
 
 # Module structure (referenced from base)
 # 0x0000 - 0x3FFF : Control/status space
@@ -36,6 +37,7 @@ class PueoTURFAurora(dev_submod):
         for s in self.scanner:
             s.enable(True)
         self.reset()
+        time.sleep(0.1)
         for s in self.scanner:
             s.setup()
             
@@ -57,7 +59,7 @@ class PueoTURFAurora(dev_submod):
         return rv
 
     def up(self, linkno):
-        return self.linkstat(i) & 0x1
+        return self.linkstat(linkno) & 0x1
     
     def eyescanreset(self, linkno, onoff):
         rv = bf(self.read(0x800*linkno))

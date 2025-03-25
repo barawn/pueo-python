@@ -4,6 +4,7 @@ from ..common.uspeyescan import USPEyeScan
 
 from enum import Enum
 from functools import partial
+import time
 
 # Module structure (referenced from base)
 # 0x0000 - 0x0FFF : DRP 0
@@ -35,6 +36,7 @@ class PueoTURFGBE(dev_submod):
         self.scanner[0].enable(True)
         self.scanner[1].enable(True)
         self.reset()
+        time.sleep(0.1)
         self.scanner[0].setup()
         self.scanner[1].setup()
 
@@ -60,8 +62,9 @@ class PueoTURFGBE(dev_submod):
         rv[0] = 1
         self.write(0, int(rv))
         rv[0] = 0
-        self.write(0, int(rv))
+        self.write(0, int(rv))    
 
+    
     def pretty_eyescan(self,
                        linkno,
                        prescale = 9,
