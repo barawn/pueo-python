@@ -146,6 +146,7 @@ class USPEyeScan:
         """ Call after enabling and reset. ** May disturb read data!! ** """
         if not self.up():
             print(self.name, ": not up, so not enabling eye scan")
+            return
         self._rxrate = self.rxrate
         self._dwidth = self.dwidth
         v = [0xFFFF]*10
