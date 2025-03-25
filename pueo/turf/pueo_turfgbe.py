@@ -31,12 +31,14 @@ class PueoTURFGBE(dev_submod):
                                             partial(self.up, i),
                                             "10GBE"+str(i)))
 
-    def enableEyeScan(self):
+    
+            
+    def enableEyeScan(self, waittime=1):
         """ Enable the eye scan functionality. This WILL reset GBE link!! """
         self.scanner[0].enable(True)
         self.scanner[1].enable(True)
         self.reset()
-        time.sleep(0.1)
+        time.sleep(waittime)
         self.scanner[0].setup()
         self.scanner[1].setup()
 
@@ -64,12 +66,12 @@ class PueoTURFGBE(dev_submod):
         rv[0] = 0
         self.write(0, int(rv))    
 
-    
     def pretty_eyescan(self,
                        linkno,
                        prescale = 9,
                        verts = [ -96, -48, 0, 48, 96 ],
                        horzs = [ -0.375, -0.1875, 0, 0.1875, 0.375 ]):
+        res = []
         # exact numbers don't matter that much
         self.scanner[linkno].prescale = prescale
         sampleScale = self.scanner[linkno].sampleScaleValue()
@@ -82,7 +84,9 @@ class PueoTURFGBE(dev_submod):
                 self.scanner[linkno].start()
                 while not self.scanner[linkno].complete():
                     pass
-                thisBer = ber(self.scanner[linkno].results())
+                r = self.scanner[linkno].results()
+                res.append(r)
+                thisBer = ber(r)
                 # this makes the eye stand out more
                 if thisBer:
                     print("%.1e\t" % thisBer, end='')
@@ -90,6 +94,7 @@ class PueoTURFGBE(dev_submod):
                     print(".......\t", end='')
 
             print("")
+        return res
 
     # DRP read of drpaddr from GBE idx gbe
     def drpread(self, gbe, drpaddr):

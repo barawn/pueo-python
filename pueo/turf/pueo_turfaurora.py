@@ -33,11 +33,13 @@ class PueoTURFAurora(dev_submod):
                                             partial(self.up, i),
                                             name="TURFIO"+str(i)))
             
-    def enableEyeScan(self):
+    def enableEyeScan(self, waittime=1):
+        """ Enable eye scanning on all links. Will skip over non-up links. """
         for s in self.scanner:
             s.enable(True)
         self.reset()
-        time.sleep(0.1)
+        # It takes a while for the link to come back up.
+        time.sleep(waittime)
         for s in self.scanner:
             s.setup()
             
