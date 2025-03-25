@@ -67,10 +67,10 @@ class USPEyeScan:
                 saturatedErrors |= (1<<i)
         rb = saturatedErrors.to_bytes(4, 'big')
         for r in res:
-            if res[i][0] == 65535:
-                rb += res[i][1].to_bytes(2, 'big')
+            if r[0] == 65535:
+                rb += r[1].to_bytes(2, 'big')
             else:
-                rb += res[i][0].to_bytes(2, 'big')
+                rb += r[0].to_bytes(2, 'big')
         return rb
     
 
