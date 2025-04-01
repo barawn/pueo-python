@@ -151,7 +151,7 @@ class PueoTURFIO:
             # Now check to see if the read completed.
             st = turf.read(turf.map['BRIDGESTAT'])
             if st != 0:
-                raise Exception("TURFIO bridge error: %8.8x", st)            
+                raise Exception("TURFIO bridge error: %8.8x" % st)
         elif type == self.AccessType.HSK:
             raise Exception("HSK connection is a Work In Progress")
         else:
