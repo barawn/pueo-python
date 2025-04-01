@@ -263,6 +263,13 @@ class PueoTURFIO:
 
     def status(self):
         self.identify()
+        rv = bf(self.read(self.map['CTRLSTAT']))
+        print("Crate Power Enable:", rv[2])
+        print("RACK 3.3V Enable:", rv[3])
+        print("Crate I2C Ready:", rv[4])
+        print("Local HSKBUS Override:", rv[5])
+        print("HSKBUS Crate Bridge Enable:", rv[6])
+        print("Housekeeping RX Byte Count:", rv[23:16])
         # N.B.: These values are actually only 16 bit, but they're
         # shifted so they're read out in Hz. If you really want
         # to save space when storing the only non-zero bits are [29:14].
