@@ -3,6 +3,14 @@ import time
 import struct
 import ipaddress
 
+#polyfill for python < 3.8
+def tohex(b, s=' '):
+    if  sys.version_info < (3,8,0):
+        h = b.hex()
+        return s.join(h[i:i+2] for i in range(0,len(h),2))
+    else: 
+        return b.hex(sep=s)
+
 # NOTE:
 #
 # The Ethernet UDP stuff presents 64-bit data in a
@@ -52,7 +60,8 @@ class TURFEth:
         self.cs.sendto( msg[::-1], (str(self.turf_ip), self.turf_csp))
         data, addr = self.cs.recvfrom(1024)
         resp = data[::-1]
-        return resp[2:].hex(sep=':')
+        # GODDAMN SFC
+        return tohex(resp[2:], sep=':')
         
     def read(self, addr):
         addr = (addr & 0xFFFFFFF) | (self.tag << 28)
