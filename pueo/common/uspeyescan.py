@@ -88,13 +88,22 @@ class USPEyeScan:
         self.up = up_fn
         self._rxrate = None
         self._dwidth = None
-        
-    def enable(self, onoff):
+        self._enabled = None
+
+    @property
+    def enable(self):
+        if self._enabled is None:
+            self._enabled = True if (self.read(0x3c) & 0x30) else False
+        return self._enabled
+
+    @enable.setter    
+    def enable(self, value):
         """ Enable or disable the eye scanner. ** Needs GT reset after! ** """
         rv = bf(self.read(0x3C))
         rv[9:8] = 3 if onoff else 0
         rv[15:10] = 0
         self.write(0x3C, int(rv))
+        self._enabled = True if onoff else False
 
     @property
     def rxrate(self):
