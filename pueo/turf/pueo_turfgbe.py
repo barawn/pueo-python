@@ -34,13 +34,14 @@ class PueoTURFGBE(dev_submod):
     
             
     def enableEyeScan(self, waittime=1):
-        """ Enable the eye scan functionality. This WILL reset GBE link!! """
-        self.scanner[0].enable(True)
-        self.scanner[1].enable(True)
-        self.reset()
-        time.sleep(waittime)
-        self.scanner[0].setup()
-        self.scanner[1].setup()
+        if not self.scanner[0].enable or not self.scanner[1].enable:
+            """ Enable the eye scan functionality. This WILL reset GBE link!! """        
+            self.scanner[0].enable = True
+            self.scanner[1].enable = True
+            self.reset()
+            time.sleep(waittime)
+            self.scanner[0].setup()
+            self.scanner[1].setup()
 
     def eyescanreset(self, linkno, onoff):
         rv = bf(self.read(0x4*linkno))
