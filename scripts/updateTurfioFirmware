@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+
+from pueo.turf.turf import PueoTURF
+from pueo.turfio.turfio import PueoTURFIO
+
+import code
+import argparse
+import glob
+
+parser = argparse.ArgumentParser()
+parser.add_argument("port", help="TURF/TURFIO debug serial port path", default="/dev/ttyS13") #CHECK DEFAULT PORT
+parser.add_argument("--turflink", default=None,
+                    help="if specified, use TURF bridge with this link # [0-3]")
+parser.add_argument("--firmvers", default=None,
+                    help="if specified, use TURFIO version # [of form vr_p_]")
+args = parser.parse_args()
+
+port = args.port
+
+dev = None
+if args.turflink is None:
+   dev = PueoTURFIO(port)
+else:
+   print("Bridging to TURFIO", args.turflink, "via TURF at", port)
+   turf = PueoTURF(port)
+   link = int(args.turflink)
+   params = [ turf, link ]
+   dev = PueoTURFIO(params, type=PueoTURFIO.AccessType.TURFGTP)
+
+print("Connected to TURFIO")
+
+"""if args.firmvers is None:
+       mcs_vers = glob.glob('~/imgs/pueo_turfio_*.mcs')[-1] #CHECK FILE PATH, AND IF THIS WORKS
+       
+else:
+       mcs_vers = '~/imgs/pueo_turfio_'+args.firmvers+'.mcs' #CHECK FILE PATH
+
+print("Using TURFIO firmware "+mcs_vers)
+
+with dev.genspi as spi: 
+	      spi.program_mcs(mcs_vers)"""
