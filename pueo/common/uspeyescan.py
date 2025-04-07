@@ -93,7 +93,7 @@ class USPEyeScan:
     @property
     def enable(self):
         if self._enabled is None:
-            self._enabled = True if (self.read(0x3c) & 0x30) else False
+            self._enabled = True if (self.read(0x3c) & 0x300) else False
         return self._enabled
 
     @enable.setter    
