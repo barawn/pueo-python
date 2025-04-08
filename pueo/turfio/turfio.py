@@ -367,10 +367,11 @@ class PueoTURFIO:
 
     def enable_rxclk(self, on=True):
         rv = bf(self.read(self.map['SURFTURFCOMMON']))
-        if on:
-            rv[31] = 0
-        else:
-            rv[31] = 1
+        if on is True:
+            on = 0xFF
+        if on is False:
+            on = 0x0
+        rv[31:24] = (~on & 0xFF)
         self.write(self.map['SURFTURFCOMMON'], int(rv))
         
     # Perform an eye scan on an ISERDES: run over its IDELAY values and get bit
