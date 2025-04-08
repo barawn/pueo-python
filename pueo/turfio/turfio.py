@@ -18,6 +18,7 @@ from .surfturf import SURFTURF
 
 from enum import Enum
 import time
+import glob
 
 class PueoTURFIO:
     # the TURFIO debug interface has to muck around to get the upper bits (bits 24-21).
@@ -731,3 +732,24 @@ class PueoTURFIO:
     @classmethod
     def find_serial_devices(cls, board = -1, verbose=False):
         return SerialCOBSDevice.find_serial_devices(board, 'TI', verbose)
+
+    def updateTurfioFirmware(self, turfionum, firmvers=None):
+        dev = self.find_serial_devices(int(turfionum))[0][0], 'SERIAL'
+
+        print("Linked to TURFIO "+turfionum)
+        
+        if firmvers is None:
+            mcs_list = glob.glob('/home/pueo/imgs/pueo_turfio_*.mcs').sort()[-1]
+            vers_list = []
+            for vers in mcs_list:
+                curr_vers = vers.split('/home/pueo/imgs/pueo_turfio_')[1].split('.mcs')[0]
+                vers_list.append(curr_vers)
+            mcs_vers = '/home/pueo/imgs/pueo_turfio_'+vers_list[-1]+'.mcs'
+            
+        else:
+            mcs_vers = '/home/pueo/imgs/pueo_turfio_'+firmvers+'.mcs'
+
+        print("Using TURFIO firmware "+mcs_vers)
+
+        with dev.genspi as spi: 
+            spi.program_mcs(mcs_vers)

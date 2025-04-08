@@ -1,41 +1,33 @@
 #!/usr/bin/env python3
 
-from pueo.turf.turf import PueoTURF
-from pueo.turfio.turfio import PueoTURFIO
-
-import code
+from pueo.turfio import PueoTURFIO
 import argparse
 import glob
+                                                      
 
 parser = argparse.ArgumentParser()
-parser.add_argument("port", help="TURF/TURFIO debug serial port path", default="/dev/ttyS13") #CHECK DEFAULT PORT
-parser.add_argument("--turflink", default=None,
-                    help="if specified, use TURF bridge with this link # [0-3]")
+parser.add_argument("turfionum", default=None,
+                    help="Link to TURFIO # [1,2,4, or 5]")
 parser.add_argument("--firmvers", default=None,
-                    help="if specified, use TURFIO version # [of form vr_p_]")
+                    help="if specified, use TURFIO firmware version # [of form v_r_p_]")
 args = parser.parse_args()
 
-port = args.port
+dev = PueoTURFIO(PueoTURFIO.find_serial_devices(int(args.turfionum))[0][0], 'SERIAL')
 
-dev = None
-if args.turflink is None:
-   dev = PueoTURFIO(port)
-else:
-   print("Bridging to TURFIO", args.turflink, "via TURF at", port)
-   turf = PueoTURF(port)
-   link = int(args.turflink)
-   params = [ turf, link ]
-   dev = PueoTURFIO(params, type=PueoTURFIO.AccessType.TURFGTP)
-
-print("Connected to TURFIO")
-
-"""if args.firmvers is None:
-       mcs_vers = glob.glob('~/imgs/pueo_turfio_*.mcs')[-1] #CHECK FILE PATH, AND IF THIS WORKS
+print("Linked to TURFIO "+args.turfionum)
+   
+if args.firmvers is None:
+       mcs_list = glob.glob('/home/pueo/imgs/pueo_turfio_*.mcs').sort()[-1]
+       vers_list = []
+       for vers in mcs_list:
+           curr_vers = vers.split('/home/pueo/imgs/pueo_turfio_')[1].split('.mcs')[0]
+           vers_list.append(curr_vers)
+       mcs_vers = '/home/pueo/imgs/pueo_turfio_'+vers_list[-1]+'.mcs'
        
 else:
-       mcs_vers = '~/imgs/pueo_turfio_'+args.firmvers+'.mcs' #CHECK FILE PATH
+       mcs_vers = '/home/pueo/imgs/pueo_turfio_'+args.firmvers+'.mcs'
 
 print("Using TURFIO firmware "+mcs_vers)
 
 with dev.genspi as spi: 
-	      spi.program_mcs(mcs_vers)"""
+    spi.program_mcs(mcs_vers)
