@@ -180,7 +180,7 @@ class USPEyeScan:
         """ Call after enabling and reset. ** May disturb read data!! ** """
         if not self.up():
             print(self.name, ": not up, so not enabling eye scan")
-            return
+            return False
         self._rxrate = self.rxrate
         self._dwidth = self.dwidth
         v = [0xFFFF]*10
@@ -238,4 +238,6 @@ class USPEyeScan:
                 ntrials = ntrials + 1
         if ntrials == 1000:
             print(self.name, ": Eye scan trial never had zero errors: failure!")
-        
+            return False
+        self.prescale = 9
+        return True
