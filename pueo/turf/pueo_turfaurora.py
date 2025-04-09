@@ -35,18 +35,23 @@ class PueoTURFAurora(dev_submod):
             
     def enableEyeScan(self, waittime=1):
         enableWasNeeded = False
-        """ Enable eye scanning on all links. Will skip over non-up links. """
+        """ Enable eye scanning on all links. EVEN NON-UP links """
         for s in self.scanner:
             if not s.enable:
                 s.enable = True
                 enableWasNeeded = True
-        if not enableWasNeeded:
-            return
-        self.reset()
-        # It takes a while for the link to come back up.
-        time.sleep(waittime)
+        if enableWasNeeded:
+            self.reset()
+            time.sleep(waittime)
+        # The issue now is that we need to know if we were setup or not.
+        # We can figure that out by looking at the prescale.
+        stat = []
         for s in self.scanner:
-            s.setup()
+            if s.prescale != 9:
+                stat.append(s.setup())
+            else:
+                stat.append(True)
+        return stat
             
     def linkstat(self, linkno, verbose=False):
         rv = self.read(0x800*linkno + 0x4)

@@ -34,14 +34,24 @@ class PueoTURFGBE(dev_submod):
     
             
     def enableEyeScan(self, waittime=1):
-        if not self.scanner[0].enable or not self.scanner[1].enable:
-            """ Enable the eye scan functionality. This WILL reset GBE link!! """        
-            self.scanner[0].enable = True
-            self.scanner[1].enable = True
+        enableWasNeeded = False
+        """ Enable eye scanning on all links. EVEN NON-UP links """
+        for s in self.scanner:
+            if not s.enable:
+                s.enable = True
+                enableWasNeeded = True
+        if enableWasNeeded:
             self.reset()
             time.sleep(waittime)
-            self.scanner[0].setup()
-            self.scanner[1].setup()
+        # The issue now is that we need to know if we were setup or not.
+        # We can figure that out by looking at the prescale.
+        stat = []
+        for s in self.scanner:
+            if s.prescale != 9:
+                stat.append(s.setup())
+            else:
+                stat.append(True)
+        return stat
 
     def eyescanreset(self, linkno, onoff):
         rv = bf(self.read(0x4*linkno))
