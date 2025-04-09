@@ -37,7 +37,7 @@ class PueoTURFAurora(dev_submod):
         enableWasNeeded = False
         """ Enable eye scanning on all links. Will skip over non-up links. """
         for s in self.scanner:
-            if s.enable:
+            if not s.enable:
                 s.enable = True
                 enableWasNeeded = True
         if not enableWasNeeded:
