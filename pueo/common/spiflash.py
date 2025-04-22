@@ -148,6 +148,7 @@ class SPIFlash:
                     if verbose:
                         print(f'Mismatch at byte {idx*sz+i}: {r[i]} {f[idx*sz+i]}')
                     errFound = True
+            idx = idx + 1
         return errFound                
 
     def program_mcs(self, filename):
