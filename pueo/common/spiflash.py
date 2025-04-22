@@ -5,11 +5,39 @@ from .hexfile import load as hexload
 from .bf import * 
 
 # let's prettify this
+pb2 = None
+ewidgets = None
+pwidgets = None
+make_bar = None
 try:
     import progressbar2 as pb2
+    ewidgets = [ "Erasing: ",
+                " ", pb2.Percentage(),
+                " ", pb2.GranularBar(),
+                " ", pb2.AdaptiveETA() ]    
+    pwidgets = [ "Programming: ",
+                 " ", pb2.Percentage(),
+                 " ", pb2.GranularBar(),
+                 " ", pb2.AdaptiveETA() ]
+    make_bar = lambda x, w : pb2.ProgressBar(widgets=w, max_value=x, redirect_stdout=True)
 except ImportError:
-    pb2 = None
+    pass
 
+if pb2 is None:
+    try:
+        import progressbar as pb2
+        ewidgets = [ "Erasing: ",
+                     " ", pb2.Percentage(),
+                     " ", pb2.Bar(),
+                     " ", pb2.AdaptiveETA() ]    
+        pwidgets = [ "Programming: ",
+                     " ", pb2.Percentage(),
+                     " ", pb2.Bar(),
+                     " ", pb2.AdaptiveETA() ]
+        make_bar = lambda x, w : pb2.ProgressBar(widgets=w, maxval=x)
+    except ImportError:
+        pass    
+    
 # This pulls out the SPI flash stuff from the old spi.py.
 class SPIFlash:
     
@@ -149,13 +177,7 @@ class SPIFlash:
                 end_sector = end_sector + 1
         # prep the erasebar
         if pb2:
-            widgets = [ "Erasing: ",
-                        " ", pb2.Percentage(),
-                        " ", pb2.GranularBar(),
-                        " ", pb2.AdaptiveETA() ]
-            erasebar = pb2.ProgressBar( widgets=widgets,
-                                        max_value=len(sector_list),
-                                        redirect_stdout=True ).start()
+            erasebar = make_bar(len(sector_list), ewidgets).start()
             update = lambda v, n : erasebar.update(v)
             finish = erasebar.finish
         else:
@@ -177,13 +199,7 @@ class SPIFlash:
             end = 0
             tot = 0
             if pb2:
-                widgets = [ "Programming: ",
-                            " ", pb2.Percentage(),
-                            " ", pb2.GranularBar(),
-                            " ", pb2.AdaptiveETA() ]
-                progbar = pb2.ProgressBar( widgets = widgets,
-                                           max_value=seg.size,
-                                           redirect_stdout=True).start()
+                progbar = make_bar(seg.size, pwidgets).start()
                 update = lambda s, e, t : progbar.update(t)
                 finish = progbar.finish
             else:
