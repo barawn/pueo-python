@@ -130,6 +130,26 @@ class SPIFlash:
         if res & 0x2:
             raise IOError("Write disable failed (%d)!" % res)
 
+    def verify_mcs(self, filename, verbose=True, sz=65536):
+        f = hexload(filename)
+        nb = len(f)
+        idx = 0
+        errFound = False
+        while idx*sz < nb:
+            if verbose:
+                print(f'Checking sector {idx}.')
+            if (nb - idx*sz < sz):
+                rb = nb-idx*sz
+            else:
+                rb = sz
+            r = self.read(idx*sz, sz)
+            for i in range(rb):
+                if r[i] != f[idx*sz+i]:
+                    if verbose:
+                        print(f'Mismatch at byte {idx*sz+i}: {r[i]} {f[idx*sz+i]}')
+                    errFound = True
+        return errFound                
+
     def program_mcs(self, filename):
         # hexload is hexfile.load
         f = hexload(filename)
