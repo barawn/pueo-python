@@ -15,11 +15,15 @@ import time
 # refactor this so that the methods are common at some point.
 # We also might merge in the RXCLK alignment as well,
 # making a base class or something. Who knows.
+
+# sigh, just force the RXCLK alignment here for the
+# caligns as an option.
 class PueoHSAlign(dev_submod):
     map = { 'CTLRESET' : 0x0,
             'IDELAY' : 0x4,
             'BITERR' : 0x8,
-            'BITSLP' : 0xC }
+            'BITSLP' : 0xC,
+            'SYSERR' : 0x1C }
 
     class BitWidth(Enum):
         BITWIDTH_8 = 8
@@ -99,6 +103,28 @@ class PueoHSAlign(dev_submod):
             return (start, stop)
         return None
 
+    # This method is used for the RXCLK eyescan.
+    @staticmethod
+    def process_eyescan(scan, width=32):
+        # We start off by assuming we're not in an eye.
+        in_eye = False
+        eye_start = 0
+        eyes = []
+        for i in range(width):
+            if scan[i] == 0 and not in_eye:
+                eye_start = i
+                in_eye = True
+            elif scan[i] > 0 and in_eye:
+                eye = [ int(eye_start+(i-eye_start)/2), i-eye_start ]
+                eyes.append(eye)
+                in_eye = False
+        # we exited the loop without finding the end of the eye
+        if in_eye:
+            eye = [ int(eye_start+(width-eye_start)/2), width-eye_start ]
+            eyes.append( eye )
+
+        return eyes
+    
     # convenience function for setting delay
     # Might end up subclassing the HSAlign for the UltraScale/7 series differences
     def set_delay(self, delayVal):
@@ -124,6 +150,28 @@ class PueoHSAlign(dev_submod):
                 sc.append(biterr)
         return sc
 
+    # rxclk eyescan for the rxclk-capable
+    def eyescan_rxclk(self, period=1024):
+        slptime = period*8E-9
+        sc = []
+        self.rxclk_phase = 0
+        self.write(0x1C, period)
+        for i in range(448):
+            self.rxclk_phase = i
+            time.sleep(slptime)
+            sc.append(self.read(0x1C))
+        return sc
+
+    @property
+    def rxclk_phase(self):
+        return self.read(0)>>16
+    
+    @rxclk_phase.setter
+    def rxclk_phase(self, value):
+        rv = self.read(0) & 0xFFFF
+        rv |= (value & 0xFFFF) << 16
+        self.write(0, rv)        
+    
     # enable training on output interface
     def trainEnable(self, onOff):
         rv = bf(self.read(self.map['CTLRESET']))
@@ -208,5 +256,33 @@ class PueoHSAlign(dev_submod):
                 print("Alignment succeeded")
             return True
     
-            
+    # Alignment method for RXCLK (for the TURF CALIGN)
+    def align_rxclk(self, verbose=False):
+        if verbose:
+            print("Scanning RXCLK->SYSCLK transition.")
+        rxsc = self.eyescan_rxclk()
+        eyes = self.process_eyescan(rxsc, 448)
+        bestEye = None
+        for eye in eyes:
+            if bestEye is not None:
+                if verbose:
+                    print(f'Second RXCLK->SYSCLK eye found at {eye[0]}, possible glitch')
+                if eye[1] > bestEye[1]:
+                    if verbose:
+                        print(f'Eye at {eye[0]} has width {eye[1]}, better than {bestEye[1]}')
+                    bestEye = eye
+                else:
+                    if verbose:
+                        print(f'Eye at {eye[0]} has width {eye[1]}, worse than {bestEye[1]}, skipping')
+            else:
+                if verbose:
+                    print(f'First eye at {eye[0]} width {eye[1]}')
+                bestEye = eye
+        if bestEye is None:
+            raise IOError("No valid RXCLK->SYSCLK eye found!!")
+        if verbose:
+            print(f'Using eye at {eye[0]}')
+        self.rxclk_phase = eye[0]
+        return bestEye[0]
     
+                        

@@ -373,7 +373,8 @@ class PueoTURFIO:
             on = 0x0
         rv[31:24] = (~on & 0xFF)
         self.write(self.map['SURFTURFCOMMON'], int(rv))
-        
+
+# This is now in the HSAlign
     # Perform an eye scan on an ISERDES: run over its IDELAY values and get bit
     # error rates. slptime needs to be larger than the acquisition interval
     # programmed in. N.B. FIX THIS TO BE AUTOMATICALLY PROGRAMMED
@@ -383,25 +384,26 @@ class PueoTURFIO:
     #
     # All the eye control stuff is aligned such that +0x4 is IDELAY, +0x8 is BITERR,
     # +0xC is BITSLP.
-    def eyescan(self, slptime, base=None, getBitno=False):
-        idelayAddr = base + 0x4
-        biterrAddr = base + 0x8
-        bitslipAddr = base + 0xC
-        sc = []
-        for i in range(32):
-            self.write(idelayAddr, i)
-            time.sleep(slptime)
-            biterr = self.read(biterrAddr)
-            if getBitno:
-                if biterr == 0: # This is a new-style eyescan, including bitnos
-                    testVal = self.read(bitslipAddr)
-                    nbits = pueo_utils.check_eye(testVal)
-                    sc.append((biterr, nbits % 4))
-                else:
-                    sc.append((biterr, None))
-            else:
-                sc.append(biterr)
-        return sc
+#    def eyescan(self, slptime, base=None, getBitno=False):
+#        idelayAddr = base + 0x4
+#        biterrAddr = base + 0x8
+#        bitslipAddr = base + 0xC
+#        sc = []
+#        for i in range(32):
+#            self.write(idelayAddr, i)
+#            time.sleep(slptime)
+#            biterr = self.read(biterrAddr)
+#            if getBitno:
+#                if biterr == 0: # This is a new-style eyescan, including bitnos
+#                    testVal = self.read(bitslipAddr)
+#                    nbits = pueo_utils.check_eye(testVal)
+#                    sc.append((biterr, nbits % 4))
+#                else:
+#                    sc.append((biterr, None))
+#            else:
+#                sc.append(biterr)
+#        return sc
+
 
     def eyescan_rxclk(self, period=1024):
         slptime = period*8E-9
@@ -473,23 +475,23 @@ class PueoTURFIO:
         return None
     
     # forcibly reset TURFCTL interface
-    def reset_turfctl(self):
-        rv = bf(self.read(self.map['TURFCTLRESET']))
-        rv[3] = 1
-        rv[8] = 0
-        self.write(self.map['TURFCTLRESET'], int(rv))
-        rv = bf(self.read(self.map['TURFCTLRESET']))
-        rv[3] = 0
-        self.write(self.map['TURFCTLRESET'], int(rv))
+#    def reset_turfctl(self):
+#        rv = bf(self.read(self.map['TURFCTLRESET']))
+#        rv[3] = 1
+#        rv[8] = 0
+#        self.write(self.map['TURFCTLRESET'], int(rv))
+#        rv = bf(self.read(self.map['TURFCTLRESET']))
+#        rv[3] = 0
+#        self.write(self.map['TURFCTLRESET'], int(rv))
 
     # enable TURF training
-    def turf_train(self, enable):
-        rv = bf(self.read(self.map['TURFCTLRESET']))
-        if enable:
-            rv[10] = 1
-        else:
-            rv[10] = 0
-        self.write(self.map['TURFCTLRESET'], int(rv))
+#    def turf_train(self, enable):
+#        rv = bf(self.read(self.map['TURFCTLRESET']))
+#        if enable:
+#            rv[10] = 1
+#        else:
+#            rv[10] = 0
+#        self.write(self.map['TURFCTLRESET'], int(rv))
 
     # Set up sync. By default the offset is 8 clocks,
     # which appears to put the TURF and TURFIO/SURF clocks
@@ -503,175 +505,175 @@ class PueoTURFIO:
             self.write(self.map['SYNCCTRL'], 0)
             
     # This is the TURF->TURFIO alignment procedure
-    def align_turfctl(self, oldMethod=False):
-        # Check to see if the interface is already aligned.
-        rv = bf(self.read(self.map['TURFCTLRESET']))
-        if rv[9]:
-            print("TURFCTL is already aligned, skipping.")
-            return
+    # def align_turfctl(self, oldMethod=False):
+    #     # Check to see if the interface is already aligned.
+    #     rv = bf(self.read(self.map['TURFCTLRESET']))
+    #     if rv[9]:
+    #         print("TURFCTL is already aligned, skipping.")
+    #         return
 
-        # It's not aligned. First, let's reset the OSERDES.
-        print("Resetting OSERDES.")
-        rv[4] = 1;
-        self.write(self.map['TURFCTLRESET'], int(rv))
-        rv[4] = 0
-        self.write(self.map['TURFCTLRESET'], int(rv))
+    #     # It's not aligned. First, let's reset the OSERDES.
+    #     print("Resetting OSERDES.")
+    #     rv[4] = 1;
+    #     self.write(self.map['TURFCTLRESET'], int(rv))
+    #     rv[4] = 0
+    #     self.write(self.map['TURFCTLRESET'], int(rv))
         
-        # First we need to align RXCLK->SYSCLK.
+    #     # First we need to align RXCLK->SYSCLK.
         
-        # This currently takes a loong time just due to
-        # how slow the interface is.
-        print("Scanning RXCLK->SYSCLK transition.")
-        rxsc = self.eyescan_rxclk()
-        eyes = self.process_eyescan(rxsc, 448)
-        bestEye = None
-        for eye in eyes:
-            if bestEye is not None:
-                print("Second RXCLK->SYSCLK eye found at", eye[0], "possible glitch")
-                if eye[1] > bestEye[1]:
-                    print("Eye at", eye[0], "has width", eye[1], "better than", bestEye[1])
-                    bestEye = eye
-                else:
-                    print("Eye at", eye[0], "has width", eye[1], "worse than", bestEye[1], "skipping")
-            else:
-                print("First eye at", eye[0], "width", eye[1])
-                bestEye = eye
+    #     # This currently takes a loong time just due to
+    #     # how slow the interface is.
+    #     print("Scanning RXCLK->SYSCLK transition.")
+    #     rxsc = self.eyescan_rxclk()
+    #     eyes = self.process_eyescan(rxsc, 448)
+    #     bestEye = None
+    #     for eye in eyes:
+    #         if bestEye is not None:
+    #             print("Second RXCLK->SYSCLK eye found at", eye[0], "possible glitch")
+    #             if eye[1] > bestEye[1]:
+    #                 print("Eye at", eye[0], "has width", eye[1], "better than", bestEye[1])
+    #                 bestEye = eye
+    #             else:
+    #                 print("Eye at", eye[0], "has width", eye[1], "worse than", bestEye[1], "skipping")
+    #         else:
+    #             print("First eye at", eye[0], "width", eye[1])
+    #             bestEye = eye
 
-        if bestEye is None:
-            print("No valid RXCLK->SYSCLK eye found!! Check if clocks are present and correct frequency!")
-            return
-        print("Using eye at", bestEye[0])
-        # n.b. this needs to be a read-modify-write register after this point!!
-        self.write(self.map['TURFCTLRESET'], bestEye[0]<<16)
+    #     if bestEye is None:
+    #         print("No valid RXCLK->SYSCLK eye found!! Check if clocks are present and correct frequency!")
+    #         return
+    #     print("Using eye at", bestEye[0])
+    #     # n.b. this needs to be a read-modify-write register after this point!!
+    #     self.write(self.map['TURFCTLRESET'], bestEye[0]<<16)
 
-        # RXCLK is aligned. Now reset the ISERDES.
-        print("Resetting ISERDES.")
-        rv = bf(self.read(self.map['TURFCTLRESET']))
-        rv[2] = 1
-        self.write(self.map['TURFCTLRESET'], int(rv))
-        rv[2] = 0
-        self.write(self.map['TURFCTLRESET'], int(rv))
+    #     # RXCLK is aligned. Now reset the ISERDES.
+    #     print("Resetting ISERDES.")
+    #     rv = bf(self.read(self.map['TURFCTLRESET']))
+    #     rv[2] = 1
+    #     self.write(self.map['TURFCTLRESET'], int(rv))
+    #     rv[2] = 0
+    #     self.write(self.map['TURFCTLRESET'], int(rv))
         
-        # I really, really hope that we don't get a case
-        # where the entire IDELAY region looks clean.
+    #     # I really, really hope that we don't get a case
+    #     # where the entire IDELAY region looks clean.
 
-        # NOTE NOTE NOTE NOTE NOTE
-        # This SHOULD BE REDONE to be more similar
-        # to the TURF case
-        #
-        # We DO NOT WANT to try to locate the center
-        # of the eye directly: we want to find the eye TRANSITION
-        # from one bit to the next, and then BACK OFF
-        # (or forward) by 1 ns (around 13 taps).
-        # This is because we CANNOT SEE the start and stop of any
-        # individual eye since the total delay length is too short.
+    #     # NOTE NOTE NOTE NOTE NOTE
+    #     # This SHOULD BE REDONE to be more similar
+    #     # to the TURF case
+    #     #
+    #     # We DO NOT WANT to try to locate the center
+    #     # of the eye directly: we want to find the eye TRANSITION
+    #     # from one bit to the next, and then BACK OFF
+    #     # (or forward) by 1 ns (around 13 taps).
+    #     # This is because we CANNOT SEE the start and stop of any
+    #     # individual eye since the total delay length is too short.
 
-        delayVal = None
-        slipFix = None
+    #     delayVal = None
+    #     slipFix = None
         
-        if oldMethod:
-            # Eye scanning with a quick period
-            # seems pretty robust.
-            self.write(self.map['TURFCTLBITERR'], 131072)
-            sc = self.eyescan(0.01, base=self.map['TURFCTLRESET'])            
-            eyes = self.process_eyescan(sc, 32)
-            # Check each of the eyes and choose the best one.
-            bestEye = None
-            for eye in eyes:
-                self.write(self.map['TURFCTLIDELAY'], eye[0])
-                testVal = self.read(self.map['TURFCTLBITSLP'])
-                nbits = pueo_utils.check_eye(testVal)
-                if nbits is None:
-                    print("False eye at", eye[0], "skipped")
-                else:
-                    eye.append(nbits)
-                    if bestEye is not None:
-                        print("Eye at", eye[0],"read",hex(testVal),"(", eye[2] % 4, "slips) ", end='')
-                        if eye[1] > bestEye[1]:
-                            print("has better width (",eye[1],")")
-                            bestEye = eye
-                        else:
-                            print("has worse width (", eye[1],"), skipped")
-                    else:
-                        print("First valid eye at", eye[0], "(", eye[2] % 4,"slips), width:", eye[1])
-                        bestEye = eye
-            if bestEye is None:
-                print("No valid eyes found!! Alignment FAILED.")
-                return        
-            print("Using eye at", bestEye[0], "with", bestEye[2] % 4, "slips")
-            delayVal = bestEye[0]
-            slipFix = bestEye[2] % 4
-        else:
-            # New method: instead of locating the "best" eye we locate
-            # the eye *boundary* and go back (or forward) to the theoretical center.
-            # This method's pulled mostly from the TURF methods.
-            # We need eyescans with both error count and bitno.
-            # For instance, if our eyescan looks like
-            # sc[12]=0, 0
-            # sc[13]=29123, None
-            # sc[14]=19312, None
-            # sc[15]=0, 3
-            # (and everything else same)
-            # then our eye boundary is at 13.5. With (5/64) ns per tap and 2 ns per eye, the full
-            # eye width is 25.6, so the half-width is 12.
-            # Frustratingly we're trying to minimize latency *and* center the eye, and so
-            # it's a bit of a tough situation here. Do we go back or forward?
-            # Basically:
-            # eye edge < 8 : go to edge + 12
-            # 8 <= eye edge <= 12 : go to 0
-            # 12 < eye edge : go to edge - 12
-            # We may have to adjust this the other way depending on temp and overall stability.
-            # Basically we want the alignment to be the same every freaking time.
-            # So, in the end we might actually even have to just have an align call with
-            # a desired eye and you go as close to the center as you can with it.
+    #     if oldMethod:
+    #         # Eye scanning with a quick period
+    #         # seems pretty robust.
+    #         self.write(self.map['TURFCTLBITERR'], 131072)
+    #         sc = self.eyescan(0.01, base=self.map['TURFCTLRESET'])            
+    #         eyes = self.process_eyescan(sc, 32)
+    #         # Check each of the eyes and choose the best one.
+    #         bestEye = None
+    #         for eye in eyes:
+    #             self.write(self.map['TURFCTLIDELAY'], eye[0])
+    #             testVal = self.read(self.map['TURFCTLBITSLP'])
+    #             nbits = pueo_utils.check_eye(testVal)
+    #             if nbits is None:
+    #                 print("False eye at", eye[0], "skipped")
+    #             else:
+    #                 eye.append(nbits)
+    #                 if bestEye is not None:
+    #                     print("Eye at", eye[0],"read",hex(testVal),"(", eye[2] % 4, "slips) ", end='')
+    #                     if eye[1] > bestEye[1]:
+    #                         print("has better width (",eye[1],")")
+    #                         bestEye = eye
+    #                     else:
+    #                         print("has worse width (", eye[1],"), skipped")
+    #                 else:
+    #                     print("First valid eye at", eye[0], "(", eye[2] % 4,"slips), width:", eye[1])
+    #                     bestEye = eye
+    #         if bestEye is None:
+    #             print("No valid eyes found!! Alignment FAILED.")
+    #             return        
+    #         print("Using eye at", bestEye[0], "with", bestEye[2] % 4, "slips")
+    #         delayVal = bestEye[0]
+    #         slipFix = bestEye[2] % 4
+    #     else:
+    #         # New method: instead of locating the "best" eye we locate
+    #         # the eye *boundary* and go back (or forward) to the theoretical center.
+    #         # This method's pulled mostly from the TURF methods.
+    #         # We need eyescans with both error count and bitno.
+    #         # For instance, if our eyescan looks like
+    #         # sc[12]=0, 0
+    #         # sc[13]=29123, None
+    #         # sc[14]=19312, None
+    #         # sc[15]=0, 3
+    #         # (and everything else same)
+    #         # then our eye boundary is at 13.5. With (5/64) ns per tap and 2 ns per eye, the full
+    #         # eye width is 25.6, so the half-width is 12.
+    #         # Frustratingly we're trying to minimize latency *and* center the eye, and so
+    #         # it's a bit of a tough situation here. Do we go back or forward?
+    #         # Basically:
+    #         # eye edge < 8 : go to edge + 12
+    #         # 8 <= eye edge <= 12 : go to 0
+    #         # 12 < eye edge : go to edge - 12
+    #         # We may have to adjust this the other way depending on temp and overall stability.
+    #         # Basically we want the alignment to be the same every freaking time.
+    #         # So, in the end we might actually even have to just have an align call with
+    #         # a desired eye and you go as close to the center as you can with it.
 
-            # Quick scans seem OK.
-            self.write(self.map['TURFCTLBITERR'], 131072)
-            sc = self.eyescan(0.01, base=self.map['TURFCTLRESET'], getBitno=True)            
-            edge = self.process_eyescan_edge(sc)
-            if edge is None:
-                print("Cannot find eye transition, abandoning!")
-                return
-            transition = round((edge[0] + edge[1])/2.)
-            if transition < 8:
-                print("Using", transition + 12, "since transition is too low")
-                delayVal = transition + 12
-            elif transition < 13:
-                print("Using 0 since transition at", transition, "is far enough from 0 but too small to center")
-                delayVal = 0
-            else:
-                print("Using", transition - 12, "as delay point")
-                delayVal = transition - 12
-            print("Needs", sc[delayVal][1], "slips")
-            slipFix = sc[delayVal][1]
+    #         # Quick scans seem OK.
+    #         self.write(self.map['TURFCTLBITERR'], 131072)
+    #         sc = self.eyescan(0.01, base=self.map['TURFCTLRESET'], getBitno=True)            
+    #         edge = self.process_eyescan_edge(sc)
+    #         if edge is None:
+    #             print("Cannot find eye transition, abandoning!")
+    #             return
+    #         transition = round((edge[0] + edge[1])/2.)
+    #         if transition < 8:
+    #             print("Using", transition + 12, "since transition is too low")
+    #             delayVal = transition + 12
+    #         elif transition < 13:
+    #             print("Using 0 since transition at", transition, "is far enough from 0 but too small to center")
+    #             delayVal = 0
+    #         else:
+    #             print("Using", transition - 12, "as delay point")
+    #             delayVal = transition - 12
+    #         print("Needs", sc[delayVal][1], "slips")
+    #         slipFix = sc[delayVal][1]
         
-        self.write(self.map['TURFCTLIDELAY'], delayVal)        
-        print("Performing", slipFix, "slips")
-        for i in range(slipFix):
-            self.write(self.map['TURFCTLBITSLP'], 1)
+    #     self.write(self.map['TURFCTLIDELAY'], delayVal)        
+    #     print("Performing", slipFix, "slips")
+    #     for i in range(slipFix):
+    #         self.write(self.map['TURFCTLBITSLP'], 1)
             
-        val = self.read(self.map['TURFCTLBITSLP'])
-        checkVal = pueo_utils.check_eye(val)
-        print("Readback pattern is now", hex(val),"with", checkVal % 4, "slips")
-        if checkVal % 4:
-            print("Alignment failed?!?")
-            return
-        else:
-            print("Alignment succeeded.")
+    #     val = self.read(self.map['TURFCTLBITSLP'])
+    #     checkVal = pueo_utils.check_eye(val)
+    #     print("Readback pattern is now", hex(val),"with", checkVal % 4, "slips")
+    #     if checkVal % 4:
+    #         print("Alignment failed?!?")
+    #         return
+    #     else:
+    #         print("Alignment succeeded.")
 
-        # Now we need to enable the interface to lock.
-        st = bf(self.read(self.map['TURFCTLRESET']))
-        # Set bit 8 (enable lock)
-        st[8] = 1
-        self.write(self.map['TURFCTLRESET'], int(st))
-        # Read back to see if it actually locked. This happens almost instantly.
-        rb = bf(self.read(self.map['TURFCTLRESET']))
-        # actually return something indicating a failure!!
-        if rb[9]:
-            print("TURFIO TURFCTL interface is now locked and running.")
-        else:
-            print("Interface did not lock?!")
-        return
+    #     # Now we need to enable the interface to lock.
+    #     st = bf(self.read(self.map['TURFCTLRESET']))
+    #     # Set bit 8 (enable lock)
+    #     st[8] = 1
+    #     self.write(self.map['TURFCTLRESET'], int(st))
+    #     # Read back to see if it actually locked. This happens almost instantly.
+    #     rb = bf(self.read(self.map['TURFCTLRESET']))
+    #     # actually return something indicating a failure!!
+    #     if rb[9]:
+    #         print("TURFIO TURFCTL interface is now locked and running.")
+    #     else:
+    #         print("Interface did not lock?!")
+    #     return
 
     def monitor(self, verbose=True):
         self.i2c.write(0x48, [0x5])
