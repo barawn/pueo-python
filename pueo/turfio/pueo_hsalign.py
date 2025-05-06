@@ -222,7 +222,7 @@ class PueoHSAlign(dev_submod):
         sc = self.eyescan()
         edge = self.process_eyescan_edge(sc)
         if edge is None:
-            raise Exception("Cannot find eye transition: check training status")
+            raise IOError("Cannot find eye transition: check training status")
 
         transition = round((edge[0]+edge[1])/2.)
         # okay, so here's the logic.
@@ -250,7 +250,7 @@ class PueoHSAlign(dev_submod):
         val = self.read(self.map['BITSLP'])
         checkVal = self.check_eye(val, self.bw.value, self.trainVal[self.bw])
         if checkVal % self.maxSlips[self.bw]:
-            raise Exception("Alignment procedure failed: still need %d slips??" % (checkVal % self.maxSlips[self.bw]))
+            raise IOError("Alignment procedure failed: still need %d slips??" % (checkVal % self.maxSlips[self.bw]))
         else:
             if verbose:
                 print("Alignment succeeded")
