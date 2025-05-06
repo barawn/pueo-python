@@ -7,6 +7,7 @@ from .pueo_turfaurora import PueoTURFAurora
 from .pueo_turfgbe import PueoTURFGBE
 from .pueo_cratebridge import PueoCrateBridge
 from .pueo_turfevent import PueoTURFEvent
+from .pueo_turftrig import PueoTURFTrig
 
 from ..common.pyaxibridge import PyAXIBridge
 from ..common.ethdevice import EthDevice
