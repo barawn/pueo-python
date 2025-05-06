@@ -1,4 +1,6 @@
 import itertools
+import os
+import gzip
 
 def short(msb,lsb):
     return (msb<<8) | lsb
@@ -42,8 +44,13 @@ class HexFile(object):
         cs = None
         ip = None
 
-        with open(filename) as fp:
-            lines = fp.readlines()
+        if os.path.splitext(filename)[1] == '.gz':
+            with gzip.open(filename) as fp:
+                blines = fp.readlines()
+                lines = [bline.decode('utf-8') for bline in blines] 
+        else:
+            with open(filename) as fp:
+                lines = fp.readlines()
 
         extended_linear_address = 0
         extended_segment_address = 0
