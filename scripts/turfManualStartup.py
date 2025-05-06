@@ -44,7 +44,7 @@ for tionum in tioList:
         print(f'CIN alignment failed on TURFIO#{tionum}!!') 
         continue
     tio.calign[0].enable(True)
-    tio.calign[0].train_enable(False)
+    dev.ctl.tio[tionum].train_enable(False)
     print(f'CIN is running on TURFIO#{tionum}')
     tio.sync_offset = 8
     tio.extsync = True
