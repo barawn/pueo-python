@@ -105,6 +105,7 @@ class PueoTURF:
         self.aurora = PueoTURFAurora(self.dev, 0x8000)
         self.gbe = PueoTURFGBE(self.dev, 0x4000)
         self.event = PueoTURFEvent(self.dev, 0x18000)
+        self.trig = PueoTURFTrig(self.dev, 0x1C000)
         self.crate = PueoCrateBridge(self.dev, (1<<27))
         self.clockMonValue = 100000000
         self.write(self.map['SYSCLKMON'], self.clockMonValue)
