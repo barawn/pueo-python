@@ -176,11 +176,12 @@ class PueoTURFIO:
                              prescale=2)
         
         # set up the HSAligns
-        # first, the COUTs
+        # first, the COUTs. I don't know why these were marked as
+        # non-lockable, of course they are??
         self.calign = []
         for i in range(8):
             self.calign.append(PueoHSAlign(self, self.map['SURFTURF']+0x40*i,
-                                           lockable=False,
+                                           lockable=True,
                                            bw=PueoHSAlign.BitWidth.BITWIDTH_32))
         # now the DOUTs
         self.dalign = []
@@ -374,128 +375,8 @@ class PueoTURFIO:
         rv[31:24] = (~on & 0xFF)
         self.write(self.map['SURFTURFCOMMON'], int(rv))
 
-# This is now in the HSAlign
-    # Perform an eye scan on an ISERDES: run over its IDELAY values and get bit
-    # error rates. slptime needs to be larger than the acquisition interval
-    # programmed in. N.B. FIX THIS TO BE AUTOMATICALLY PROGRAMMED
-    #
-    # The "getBitno" shifts this from "old-style" (just bit error count)
-    # to "new-style" (bit error count and bit offset number)
-    #
-    # All the eye control stuff is aligned such that +0x4 is IDELAY, +0x8 is BITERR,
-    # +0xC is BITSLP.
-#    def eyescan(self, slptime, base=None, getBitno=False):
-#        idelayAddr = base + 0x4
-#        biterrAddr = base + 0x8
-#        bitslipAddr = base + 0xC
-#        sc = []
-#        for i in range(32):
-#            self.write(idelayAddr, i)
-#            time.sleep(slptime)
-#            biterr = self.read(biterrAddr)
-#            if getBitno:
-#                if biterr == 0: # This is a new-style eyescan, including bitnos
-#                    testVal = self.read(bitslipAddr)
-#                    nbits = pueo_utils.check_eye(testVal)
-#                    sc.append((biterr, nbits % 4))
-#                else:
-#                    sc.append((biterr, None))
-#            else:
-#                sc.append(biterr)
-#        return sc
+    # All of the eye alignment stuff is now in the HSAlign.
 
-
-    def eyescan_rxclk(self, period=1024):
-        slptime = period*8E-9
-        sc = []
-        # Reset to 0 phase shift because it makes the
-        # scan quicker.
-        self.write(self.map['TURFCTLRESET'], 0<<16)
-        # Set the scan period
-        self.write(self.map['TURFCTLSYSERR'], period)
-        for i in range(448):
-            self.write(self.map['TURFCTLRESET'], i<<16)
-            time.sleep(slptime)
-            sc.append(self.read(self.map['TURFCTLSYSERR']))
-        return sc
-            
-    # Processes an eyescan and returns a list of putative eyes and their widths.
-    # NOTE NOTE NOTE:
-    #
-    # This function needs a "wraparound" option so that if we are
-    # passed an eyescan that fully wraps around (like a phase scan)
-    # this function can "merge" eyes at the beginning/end of the scan.
-    # Other scans (like delay scans) do not actually wrap around and
-    # just have to treat the beginning/end of the eye scan as endings.
-    # MAYBE IMPROVE THIS LATER EVEN WITH DELAY SCANS
-    @staticmethod
-    def process_eyescan(scan, width=32):
-        # We start off by assuming we're not in an eye.
-        in_eye = False
-        eye_start = 0
-        eyes = []
-        for i in range(width):
-            if scan[i] == 0 and not in_eye:
-                eye_start = i
-                in_eye = True
-            elif scan[i] > 0 and in_eye:
-                eye = [ int(eye_start+(i-eye_start)/2), i-eye_start ]
-                eyes.append(eye)
-                in_eye = False
-        # we exited the loop without finding the end of the eye
-        if in_eye:
-            eye = [ int(eye_start+(width-eye_start)/2), width-eye_start ]
-            eyes.append( eye )
-
-        return eyes
-
-    # This is the "new-style" eye-scan function. It finds the center of the
-    # transition rather than the center of an eye.
-    # We need to do both because when we align RXCLK we need the old method.
-    @staticmethod
-    def process_eyescan_edge(scan, width=32):
-        start = None
-        stop = None
-        curBitno = None
-        for i in range(width):
-            val = scan[i]
-            if val[0] == 0 and val[1] is not None:
-                # no errors, data OK
-                if curBitno is None:
-                    curBitno = val[1]
-                    start = i
-                elif val[1] != curBitno:
-                    stop = i
-                    break
-                else:
-                    start = i
-        if start is not None and stop is not None:
-            print("start is", start, "stop is", stop)
-            return (start, stop)
-        return None
-    
-    # forcibly reset TURFCTL interface
-#    def reset_turfctl(self):
-#        rv = bf(self.read(self.map['TURFCTLRESET']))
-#        rv[3] = 1
-#        rv[8] = 0
-#        self.write(self.map['TURFCTLRESET'], int(rv))
-#        rv = bf(self.read(self.map['TURFCTLRESET']))
-#        rv[3] = 0
-#        self.write(self.map['TURFCTLRESET'], int(rv))
-
-    # enable TURF training
-#    def turf_train(self, enable):
-#        rv = bf(self.read(self.map['TURFCTLRESET']))
-#        if enable:
-#            rv[10] = 1
-#        else:
-#            rv[10] = 0
-#        self.write(self.map['TURFCTLRESET'], int(rv))
-
-    # Set up sync. By default the offset is 8 clocks,
-    # which appears to put the TURF and TURFIO/SURF clocks
-    # within 1 clock with a 1 meter cable.
     # Note: sync should not be LEFT enabled just in case
     # something goes horribly wrong with the TURFIO comms.
     def sync_enable(self, enable, delay=8):
