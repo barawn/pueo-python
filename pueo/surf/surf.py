@@ -445,18 +445,36 @@ class PueoSURF:
         if verbose:
             print("sample center is at", eye[0], "with bit offset", eye[1])
         return eye
+
+    # these are all of the simple controls
+    @property
+    def turfio_lock_req(self):
+        return (self.read(0x800) >> 11) & 0x1
+
+    @turfio_lock_req.setter
+    def turfio_lock_req(self, value):
+        r = bf(self.read(0x800))
+        r[11] = 1 if value else 0
+        self.write(0x800, int(r))
+
+    @property
+    def turfio_locked_or_running(self):
+        return (self.read(0x800) >> 12) & 0x1
+
+    @property
+    def turfio_cin_active(self):
+        return (self.read(0x800) >> 7) & 0x1
     
-    def turfioLock(self, enable):
-        r = bf(self.read(self.map['TIOCTRL']))        
-        if enable:
-            r[11] = 1
-        else:
-            r[10] = 1
-        self.write(self.map['TIOCTRL'], int(r))
-    
-    def turfioLocked(self):
-        r = bf(self.read(self.map['TIOCTRL']))
-        return r[12]
+    @property
+    def turfio_train_enable(self):
+        return (self.read(0x800) >> 6) & 0x1
+
+    @turfio_train_enable.setter
+    def turfio_train_enable(self, value):
+        r = bf(self.read(0x800))
+        r[6] = 1 if value else 0
+        self.write(0x800, int(r))
+
     
     # set the bit offset to a value
     def turfioSetOffset(self, val):
