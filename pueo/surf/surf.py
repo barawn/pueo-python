@@ -469,7 +469,7 @@ class PueoSURF:
     @turfio_cin_active.setter
     def turfio_cin_active(self, value):
         r = self.read(0x800) & ~0x80
-        self.write(r)
+        self.write(0x800, r)
     
     @property
     def turfio_train_enable(self):
