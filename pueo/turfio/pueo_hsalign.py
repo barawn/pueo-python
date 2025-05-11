@@ -80,7 +80,7 @@ class PueoHSAlign(dev_submod):
         testVal = int(eye_val)
         # just hardcode this check for now!!!
         if (bw == 8):
-            return self.BW8_MAP[testVal] if testVal in self.BW8_MAP else None
+            return cls.BW8_MAP[testVal] if testVal in cls.BW8_MAP else None
         def rightRotate(n, d):
             return (n>>d)|(n<<(bw-d)) & (2 ** bw - 1)
         for i in range(bw):
