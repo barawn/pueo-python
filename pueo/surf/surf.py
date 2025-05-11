@@ -491,7 +491,18 @@ class PueoSURF:
         value &= 0x1F
         r[20:16] = value
         self.write(0xC, int(r))
-    
+
+    @property
+    def sync_seen(self):
+        return (self.read(0xC) >> 23) & 0x1
+
+    # write anything to reset
+    @sync_seen.setter
+    def sync_seen(self, value):
+        r = self.read(0xC)
+        r |= (1<<23)
+        self.write(0xC, r)
+        
     # set the bit offset to a value
     def turfioSetOffset(self, val):
         # both bitslip reset and bitslip are flags
