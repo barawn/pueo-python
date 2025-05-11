@@ -481,6 +481,16 @@ class PueoSURF:
         r[6] = 1 if value else 0
         self.write(0x800, int(r))
 
+    @property
+    def sync_offset(self):
+        return (self.read(0xC) >> 16) & 0x1F
+
+    @sync_offset.setter
+    def sync_offset(self, value):
+        r = bf(self.read(0xC))
+        value &= 0x1F
+        r[20:16] = value
+        self.write(0xC, int(r))
     
     # set the bit offset to a value
     def turfioSetOffset(self, val):
