@@ -75,8 +75,8 @@ class PueoHSAlign(dev_submod):
     # 0xA9569A65 (2 bitslips needed)
     # 0xD4AB4D32 (3 bitslips needed)
     # GODDAMNIT JUST MAKE A LOOKUP TABLE
-    @staticmethod
-    def check_eye(eye_val, bw=32, trainValue=trainVal[BitWidth.BITWIDTH_32]):
+    @classmethod
+    def check_eye(cls, eye_val, bw=32, trainValue=trainVal[BitWidth.BITWIDTH_32]):   
         testVal = int(eye_val)
         # just hardcode this check for now!!!
         if (bw == 8):
