@@ -28,6 +28,23 @@ class PueoHSAlign(dev_submod):
     class BitWidth(Enum):
         BITWIDTH_8 = 8
         BITWIDTH_32 = 32
+        
+    # 0xD4 => 7 BITSLIPS NEEDED
+    # 0x9A => 6 BITSLIPS NEEDED
+    # 0x35 => 5 BITSLIPS NEEDED
+    # 0xA6 => 4 BITSLIPS NEEDED
+    # 0x4D => 3 BITSLIPS NEEDED
+    # 0xA9 => 2 BITSLIPS NEEDED
+    # 0x53 => 1 BITSLIP NEEDED
+    # 0x6A => 0 BITSLIPS NEEDED    
+    BW8_MAP = { 0xD4 : 7,
+                0x9A : 6,
+                0x35 : 5,
+                0xA6 : 4,
+                0x4D : 3,
+                0xA9 : 2,
+                0x53 : 1,
+                0x6A : 0 }
 
     # LOCK_REQ is either a lock request (if lockable) or enable
     # TRAINEN enables training on the associated output interface
@@ -57,11 +74,13 @@ class PueoHSAlign(dev_submod):
     # 0x52AD34CB (1 bitslip  needed)
     # 0xA9569A65 (2 bitslips needed)
     # 0xD4AB4D32 (3 bitslips needed)
-    # Note that we ALSO need to check all the nybble-rotated
-    # versions of this
+    # GODDAMNIT JUST MAKE A LOOKUP TABLE
     @staticmethod
     def check_eye(eye_val, bw=32, trainValue=trainVal[BitWidth.BITWIDTH_32]):
         testVal = int(eye_val)
+        # just hardcode this check for now!!!
+        if (bw == 8):
+            return self.BW8_MAP[testVal] if testVal in self.BW8_MAP else None
         def rightRotate(n, d):
             return (n>>d)|(n<<(bw-d)) & (2 ** bw - 1)
         for i in range(bw):
