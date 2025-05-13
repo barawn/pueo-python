@@ -224,8 +224,9 @@ class PueoHSAlign(dev_submod):
                 self.write(self.map['CTLRESET'], int(rv))
             return True
 
-    # Run the alignment procedure using new-style alignment (search for bit transition)
-    def align(self, doReset=True, verbose=False):
+    # Sigh, split the alignment procedure in two:
+    # first find the eye and offset, then apply it.    
+    def find_alignment(self, doReset=True, verbose=False):
         if (doReset):
             rv = bf(self.read(self.map['CTLRESET']))
             rv[self.CtlReset.ISERDES_RST.value] = 1
@@ -259,8 +260,11 @@ class PueoHSAlign(dev_submod):
         if verbose:
             print("Eye transition at", transition,": using tap", delayVal)            
 
-        self.set_delay(delayVal)
-        slipFix = sc[delayVal][1]
+        return (delayVal, sc[delayVal][1])
+
+    def apply_alignment(self, eye, verbose=False):
+        self.set_delay(eye[0])
+        slipFix = eye[1]
         if verbose:
             print("Performing", slipFix, "bit slips")
         for i in range(slipFix):
