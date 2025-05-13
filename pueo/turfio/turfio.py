@@ -365,6 +365,10 @@ class PueoTURFIO:
         self.program_lmk(reg)
         self.genshift.gpio(self.SHIFT_LMKOE_GPIO, self.genshift.GpioState.GPIO_HIGH)
         self.genshift.disable()
+        # and now pull sysclk out of reset
+        r = bf(self.read(0xC))
+        r[7] = 0
+        self.write(0xC, int(r))
 
     def enable_rxclk(self, on=True):
         rv = bf(self.read(self.map['SURFTURFCOMMON']))
