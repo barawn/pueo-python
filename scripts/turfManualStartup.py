@@ -39,10 +39,13 @@ for tionum in tioList:
     print(f'TURFIO#{tionum} - tap is {tap}')
     print(f'Aligning CIN on TURFIO#{tionum}...')    
     dev.ctl.tio[tionum].train_enable(True)
-    pv = tio.calign[0].align(doReset=True)
-    if not pv:
-        print(f'CIN alignment failed on TURFIO#{tionum}!!') 
+    try:
+        eye = tio.calign[0].find_alignment(doReset=True)        
+    except IOError:
+        print(f'Alignment failed on TURFIO#{tionum}, skipping')
         continue
+    print(f'CIN alignment: tap {eye[0]} offset {eye[1]}')
+    tio.calign[0].apply_alignment(eye)
     tio.calign[0].enable(True)
     dev.ctl.tio[tionum].train_enable(False)
     print(f'CIN is running on TURFIO#{tionum}')
