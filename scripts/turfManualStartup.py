@@ -49,7 +49,7 @@ for tionum in tioList:
     tio.calign[0].enable(True)
     dev.ctl.tio[tionum].train_enable(False)
     print(f'CIN is running on TURFIO#{tionum}')
-    tio.syncdelay = 9 if eye[1] is 0 else 8 
+    tio.syncdelay = 9 if eye[1] == 0 else 8 
     tio.extsync = True
     enabled_turfios.append(tio)
     
