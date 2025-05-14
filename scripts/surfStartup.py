@@ -29,7 +29,7 @@ for n in tio:
 # enable RXCLK for the TURFIOs containing the SURFs
 for t in tio.values():
     print(f'Enabling RXCLK on {t}')
-    tio.enable_rxclk(True)
+    t.enable_rxclk(True)
 
 surfActiveList = []
 for surfAddr in surfList:
