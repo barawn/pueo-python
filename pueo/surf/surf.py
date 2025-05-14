@@ -502,6 +502,17 @@ class PueoSURF:
         r = self.read(0xC)
         r |= (1<<23)
         self.write(0xC, r)
+
+    @property
+    def live_seen(self):
+        return (self.read(0xC) >> 22) & 0x1
+
+    #write anything to reset
+    @live_seen.setter
+    def live_seen(self, value):
+        r = self.read(0xC)
+        r |= (1<<22)
+        self.write(0xC, r)
         
     # set the bit offset to a value
     def turfioSetOffset(self, val):
