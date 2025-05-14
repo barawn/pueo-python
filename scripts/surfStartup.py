@@ -2,6 +2,7 @@ from pueo.turf import PueoTURF
 from pueo.turfio import PueoTURFIO
 from pueo.surf import PueoSURF
 import time
+import sys
 
 # WHATEVER JUST HARDCODE THIS FOR NOW
 surfList = [ (0, 0) ]
@@ -17,6 +18,8 @@ for surfAddr in surfList:
         masks[surfAddr] = 0
     masks[surfAddr] |= (1<<(surfAddr[1]+16))
 
+sys.exit(1)
+    
 # enable autotrain for the enabled SURFs
 for n in tio:
     print(f'Setting TURFIO#{n} autotrain to {hex(masks[n])}')
