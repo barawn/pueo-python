@@ -18,6 +18,9 @@ for surfAddr in surfList:
         masks[surfAddr[0]] = 0
     masks[surfAddr[0]] |= (1<<(surfAddr[1]+16))
 
+for m in masks:
+    print(f'mask {m} is {hex(masks[m])}')
+    
 sys.exit(1)
     
 # enable autotrain for the enabled SURFs
