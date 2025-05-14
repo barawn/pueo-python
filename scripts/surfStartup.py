@@ -62,6 +62,7 @@ for surfAddr in surfActiveList:
     s.turfio_train_enable = True
     # end hack
     eye = t.dalign[sn].find_alignment(doReset=True, verbose=True)
-    t.dalign[sn].apply_alignment(eye)
+    print(f'SURF#{sn} on TURFIO#{tn}: tap {eye[0]} offset {eye[1]}')
+    t.dalign[sn].apply_alignment(eye, verbose=True)
     s.turfio_train_enable = False
     
