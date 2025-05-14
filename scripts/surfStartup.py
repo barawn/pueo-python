@@ -44,6 +44,7 @@ for surfAddr in surfList:
         print(f'SURF#{sn} on TURFIO#{tn} did not become ready??')
     else:
         print(f'SURF#{sn} on TURFIO#{tn} is ready for out training')
+        tio[tn].dalign[sn].trainEnable(False)
         surfActiveList.append(surfAddr)
 
 # dumbass hackery
@@ -61,9 +62,13 @@ dev.trig.runcmd(dev.trig.RUNCMD_SYNC)
 for surfAddr in surfActiveList:
     tn = surfAddr[0]
     t = tio[tn]
+    print(f'Training SURF#{sn} on TURFIO#{tn}:')
     eye = t.dalign[sn].find_alignment(doReset=True, verbose=True)
-    print(f'SURF#{sn} on TURFIO#{tn}: tap {eye[0]} offset {eye[1]}')
-    t.dalign[sn].apply_alignment(eye, verbose=True)
-
+    if eye is not None:
+        print(f'SURF#{sn} on TURFIO#{tn}: tap {eye[0]} offset {eye[1]}')
+        t.dalign[sn].apply_alignment(eye, verbose=True)
+    else:
+        print(f'SURF#{sn} on TURFIO#{tn} failed training!!!')
+        
 print("Issuing NOOP_LIVE")
 dev.trig.runcmd(dev.trig.RUNCMD_NOOP_LIVE)
