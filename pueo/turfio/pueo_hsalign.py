@@ -259,7 +259,11 @@ class PueoHSAlign(dev_submod):
             delayVal = transition - eyeCenterOffset
         if verbose:
             print("Eye transition at", transition,": using tap", delayVal)            
-
+        if sc[delayVal][1] is None:
+            print("Target tap has invalid data??")
+            print(sc)
+            return None
+            
         return (delayVal, sc[delayVal][1])
 
     def apply_alignment(self, eye, verbose=False):
