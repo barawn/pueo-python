@@ -15,8 +15,8 @@ for surfAddr in surfList:
         print(f'Building TURFIO#{surfAddr[0]}')
         tio[surfAddr[0]] = PueoTURFIO((dev, surfAddr[0]), 'TURFGTP')
         print(f'TURFIO#{surfAddr[0]} : {tio[surfAddr[0]]}')
-        masks[surfAddr] = 0
-    masks[surfAddr] |= (1<<(surfAddr[1]+16))
+        masks[surfAddr[0]] = 0
+    masks[surfAddr[0]] |= (1<<(surfAddr[1]+16))
 
 sys.exit(1)
     
