@@ -6,6 +6,7 @@ class PueoTURFTrig(dev_submod):
     map = { 'RUNCMD' : 0x0,
             'FWU' : 0x4 }
 
+    RUNCMD_NOOP_LIVE = 0
     RUNCMD_SYNC = 1
     RUNCMD_RESET = 2
     RUNCMD_STOP = 3

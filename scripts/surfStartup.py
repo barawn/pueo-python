@@ -46,25 +46,24 @@ for surfAddr in surfList:
         print(f'SURF#{sn} on TURFIO#{tn} is ready for out training')
         surfActiveList.append(surfAddr)
 
-########
-# DUMBASS HACK DUE TO STUPIDITY
-########
-
+# dumbass hackery
 for surfAddr in surfActiveList:
     tn = surfAddr[0]
     sn = surfAddr[1]
     t = tio[tn]
     # THIS SHOULD BE AUTOSET?!?
+    print(f'Applying sync offset to SURF#{sn} on TURFIO${tn}')
     s = PueoSURF((t, sn), 'TURFIO')
     s.sync_offset = 7
-    # THIS IS THE DUMBASS HACK FOR NOW
-    t.dalign[sn].trainEnable(False)
-    dev.trig.runcmd(dev.trig.RUNCMD_SYNC)
-    s.turfio_train_enable = 1
-    time.sleep(0.1)
-    # end hack
+    
+print("Issuing SYNC")
+dev.trig.runcmd(dev.trig.RUNCMD_SYNC)
+for surfAddr in surfActiveList:
+    tn = surfAddr[0]
+    t = tio[tn]
     eye = t.dalign[sn].find_alignment(doReset=True, verbose=True)
     print(f'SURF#{sn} on TURFIO#{tn}: tap {eye[0]} offset {eye[1]}')
     t.dalign[sn].apply_alignment(eye, verbose=True)
-    s.turfio_train_enable = 0
-    
+
+print("Issuing NOOP_LIVE")
+dev.trig.runcmd(dev.trig.RUNCMD_NOOP_LIVE)
