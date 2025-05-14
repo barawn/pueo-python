@@ -21,8 +21,6 @@ for surfAddr in surfList:
 for m in masks:
     print(f'mask {m} is {hex(masks[m])}')
     
-sys.exit(1)
-    
 # enable autotrain for the enabled SURFs
 for n in tio:
     print(f'Setting TURFIO#{n} autotrain to {hex(masks[n])}')
