@@ -53,12 +53,13 @@ for surfAddr in surfActiveList:
     sn = surfAddr[1]
     t = tio[tn]
     # THIS SHOULD BE AUTOSET?!?
-    print(f'Applying sync offset to SURF#{sn} on TURFIO${tn}')
+    print(f'Applying sync offset to SURF#{sn} on TURFIO#{tn}')
     s = PueoSURF((t, sn), 'TURFIO')
     s.sync_offset = 7
     
 print("Issuing SYNC")
 dev.trig.runcmd(dev.trig.RUNCMD_SYNC)
+trainedSurfs = []
 for surfAddr in surfActiveList:
     tn = surfAddr[0]
     t = tio[tn]
@@ -67,8 +68,17 @@ for surfAddr in surfActiveList:
     if eye is not None:
         print(f'SURF#{sn} on TURFIO#{tn}: tap {eye[0]} offset {eye[1]}')
         t.dalign[sn].apply_alignment(eye, verbose=True)
+        trainedSurfs.append(surfAddr)
     else:
         print(f'SURF#{sn} on TURFIO#{tn} failed training!!!')
         
 print("Issuing NOOP_LIVE")
 dev.trig.runcmd(dev.trig.RUNCMD_NOOP_LIVE)
+
+for surfAddr in trainedSurfs:
+    tn = surfAddr[0]
+    sn = surfAddr[1]
+    t = tio[tn]
+    print(f'Unmasking data from SURF#{sn} on TURFIO#{tn}')
+    t.dalign[sn].dout_mask = 0
+
