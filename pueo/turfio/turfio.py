@@ -457,29 +457,27 @@ class PueoTURFIO:
                 return i
         return None     
 
-    def updateTurfioFirmware(self, turfionum, firmvers=None, mcs_loc='/home/pueo/imgs/'):
+    def updateTurfioFirmware(self, dev, firmvers=None, mcs_loc='/home/pueo/imgs/'):
         """
         function to update TURFIO firmware after files have been copied into computer
 
         Parameters
         ----------
-        turfionum: int
-            TURFIO # to link [1,2,4, or 5]
+        dev: PueoTURFIO
+            TURFIO you're linked to
         firmverse: string (optional)
             if specified, use TURFIO firmware version # [of form v_r_p_]
         mcs_loc: string (defaults to /home/pueo/imgs/)
             specifies where TURFIO firmware is located
         """
-        dev = self.find_serial_devices(int(turfionum))[0][0]
-
-        print("Linked to TURFIO "+turfionum)
         
         if firmvers is None:
-            mcs_list = glob.glob(mcs_loc+'pueo_turfio_*.mcs').sort()[-1]
+            mcs_list = glob.glob(mcs_loc+'pueo_turfio_*.mcs')
             vers_list = []
             for vers in mcs_list:
                 curr_vers = vers.split(mcs_loc+'pueo_turfio_')[1].split('.mcs')[0]
                 vers_list.append(curr_vers)
+            vers_list.sort()
             mcs_vers = mcs_loc+'pueo_turfio_'+vers_list[-1]+'.mcs'
             
         else:
