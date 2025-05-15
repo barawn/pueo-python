@@ -147,6 +147,11 @@ class PueoHSAlign(dev_submod):
     # convenience function for setting delay
     # Might end up subclassing the HSAlign for the UltraScale/7 series differences
     def set_delay(self, delayVal):
+        # if we have more than 32 taps, we're cascaded
+        # and our cascade sleaze is that when we jump into the second
+        # IDELAY we need to add 1.
+        if self.maxTaps > 32:
+            delayVal = delayVal+1 if delayVal & 32 else delayVal
         self.write(self.map['IDELAY'], delayVal)
     
     def eyescan(self, slptime=0.01, getBitno=True):

@@ -188,6 +188,7 @@ class PueoTURFIO:
         for i in range(7):
             self.dalign.append(PueoHSAlign(self, self.map['SURFDOUT']+0x40*i,
                                            lockable=False,
+                                           maxTaps=63,
                                            bw=PueoHSAlign.BitWidth.BITWIDTH_8))
 
         # now the SURFbridges
