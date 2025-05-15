@@ -455,15 +455,21 @@ class PueoTURFIO:
         for i in range(len(self.surfbridge)):
             if self.surfbridge[i] == surf.dev:
                 return i
-        return None        
-
-    # class method to locate all USB-connected TURFIOs and return ttys/sns
-    # only works if you have pyusb installed and are on Linux and have
-    @classmethod
-    def find_serial_devices(cls, board = -1, verbose=False):
-        return SerialCOBSDevice.find_serial_devices(board, 'TI', verbose)
+        return None     
 
     def updateTurfioFirmware(self, turfionum, firmvers=None, mcs_loc='/home/pueo/imgs/'):
+        """
+        function to update TURFIO firmware after files have been copied into computer
+
+        Parameters
+        ----------
+        turfionum: int
+            TURFIO # to link [1,2,4, or 5]
+        firmverse: string (optional)
+            if specified, use TURFIO firmware version # [of form v_r_p_]
+        mcs_loc: string (defaults to /home/pueo/imgs/)
+            specifies where TURFIO firmware is located
+        """
         dev = self.find_serial_devices(int(turfionum))[0][0]
 
         print("Linked to TURFIO "+turfionum)
@@ -482,4 +488,10 @@ class PueoTURFIO:
         print("Using TURFIO firmware "+mcs_vers)
 
         with dev.genspi as spi: 
-            spi.program_mcs(mcs_vers)
+            spi.program_mcs(mcs_vers)   
+
+    # class method to locate all USB-connected TURFIOs and return ttys/sns
+    # only works if you have pyusb installed and are on Linux and have
+    @classmethod
+    def find_serial_devices(cls, board = -1, verbose=False):
+        return SerialCOBSDevice.find_serial_devices(board, 'TI', verbose)
