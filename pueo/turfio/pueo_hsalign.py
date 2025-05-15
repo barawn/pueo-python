@@ -190,7 +190,18 @@ class PueoHSAlign(dev_submod):
         rv = self.read(0) & 0xFFFF
         rv |= (value & 0xFFFF) << 16
         self.write(0, rv)        
-    
+
+    @property
+    def dout_mask(self):
+        return (self.read(0)>>15) & 0x1
+
+    @dout_mask.setter
+    def dout_mask(self, value):
+        rv = self.read(0) & 0xFFFF7FFF
+        if value:
+            rv |= 0x8000
+        self.write(0, rv)
+        
     # enable training on output interface
     def trainEnable(self, onOff):
         rv = bf(self.read(self.map['CTLRESET']))
