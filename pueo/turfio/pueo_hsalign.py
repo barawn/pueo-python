@@ -29,6 +29,16 @@ class PueoHSAlign(dev_submod):
         BITWIDTH_8 = 8
         BITWIDTH_32 = 32
         
+
+    # OK, the map is so much more complicated now.
+    # We have 2 things we need to derive: number of bitslips
+    # and the capture phase. But we'll 'encode' that
+    # in the top bit, so 7/6/5/4 need capture phase 1,
+    # and 3/2/1/0 need capture phase 0.
+    # You can only determine this map after a reset of the ISERDES
+    # and when you're in capture phase 0!
+    # Once you bitslip you don't really 'know' where you are!
+    
     # 0xD4 => 7 BITSLIPS NEEDED
     # 0x9A => 6 BITSLIPS NEEDED
     # 0x35 => 5 BITSLIPS NEEDED
@@ -98,9 +108,23 @@ class PueoHSAlign(dev_submod):
         self.eyeInTaps = eyeInTaps
         super().__init__(dev, base)
 
+    @staticmethod
+    def edges_to_eyes(scan, edges, maxWidth=32, eyeWidth=26):
+        eyes = {}
+        for edge in edges:
+            edgeVal = int((edge[0] + edge[1])/2)
+            eyeCenter = edgeVal - (eyeWidth//2)
+            if eyeCenter > 0 and scan[eyeCenter] is not None:
+                eyes[scan[eyeCenter][1]] = eyeCenter
+        lastEyeCenter = edgeVal + (eyeWidth//2)
+        if lastEyeCenter < maxWidth and scan[lastEyeCenter] is not None:
+            eyes[scan[lastEyeCenter][1]] = lastEyeCenter
+        return eyes
+        
     # Find the edges of an eyescan
     @staticmethod
-    def process_eyescan_edge(scan, width=32, verbose=False):
+    def process_eyescan_edge(scan, width=32, verbose=False, allEdges=False):
+        edges = []
         start = None
         stop = None
         curBitno = None
@@ -113,14 +137,19 @@ class PueoHSAlign(dev_submod):
                     start = i
                 elif val[1] != curBitno:
                     stop = i
-                    break
+                    if verbose:
+                        print("edge at (", start, ",", stop, ")")
+                    if not allEdges:
+                        return (start, stop)
+                    edges.append((start,stop))
+                    start = None
+                    stop = None
+                    curBitno = None
                 else:
                     start = i
-        if start is not None and stop is not None:
-            if verbose:
-                print("start is", start, "stop is", stop)
-            return (start, stop)
-        return None
+        if len(edges) == 0:
+            return None
+        return edges
 
     # This method is used for the RXCLK eyescan.
     @staticmethod
@@ -203,8 +232,17 @@ class PueoHSAlign(dev_submod):
     @dout_mask.setter
     def dout_mask(self, value):
         rv = self.read(0) & 0xFFFF7FFF
-        if value:
-            rv |= 0x8000
+        rv |= 0x8000 if value else 0
+        self.write(0, rv)
+
+    @property
+    def iserdes_reset(self):
+        return (self.read(0) >> 2) & 0x1
+
+    @iserdes_reset.setter
+    def iserdes_reset(self, value):
+        rv = self.read(0) & 0xFFFFFFFB
+        rv |= 0x4 if value else 0
         self.write(0, rv)
         
     # enable training on output interface
