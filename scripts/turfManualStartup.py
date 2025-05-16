@@ -44,7 +44,7 @@ tioEyes = [ None, None, None, None ]
 for i in range(4):
     if tios[i] is not None:
         try:
-            eyes = tio.calign[0].find_alignment(doReset=True)        
+            eyes = tios[i].calign[0].find_alignment(doReset=True)        
         except IOError:
             print(f'Alignment failed on TURFIO#{i}, skipping')
             continue
