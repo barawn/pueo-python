@@ -399,9 +399,19 @@ class PueoTURFIO:
     @extsync.setter
     def extsync(self, value):
         r = self.read(0x10) & ~0x100
-        if value:
-            r |= 0x100
+        r |= 0x100 if value else 0
         self.write(0x10, r)
+
+
+    @property
+    def watchdog_disable(self):
+        return (self.read(0x3000)>>8) & 0x1
+
+    @watchdog_disable.setter
+    def watchdog_disable(self, value):
+        r = self.read(0x3000) & 0xFFFFFEFF
+        r |= 0x100 if value else 0
+        self.write(0x3000, r)
         
     def monitor(self, verbose=True):
         self.i2c.write(0x48, [0x5])
