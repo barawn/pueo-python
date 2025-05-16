@@ -78,9 +78,13 @@ if len(commonEye) > 1:
                 minEye = eye
                 print(f'New eye {minEye} has smaller tap {min}, using it')
     usingEye = minEye
-else:
+else if len(commonEye):
     usingEye = list(commonEye)[0]
-    
+
+if usingEye is None:
+    print("No common eye found???!?")
+    sys.exit(1)
+
 print(f'Using eye: {usingEye}')
 
 enabled_turfios = []
