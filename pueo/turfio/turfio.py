@@ -182,6 +182,7 @@ class PueoTURFIO:
         for i in range(8):
             self.calign.append(PueoHSAlign(self, self.map['SURFTURF']+0x40*i,
                                            lockable=True,
+                                           maxTaps=63 if i == 0 else 32,
                                            bw=PueoHSAlign.BitWidth.BITWIDTH_32))
         # now the DOUTs
         self.dalign = []
