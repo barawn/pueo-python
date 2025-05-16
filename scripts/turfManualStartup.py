@@ -83,7 +83,7 @@ else:
     
 print(f'Using eye: {usingEye}')
 
-enabledTurfios = []
+enabled_turfios = []
 for i in range(4):
     if tioEyes[i] is not None:
         eye = (tioEyes[i][usingEye], usingEye)
@@ -92,7 +92,7 @@ for i in range(4):
         dev.ctl.tio[i].train_enable(False)
         tios[i].syncdelay = 9 if usingEye == 0 else 8
         tios[i].extsync = True
-        enabled_turfios.append(tio[i])
+        enabled_turfios.append(tios[i])
         print(f'CIN is running on TURFIO#{i}')
     
 dev.trig.runcmd(dev.trig.RUNCMD_SYNC)
