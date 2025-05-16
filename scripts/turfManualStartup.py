@@ -88,7 +88,7 @@ for i in range(4):
     if tioEyes[i] is not None:
         eye = (tioEyes[i][usingEye], usingEye)
         print(f'CIN alignment on TURFIO#{i}: tap {eye[0]} offset {eye[1]}')
-        tio[i].calign[0].apply_alignment(eye)
+        tios[i].calign[0].apply_alignment(eye)
         dev.ctl.tio[i].train_enable(False)
         tio[i].syncdelay = 9 if usingEye == 0 else 8
         tio[i].extsync = True
