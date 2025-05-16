@@ -282,11 +282,8 @@ class PueoHSAlign(dev_submod):
     # first find the eye and offset, then apply it.    
     def find_alignment(self, doReset=True, verbose=False):
         if (doReset):
-            rv = bf(self.read(self.map['CTLRESET']))
-            rv[self.CtlReset.ISERDES_RST.value] = 1
-            self.write(self.map['CTLRESET'], int(rv))
-            rv[self.CtlReset.ISERDES_RST.value] = 0
-            self.write(self.map['CTLRESET'], int(rv))
+            self.iserdes_reset = 1
+            self.iserdes_reset = 0
 
         delayVal = None
         slipFix = None
