@@ -14,11 +14,11 @@ parser.add_argument("--mcsloc", default='/home/pueo/imgs/',
                     help="if specified, points to directory of .mcs file. Defaults to /home/pueo/imgs")
 args = parser.parse_args()
 
-dev = PueoTURFIO(PueoTURFIO.find_serial_devices(int(args.turfionum))[0][0], 'SERIAL')
+PueoTURFIO(PueoTURFIO.find_serial_devices(int(args.turfionum))[0][0], 'SERIAL')
 
 print("Linked to TURFIO "+args.turfionum)
 
 if args.firmvers is not None:
-       dev.updateTurfioFirmware(dev, args.firmvers,mcs_loc=args.mcsloc)
+       PueoTURFIO.updateTurfioFirmware(args.firmvers,mcs_loc=args.mcsloc)
 else:
-       dev.updateTurfioFirmware(dev,mcs_loc=args.mcsloc)
+       PueoTURFIO.updateTurfioFirmware(mcs_loc=args.mcsloc)

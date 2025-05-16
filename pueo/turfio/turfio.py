@@ -467,19 +467,18 @@ class PueoTURFIO:
                 return i
         return None     
 
-    def updateTurfioFirmware(self, dev, firmvers=None, mcs_loc='/home/pueo/imgs/'):
+    def updateTurfioFirmware(self, firmvers=None, mcs_loc='/home/pueo/imgs/'):
         """
         function to update TURFIO firmware after files have been copied into computer
 
         Parameters
         ----------
-        dev: PueoTURFIO
-            TURFIO you're linked to
         firmverse: string (optional)
             if specified, use TURFIO firmware version # [of form v_r_p_]
         mcs_loc: string (defaults to /home/pueo/imgs/)
             specifies where TURFIO firmware is located
         """
+        self.watchdog_disable = 1
         
         if firmvers is None:
             mcs_list = glob.glob(mcs_loc+'pueo_turfio_*.mcs')
@@ -495,8 +494,10 @@ class PueoTURFIO:
 
         print("Using TURFIO firmware "+mcs_vers)
 
-        with dev.genspi as spi: 
+        with self.genspi as spi: 
             spi.program_mcs(mcs_vers)   
+        
+        self.watchdog_disable = 0
 
     # class method to locate all USB-connected TURFIOs and return ttys/sns
     # only works if you have pyusb installed and are on Linux and have
