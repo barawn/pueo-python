@@ -101,7 +101,11 @@ class PueoHSAlign(dev_submod):
     # bw is an Enum of the bit widths
     # maxTaps is the number of taps available in the IDELAY
     # eyeInTaps is the width of the data eye in units of taps (78.125 ps tap width, 2 ns eye width = 25.6
-    def __init__(self, dev, base, lockable=False,bw=BitWidth.BITWIDTH_32, maxTaps=32, eyeInTaps=26):
+    def __init__(self, dev, base,
+                 lockable=False,
+                 bw=BitWidth.BITWIDTH_32,
+                 maxTaps=32,
+                 eyeInTaps=26):
         self.bw = bw
         self.lockable = lockable
         self.maxTaps = maxTaps
@@ -244,7 +248,7 @@ class PueoHSAlign(dev_submod):
         rv = self.read(0) & 0xFFFFFFFB
         rv |= 0x4 if value else 0
         self.write(0, rv)
-        
+
     # enable training on output interface
     def trainEnable(self, onOff):
         rv = bf(self.read(self.map['CTLRESET']))
@@ -278,8 +282,11 @@ class PueoHSAlign(dev_submod):
                 self.write(self.map['CTLRESET'], int(rv))
             return True
 
-    # Sigh, split the alignment procedure in two:
-    # first find the eye and offset, then apply it.    
+    # OK: we now return a dict of eyes.
+    # That way in startup, we can get dicts for each of the
+    # devices, and then use Python's bitwise-and functions
+    # for lists to find a common eye between all of them.
+    # So no more individual sync offsets!
     def find_alignment(self, doReset=True, verbose=False):
         if (doReset):
             self.iserdes_reset = 1
@@ -291,32 +298,16 @@ class PueoHSAlign(dev_submod):
         # set the biterr time and select our input
         self.write(self.map['BITERR'], 131072)
         sc = self.eyescan()
-        edge = self.process_eyescan_edge(sc)
+        # Find ALL edges
+        edge = self.process_eyescan_edge(sc, width=self.maxTaps, allEdges=True)
         if edge is None:
             raise IOError("Cannot find eye transition: check training status")
 
-        transition = round((edge[0]+edge[1])/2.)
-        # okay, so here's the logic.
-        # we have self.maxTaps of delay
-        # the eye is self.eyeInTaps wide
-        # we *want* to step back round(self.eyeInTaps/2)
-        eyeCenterOffset = round(self.eyeInTaps/2)
-        # if we're too close to zero, center on the other side of the transition
-        # this works for us right now because we have more than a full bit period
-        # in the full delay range.
-        if transition < eyeCenterOffset:
-            delayVal = transition + eyeCenterOffset
-        else:
-            delayVal = transition - eyeCenterOffset
-        if verbose:
-            print("Eye transition at", transition,": using tap", delayVal)            
-        if sc[delayVal][1] is None:
-            print("Target tap has invalid data??")
-            print(sc)
-            return None
-            
-        return (delayVal, sc[delayVal][1])
+        return self.edges_to_eyes(sc, edge,
+                                  maxWidth=self.maxTaps,
+                                  eyeWidth=self.eyeInTaps)
 
+    # now this function takes a tuple of (eye, bitslips)
     def apply_alignment(self, eye, verbose=False):
         self.set_delay(eye[0])
         slipFix = eye[1]
