@@ -155,9 +155,16 @@ class PueoHSAlign(dev_submod):
             return None
         return edges
 
-    # This method is used for the RXCLK eyescan.
+    # RXCLK scan method
     @staticmethod
-    def process_eyescan(scan, width=32):
+    def process_eyescan(scan, width=32, wrap=False):
+        scanShift = 0
+        if wrap:
+            if scan[0] == 0:
+                scanShift = next((i for i, x in enumerate(scan[::-1]) if x), None)
+                # roll the scan, then adjust back
+                scan = scan[-1*scanShift:] + scan[:-1*scanShift]
+                
         # We start off by assuming we're not in an eye.
         in_eye = False
         eye_start = 0
@@ -166,8 +173,15 @@ class PueoHSAlign(dev_submod):
             if scan[i] == 0 and not in_eye:
                 eye_start = i
                 in_eye = True
-            elif scan[i] > 0 and in_eye:
+            elif scan[i] > 0 and in_eye:                
                 eye = [ int(eye_start+(i-eye_start)/2), i-eye_start ]
+                # now adjust it
+                if scanShift != 0:
+                    eyePos = eye[0]
+                    eyePos -= scanShift
+                    if eyePos < 0:
+                        eyePos += width
+                    eye = [ eyePos , i-eye_start ]
                 eyes.append(eye)
                 in_eye = False
         # we exited the loop without finding the end of the eye
@@ -330,7 +344,7 @@ class PueoHSAlign(dev_submod):
         if verbose:
             print("Scanning RXCLK->SYSCLK transition.")
         rxsc = self.eyescan_rxclk()
-        eyes = self.process_eyescan(rxsc, 448)
+        eyes = self.process_eyescan(rxsc, 448, wrap=True)
         bestEye = None
         for eye in eyes:
             if bestEye is not None:
