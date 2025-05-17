@@ -95,6 +95,9 @@ for i in range(4):
         tios[i].calign[0].apply_alignment(eye)
         tios[i].calign[0].enable(True)
         dev.ctl.tio[i].train_enable(False)
+        # NOTE NOTE NOTE - I should probably get rid of this
+        # since there's virtually zero change usingEye could
+        # be zero now.
         tios[i].syncdelay = 9 if usingEye == 0 else 8
         tios[i].extsync = True
         enabled_turfios.append(tios[i])
