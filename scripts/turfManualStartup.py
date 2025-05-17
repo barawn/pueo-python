@@ -78,7 +78,7 @@ if len(commonEye) > 1:
                 minEye = eye
                 print(f'New eye {minEye} has smaller tap {min}, using it')
     usingEye = minEye
-else if len(commonEye):
+elif len(commonEye):
     usingEye = list(commonEye)[0]
 
 if usingEye is None:
