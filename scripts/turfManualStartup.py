@@ -44,7 +44,7 @@ tioEyes = [ None, None, None, None ]
 for i in range(4):
     if tios[i] is not None:
         try:
-            eyes = tio.calign[0].find_alignment(doReset=True)        
+            eyes = tios[i].calign[0].find_alignment(doReset=True)        
         except IOError:
             print(f'Alignment failed on TURFIO#{i}, skipping')
             continue
@@ -78,21 +78,25 @@ if len(commonEye) > 1:
                 minEye = eye
                 print(f'New eye {minEye} has smaller tap {min}, using it')
     usingEye = minEye
-else:
+else if len(commonEye):
     usingEye = list(commonEye)[0]
-    
+
+if usingEye is None:
+    print("No common eye found???!?")
+    sys.exit(1)
+
 print(f'Using eye: {usingEye}')
 
-enabledTurfios = []
+enabled_turfios = []
 for i in range(4):
     if tioEyes[i] is not None:
         eye = (tioEyes[i][usingEye], usingEye)
         print(f'CIN alignment on TURFIO#{i}: tap {eye[0]} offset {eye[1]}')
-        tio[i].calign[0].apply_alignment(eye)
+        tios[i].calign[0].apply_alignment(eye)
         dev.ctl.tio[i].train_enable(False)
-        tio[i].syncdelay = 9 if usingEye == 0 else 8
-        tio[i].extsync = True
-        enabled_turfios.append(tio[i])
+        tios[i].syncdelay = 9 if usingEye == 0 else 8
+        tios[i].extsync = True
+        enabled_turfios.append(tios[i])
         print(f'CIN is running on TURFIO#{i}')
     
 dev.trig.runcmd(dev.trig.RUNCMD_SYNC)
