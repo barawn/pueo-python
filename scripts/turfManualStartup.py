@@ -93,6 +93,7 @@ for i in range(4):
         eye = (tioEyes[i][usingEye], usingEye)
         print(f'CIN alignment on TURFIO#{i}: tap {eye[0]} offset {eye[1]}')
         tios[i].calign[0].apply_alignment(eye)
+        tios[i].calign[0].enable(True)
         dev.ctl.tio[i].train_enable(False)
         tios[i].syncdelay = 9 if usingEye == 0 else 8
         tios[i].extsync = True
