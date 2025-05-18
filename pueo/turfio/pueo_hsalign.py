@@ -39,21 +39,28 @@ class PueoHSAlign(dev_submod):
     # and when you're in capture phase 0!
     # Once you bitslip you don't really 'know' where you are!
     
-    # 0xD4 => 7 BITSLIPS NEEDED
-    # 0x9A => 6 BITSLIPS NEEDED
-    # 0x35 => 5 BITSLIPS NEEDED
-    # 0xA6 => 4 BITSLIPS NEEDED
-    # 0x4D => 3 BITSLIPS NEEDED
-    # 0xA9 => 2 BITSLIPS NEEDED
-    # 0x53 => 1 BITSLIP NEEDED
-    # 0x6A => 0 BITSLIPS NEEDED    
+    # This map isn't exactly number of bitslips: bit 3 tells you
+    # if you need to flip DOUT's capture phase.
+    # In other words, you do the number of bitslips in this
+    # number & 0x3, and if this number & 0x4, you set dout
+    # capture phase to 1.
+    #
+    # D4 -> A9 -> 53 -> A6 (3 bitslips needed, dout capture phase 1)
+    # A9 -> 53 -> A6    (2 bitslips needed, dout capture phase 1)
+    # 53 -> A6 (1 bitslip needed, dout capture phase 1)
+    # A6 (0 bitslips needed, dout capture phase 1)
+    # NOTE: I'M ACTUALLY NOT SURE ABOUT THESE ONES
+    # 4D (3 bitslips needed, dout capture phase 0)
+    # 9A (2 bitslips needed, dout capture phase 0)
+    # 35 (1 bitslip needed, dout capture phase 0)
+    # A6 (0 bitslips needed, dout capture phase 0)
     BW8_MAP = { 0xD4 : 7,
-                0x9A : 6,
-                0x35 : 5,
+                0xA9 : 6,
+                0x53 : 5,
                 0xA6 : 4,
                 0x4D : 3,
-                0xA9 : 2,
-                0x53 : 1,
+                0x9A : 2,
+                0x35 : 1,
                 0x6A : 0 }
 
     # LOCK_REQ is either a lock request (if lockable) or enable
@@ -86,7 +93,8 @@ class PueoHSAlign(dev_submod):
     # 0xD4AB4D32 (3 bitslips needed)
     # GODDAMNIT JUST MAKE A LOOKUP TABLE
     @classmethod
-    def check_eye(cls, eye_val, bw=32, trainValue=trainVal[BitWidth.BITWIDTH_32]):   
+    def check_eye(cls, eye_val, bw=32,
+                  trainValue=trainVal[BitWidth.BITWIDTH_32]):   
         testVal = int(eye_val)
         # just hardcode this check for now!!!
         if (bw == 8):
@@ -100,7 +108,8 @@ class PueoHSAlign(dev_submod):
 
     # bw is an Enum of the bit widths
     # maxTaps is the number of taps available in the IDELAY
-    # eyeInTaps is the width of the data eye in units of taps (78.125 ps tap width, 2 ns eye width = 25.6
+    # eyeInTaps is the width of the data eye in units of taps
+    # (78.125 ps tap width, 2 ns eye width = 25.6
     def __init__(self, dev, base,
                  lockable=False,
                  bw=BitWidth.BITWIDTH_32,
@@ -263,6 +272,16 @@ class PueoHSAlign(dev_submod):
         rv |= 0x4 if value else 0
         self.write(0, rv)
 
+    @property
+    def dout_capture_phase(self):
+        return (self.read(0) >> 7) & 0x1
+
+    @dout_capture_phase.setter
+    def dout_capture_phase(self, value):
+        rv = self.read(0) & 0xFFFFFF7F
+        rv |= 0x80 if value else 0
+        self.write(0, rv)
+        
     # enable training on output interface
     def trainEnable(self, onOff):
         rv = bf(self.read(self.map['CTLRESET']))
@@ -322,6 +341,8 @@ class PueoHSAlign(dev_submod):
                                   eyeWidth=self.eyeInTaps)
 
     # now this function takes a tuple of (eye, bitslips)
+    # This is becoming a super mess, we really need to
+    # subclass out things for DOUT vs COUT.
     def apply_alignment(self, eye, verbose=False):
         self.set_delay(eye[0])
         slipFix = eye[1]
