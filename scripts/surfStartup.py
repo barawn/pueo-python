@@ -127,10 +127,10 @@ for i in range(4):
 print("Issuing NOOP_LIVE")
 dev.trig.runcmd(dev.trig.RUNCMD_NOOP_LIVE)
 
-for surfAddr in trainedSurfs:
-    tn = surfAddr[0]
-    sn = surfAddr[1]
-    t = tio[tn]
-    print(f'Unmasking data from SURF#{sn} on TURFIO#{tn}')
-    t.dalign[sn].enable = 1
+#for surfAddr in trainedSurfs:
+#    tn = surfAddr[0]
+#    sn = surfAddr[1]
+#    t = tio[tn]
+#    print(f'Unmasking data from SURF#{sn} on TURFIO#{tn}')
+#    t.dalign[sn].enable = 1
 
