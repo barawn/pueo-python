@@ -54,10 +54,9 @@ class PueoCINAlign(PueoHSAlign):
         """
         eyes = super().find_alignment(do_reset=do_reset,
                                       verbose=verbose)
-        new_eyes = {}
-        for key in eyes.keys():
-            new_eyes[key % 4] = eyes[key]
-        return new_eyes
+        # modulo 4 all the values
+        eyes.update((x,y%4) for x, y in eyes.items())
+        return eyes
     
     # rxclk eyescan
     def eyescan_rxclk(self, period=1024):
