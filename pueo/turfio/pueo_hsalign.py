@@ -138,7 +138,7 @@ class PueoHSAlign(dev_submod):
                 r = (r & 63) - 1
         return r
 
-    @idelay.setter:
+    @idelay.setter
     def idelay(self, value):
         if self.max_taps > 32:
             value = value + 1 if value & 32 else value
