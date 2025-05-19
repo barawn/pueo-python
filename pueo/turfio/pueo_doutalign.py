@@ -9,6 +9,10 @@ class PueoDOUTAlign(PueoHSAlign):
                          eye_tap_width=26,
                          train_map=PueoHSAlign.BW8_MAP)
 
+    # NOTE NOTE NOTE
+    # THIS $#!+ IS DUMB - MERGE INTO ONE PROPERTY
+    # IF DOUT IS NOT ENABLED, IT SHOULD BE MASKED (DUH)
+    
     @property
     def dout_mask(self):
         return (self.read(0)>>15) & 0x1
