@@ -149,7 +149,7 @@ if args.enable:
     for i in range(4):
         if tioCompleteMask[i] != 0:
             nloops = 20
-            while tio[i].surfturf.surf_live & tioCompleteMask[i] != tioCompleteMask[i] && nloops:
+            while tio[i].surfturf.surf_live & tioCompleteMask[i] != tioCompleteMask[i] and nloops:
                 time.sleep(0.1)
                 nloops = nloops - 1
             if nloops == 0:
