@@ -182,7 +182,7 @@ class PueoTURFIO:
             # now the DOUTs
             self.dalign = []
             for i in range(7):
-                self.dalign.append(PueoHSAlign(self, self.map['SURFDOUT']+0x40*i))
+                self.dalign.append(PueoDOUTAlign(self, self.map['SURFDOUT']+0x40*i))
 
         # now the SURFbridges
         self.surfbridge = []
