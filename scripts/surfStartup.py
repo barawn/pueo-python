@@ -71,7 +71,7 @@ for i in range(4):
     stio = []
     for j in range(7):
         stio.append(None)
-    surfEyes.append(tio)
+    surfEyes.append(stio)
 
 # Find ALL the eyes
 for surfAddr in surfActiveList:
