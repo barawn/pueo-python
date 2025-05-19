@@ -95,10 +95,7 @@ for i in range(4):
         tios[i].cinalign.apply_alignment(eye)
         tios[i].cinalign.enable(True)
         dev.ctl.tio[i].train_enable(False)
-        # NOTE NOTE NOTE - I should probably get rid of this
-        # since there's virtually zero change usingEye could
-        # be zero now.
-        tios[i].syncdelay = 9 if usingEye == 0 else 8
+        tios[i].syncdelay = 8        
         tios[i].extsync = True
         enabled_turfios.append(tios[i])
         print(f'CIN is running on TURFIO#{i}')
