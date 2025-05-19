@@ -41,7 +41,7 @@ class SURFTURF(dev_submod):
 
     @property
     def train_out_rdy(self):
-        return self.read(0x1C) & 0x1FF
+        return self.read(0x18) & 0x1FF
 
     @property
     def train_in_req(self):
