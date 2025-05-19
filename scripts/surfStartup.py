@@ -22,15 +22,15 @@ for surfAddr in surfList:
         tio[surfAddr[0]] = PueoTURFIO((dev, surfAddr[0]), 'TURFGTP')
         print(f'TURFIO#{surfAddr[0]} : {tio[surfAddr[0]]}')
         masks[surfAddr[0]] = 0
-    masks[surfAddr[0]] |= (1<<(surfAddr[1]+16))
+    masks[surfAddr[0]] |= 1<<(surfAddr[1])
 
 for m in masks:
-    print(f'mask {m} is {hex(masks[m])}')
+    print(f'autotrain {m} is {hex(masks[m])}')
     
 # enable autotrain for the enabled SURFs
 for n in tio:
     print(f'Setting TURFIO#{n} autotrain to {hex(masks[n])}')
-    tio[n].surfturf.write(0x14, masks[n])
+    tio[n].surfturf.autotrain = masks[n]
 
 # enable RXCLK for the TURFIOs containing the SURFs
 for t in tio.values():
@@ -44,7 +44,7 @@ for surfAddr in surfList:
     # wait for train out rdy on each
     print(f'Waiting for train out rdy on SURF#{sn} on TURFIO#{tn}')
     loopno = 0
-    while not(tio[tn].surfturf.read(0x18) & (1<<sn)) and loopno < 20:
+    while not(tio[tn].surfturf.train_out_rdy & (1<<sn)) and loopno < 20:
         time.sleep(0.1)
     if loopno == 20:
         print(f'SURF#{sn} on TURFIO#{tn} did not become ready??')
@@ -78,6 +78,8 @@ for i in range(4):
         stio.append(None)
     surfEyes.append(stio)
 
+tioCompleteMask = [ 0, 0, 0, 0 ]
+    
 # Find ALL the eyes
 for surfAddr in surfActiveList:
     tn = surfAddr[0]
@@ -91,6 +93,7 @@ for surfAddr in surfActiveList:
         continue
     print(f'DOUT alignment found eyes: {eyes}')
     surfEyes[tn][sn] = eyes
+    tioCompleteMask[tn] |= (1<<sn)
 
 print('Eyes found, processing to find a common one.')
 commonEye = None
@@ -129,10 +132,35 @@ for i in range(4):
             eye = (surfEyes[i][j][usingEye], usingEye)
             tio[i].dalign[j].apply_alignment(eye)
 
+# Enabling is a bit tricky, because we CANNOT
+# enable the data path UNTIL the SURF exits
+# training.
+# The SURF live detector does this for us.
 if args.enable:
+    for i in range(4):
+        if tioCompleteMask[i] != 0:
+            print(f'Setting TURFIO#{i} complete to {hex(tioCompleteMask[i])}')
+            tio[i].surfturf.train_complete = tioCompleteMask[i]
+            
     print("Issuing NOOP_LIVE")
     dev.trig.runcmd(dev.trig.RUNCMD_NOOP_LIVE)
-    
+
+    # now wait...
+    for i in range(4):
+        if tioCompleteMask[i] != 0:
+            nloops = 20
+            while tio[i].surfturf.surf_live & tioCompleteMask[i] != tioCompleteMask[i] && nloops:
+                time.sleep(0.1)
+                nloops = nloops - 1
+            if nloops == 0:
+                print("An expected SURF did not become live:")
+                print(f'Expected {hex(tioCompleteMask[i])}')
+                print(f'Got : {hex(tio[i].surfturf.surf_live & tioCompleteMask[i])}')
+                sys.exit(1)
+        if tio[i].surfturf.surf_misaligned & tioCompleteMask[i]:
+            print('A trained SURF is misaligned: {hex(tio[i].surfturf.surf_misaligned & tioCompleteMask[i])}')
+            sys.exit(1)
+            
     for surfAddr in trainedSurfs:
         tn = surfAddr[0]
         sn = surfAddr[1]
