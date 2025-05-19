@@ -3,6 +3,7 @@ from pueo.turfio import PueoTURFIO
 from pueo.surf import PueoSURF
 import time
 import sys
+from itertools import chain
 
 # WHATEVER JUST HARDCODE THIS FOR NOW
 surfList = [ (0, 0) ]
@@ -47,31 +48,68 @@ for surfAddr in surfList:
         tio[tn].dalign[sn].trainEnable(False)
         surfActiveList.append(surfAddr)
 
-# dumbass hackery
+# dumbass hackery, since sync_offset should be constant
 for surfAddr in surfActiveList:
     tn = surfAddr[0]
     sn = surfAddr[1]
     t = tio[tn]
-    # THIS SHOULD BE AUTOSET?!?
     print(f'Applying sync offset to SURF#{sn} on TURFIO#{tn}')
     s = PueoSURF((t, sn), 'TURFIO')
     s.sync_offset = 7
     
 print("Issuing SYNC")
 dev.trig.runcmd(dev.trig.RUNCMD_SYNC)
-trainedSurfs = []
+
+# We should be able to COMPLETELY align the entire
+# payload the same, because the only variation should come
+# from slot in crate....
+# this might be wrong because of left/right issues
+surfEyes = [ [ None ] * 7 ]*4
+# Find ALL the eyes
 for surfAddr in surfActiveList:
     tn = surfAddr[0]
+    sn = surfAddr[1]
     t = tio[tn]
-    print(f'Training SURF#{sn} on TURFIO#{tn}:')
-    eye = t.dalign[sn].find_alignment(doReset=True, verbose=True)
-    if eye is not None:
-        print(f'SURF#{sn} on TURFIO#{tn}: tap {eye[0]} offset {eye[1]}')
-        t.dalign[sn].apply_alignment(eye, verbose=True)
-        trainedSurfs.append(surfAddr)
-    else:
-        print(f'SURF#{sn} on TURFIO#{tn} failed training!!!')
-        
+    print(f'Finding DOUT alignment on SURF#{sn} on TURFIO#{tn}:')
+    try:
+        eyes = t.dalign[sn].find_alignment(doReset=True, verbose=True)
+    except IOError:
+        print(f'DOUT alignment failed on SURF#{sn} on TURFIO#{tn}, skipping')
+        continue
+    print(f'DOUT alignment found eyes: {eyes}')
+    surfEyes[tn][sn] = eyes
+
+print('Eyes found, processing to find a common one.')
+commonEye = None
+for d in list(chain(*surfEyes)):
+    if d is not None:
+        commonEye = d.keys() if commonEye is None else commonEye & d.keys()
+
+print(f'Common eye[s]: {commonEye}')
+usingEye = None
+if len(commonEye) > 1:
+    print(f'Multiple common eyes found, choosing the one with smallest delay')
+    test_surf = None
+    for i in range(4):
+        for j in range(7):
+            if surfEyes[i][j] is not None:
+                test_surf = surfEyes[i][j]
+    min = None
+    minEye = None
+    for eye in commonEye:
+        if minEye is None:
+            min = test_surf[eye]
+            minEye = eye
+            print(f'First eye {minEye} has tap {min}')
+        else:
+            if test_surf[eye] < min:
+                min = test_surf[eye]
+                minEye = eye
+                print(f'New eye {minEye} has smaller tamp {min}, using it')
+    usingEye = minEye
+elif len(commonEye):
+    usingEye = list(commonEye)[0]
+    
 print("Issuing NOOP_LIVE")
 dev.trig.runcmd(dev.trig.RUNCMD_NOOP_LIVE)
 
