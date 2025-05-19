@@ -45,7 +45,7 @@ for surfAddr in surfList:
         print(f'SURF#{sn} on TURFIO#{tn} did not become ready??')
     else:
         print(f'SURF#{sn} on TURFIO#{tn} is ready for out training')
-        tio[tn].dalign[sn].trainEnable(False)
+        tio[tn].dalign[sn].train_enable = 0
         surfActiveList.append(surfAddr)
 
 # dumbass hackery, since sync_offset should be constant
@@ -64,7 +64,15 @@ dev.trig.runcmd(dev.trig.RUNCMD_SYNC)
 # payload the same, because the only variation should come
 # from slot in crate....
 # this might be wrong because of left/right issues
-surfEyes = [ [ None ] * 7 ]*4
+
+# we need a blank starting point
+surfEyes = []
+for i in range(4):
+    tio = []
+    for j in range(7):
+        tio.append(None)
+    surfEyes.append(tio)
+
 # Find ALL the eyes
 for surfAddr in surfActiveList:
     tn = surfAddr[0]
@@ -118,5 +126,5 @@ for surfAddr in trainedSurfs:
     sn = surfAddr[1]
     t = tio[tn]
     print(f'Unmasking data from SURF#{sn} on TURFIO#{tn}')
-    t.dalign[sn].dout_mask = 0
+    t.dalign[sn].enable = 1
 
