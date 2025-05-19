@@ -101,8 +101,8 @@ class PueoHSAlign(dev_submod):
                     stop = i
                     edge = (start, stop)
                     if verbose:
-                        print("edge at", eye)
-                    edges.append(eye)
+                        print("edge at", edge)
+                    edges.append(edge)
                     start = None
                     stop = None
                     cur_bitno = None
