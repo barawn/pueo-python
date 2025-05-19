@@ -173,7 +173,7 @@ class PueoHSAlign(dev_submod):
             if get_bitno:
                 if biterr == 0:
                     test = self.read(0xC)
-                    nb = train_map[test] if test in train_map else None
+                    nb = self.train_map[test] if test in self.train_map else None
                     sc.append((biterr, nb))
                 else:
                     sc.append((biterr, None))
