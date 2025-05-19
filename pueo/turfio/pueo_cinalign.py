@@ -1,4 +1,5 @@
 from .pueo_hsalign import PueoHSAlign
+import time
 
 class PueoCINAlign(PueoHSAlign):
     """
