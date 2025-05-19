@@ -34,7 +34,7 @@ for tionum in tioList:
     while not ((tio.read(0xC) & 0x1)):
         print(f'Waiting for clock on TURFIO#{tionum}...')
     print(f'Aligning RXCLK->SYSCLK transition on TURFIO#{tionum}...')
-    tap = tio.calign[0].align_rxclk()
+    tap = tio.cinalign.align_rxclk()
     print(f'TURFIO#{tionum} - tap is {tap}')
     print(f'Aligning CIN on TURFIO#{tionum}...')    
     dev.ctl.tio[tionum].train_enable(True)
@@ -44,7 +44,7 @@ tioEyes = [ None, None, None, None ]
 for i in range(4):
     if tios[i] is not None:
         try:
-            eyes = tios[i].calign[0].find_alignment(doReset=True)        
+            eyes = tios[i].cinalign.find_alignment(do_reset=True)        
         except IOError:
             print(f'Alignment failed on TURFIO#{i}, skipping')
             continue
@@ -92,8 +92,8 @@ for i in range(4):
     if tioEyes[i] is not None:
         eye = (tioEyes[i][usingEye], usingEye)
         print(f'CIN alignment on TURFIO#{i}: tap {eye[0]} offset {eye[1]}')
-        tios[i].calign[0].apply_alignment(eye)
-        tios[i].calign[0].enable(True)
+        tios[i].cinalign.apply_alignment(eye)
+        tios[i].cinalign.enable(True)
         dev.ctl.tio[i].train_enable(False)
         # NOTE NOTE NOTE - I should probably get rid of this
         # since there's virtually zero change usingEye could
