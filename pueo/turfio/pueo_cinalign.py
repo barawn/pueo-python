@@ -6,11 +6,14 @@ class PueoCINAlign(PueoHSAlign):
     High-speed alignment module for the TURF CIN on the TURFIO.
     """
     def __init__(self, dev, base):
+        # Create our map.
+        our_map = dict(zip(PueoHSAlign.BW32_MAP.keys(),
+                           map(lambda x: x%4, PueoHSAlign.BW32_MAP.values())))        
         super().__init__(dev, base,
                          bit_width=32,
                          max_idelay_taps=63,
                          eye_tap_width=26,
-                         train_map=PueoHSAlign.BW32_MAP)
+                         train_map=our_map)
 
     @property
     def rxclk_phase(self):
@@ -46,18 +49,6 @@ class PueoCINAlign(PueoHSAlign):
     def locked(self):
         return (self.read(0)>>9) & 0x1
 
-    def find_alignment(self, do_reset=True, verbose=False):
-        """
-        Find alignment of the CIN interface. We have to modulo
-        4 all of the keys because we're lockable and don't
-        care what nybble alignment we have.
-        """
-        eyes = super().find_alignment(do_reset=do_reset,
-                                      verbose=verbose)
-        # modulo 4 all the values
-        eyes.update((x,y%4) for x, y in eyes.items())
-        return eyes
-    
     # rxclk eyescan
     def eyescan_rxclk(self, period=1024):
         slptime = period*8E-9
