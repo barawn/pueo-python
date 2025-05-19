@@ -222,7 +222,7 @@ class PueoHSAlign(dev_submod):
         self.bitslip(slipFix)
         test = self.read(0xC)
         nb = self.train_map[test] if test in self.train_map else None
-        if test != 0:
+        if nb != 0:
             raise IOError(f'Alignment procedure failed: {hex(test)} maps to {nb} not 0')
         if verbose:
             print(f'Alignment succeeded.')
