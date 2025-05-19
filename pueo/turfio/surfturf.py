@@ -5,13 +5,48 @@ import os
 import struct
 
 # implements the SURFTURF class
-# right now just debugging + rxclk enabling
 class SURFTURF(dev_submod):
     BANKLEN = 49152
     
     def __init__(self, dev, base):
         super().__init__(dev, base)
 
+    @property
+    def autotrain(self):
+        return (self.read(0x14) >> 16) & 0x1FF
+
+    @autotrain.setter
+    def autotrain(self, value):
+        r = self.read(0x14) & 0xFFFF
+        r |= (value & 0x01FF) << 16
+        self.write(0x14, r)
+
+    @property
+    def train_complete(self):
+        return self.read(0x1C) & 0x1FF
+
+    @train_complete.setter
+    def train_complete(self, value):
+        r = self.read(0x1C) & 0xFFFFFE00
+        r |= (value & 0x1FF)
+        self.write(0x1C, r)
+
+    @property
+    def train_out_rdy(self):
+        return self.read(0x1C) & 0x1FF
+
+    @property
+    def train_in_req(self):
+        return self.read(0x14) & 0x1FF
+
+    @property
+    def surf_live(self):
+        return self.read(0x10) & 0x1FF
+
+    @property
+    def surf_misaligned(self):
+        return (self.read(0x10) >> 16) & 0x1FF
+        
     def mark(self, bank):
         rv = bf(self.read(0x0))
         if bank == 0:
@@ -23,7 +58,7 @@ class SURFTURF(dev_submod):
         rv = bf(self.read(0x0))
         while rv[9:8]:
             rv = bf(self.read(0x0))
-
+            
     @staticmethod
     def fwupdHeader(fn):
         hdr = bytearray(b'PYFW')
