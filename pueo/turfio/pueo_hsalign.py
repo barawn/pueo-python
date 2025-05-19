@@ -163,6 +163,13 @@ class PueoHSAlign(dev_submod):
         rv |= 0x400 if value else 0
         self.write(0, rv)
 
+    def bitslip(self, n):
+        """
+        Performs 'n' bitslips.
+        """
+        for i in range(n):
+            self.write(0xC, 1)
+        
     def eyescan(self, slptime=0.01, get_bitno=True, cntclks=131072):
         self.write(0x8, cntclks)
         sc = []
@@ -207,10 +214,17 @@ class PueoHSAlign(dev_submod):
         """
         Applies an eye alignment to a link.
         Eye is a tuple of (delay, #bitslips)
-        Note that this function is overridden
-        with 8-bit stuff bc we also have dout
-        capture phase to deal with.
         """
-        
-        
-                                         
+        self.idelay = eye[0]
+        slipFix = eye[1]
+        if verbose:
+            print(f'Performing {slipFix} bit slips')
+        self.bitslip(slipFix)
+        test = self.read(0xC)
+        nb = self.train_map[test] if test in self.train_map else None
+        if test != 0:
+            raise IOError(f'Alignment procedure failed: {hex(test)} maps to {nb} not 0')
+        if verbose:
+            print(f'Alignment succeeded.')
+        return True
+    
