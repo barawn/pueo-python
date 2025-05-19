@@ -3,10 +3,15 @@ from pueo.turfio import PueoTURFIO
 from pueo.surf import PueoSURF
 import time
 import sys
+import argparse
 from itertools import chain
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--enable")
+args = parser.parse_args()
+
 # WHATEVER JUST HARDCODE THIS FOR NOW
-surfList = [ (0, 0) ]
+surfList = [ (0, 0), (0, 5) ]
 
 dev = PueoTURF(None, 'Ethernet')
 tio = {}
@@ -123,14 +128,15 @@ for i in range(4):
         if surfEyes[i][j] is not None:
             eye = (surfEyes[i][j][commonEye], commonEye)
             tio[i].dalign[j].apply_alignment(eye)
+
+if args.enable:
+    print("Issuing NOOP_LIVE")
+    dev.trig.runcmd(dev.trig.RUNCMD_NOOP_LIVE)
     
-print("Issuing NOOP_LIVE")
-dev.trig.runcmd(dev.trig.RUNCMD_NOOP_LIVE)
-
-#for surfAddr in trainedSurfs:
-#    tn = surfAddr[0]
-#    sn = surfAddr[1]
-#    t = tio[tn]
-#    print(f'Unmasking data from SURF#{sn} on TURFIO#{tn}')
-#    t.dalign[sn].enable = 1
-
+    for surfAddr in trainedSurfs:
+        tn = surfAddr[0]
+        sn = surfAddr[1]
+        t = tio[tn]
+        print(f'Unmasking data from SURF#{sn} on TURFIO#{tn}')
+        t.dalign[sn].enable = 1
+        
