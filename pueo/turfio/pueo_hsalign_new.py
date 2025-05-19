@@ -4,10 +4,11 @@
 # Note that some of the functions here are actually 'common'
 # between the two - for instance, the train enable (which
 # controls the output, not the inputs) sets on both.
+from ..common.dev_submod import dev_submod
+import time
 
 class PueoHSAlign(dev_submod):
     # maps are here for convenience
-
     
     # the top bit here is actually the dout
     # capture phase.
@@ -19,7 +20,47 @@ class PueoHSAlign(dev_submod):
                 0x9A : 2,
                 0x35 : 1
                 0x6A : 0 }
-    
+
+    # The 32-bit map only needs the 4 bit-rotated values
+    # and their nybble rotations. We don't need to distinguish
+    # between the nybble rotations because we lock to
+    # the proper pattern.
+    BW32_MAP = { 0xa55a6996 : 0,
+                 0x55a6996a : 0,
+                 0x5a69965a : 0,
+                 0xa6996a55 : 0,
+                 0x6996a55a : 0,
+                 0x996a55a6 : 0,
+                 0x96a55a69 : 0,
+                 0x6a55a699 : 0,
+
+                 0x52AD34CB : 1,
+                 0x2AD34CB5 : 1,
+                 0xAD34CB52 : 1,
+                 0xD34CB52A : 1,
+                 0x34CB52AD : 1,
+                 0x4CB52AD3 : 1,
+                 0xCB52AD34 : 1,
+                 0xB52AD34C : 1,
+                 
+                 0xA9569A65 : 2,
+                 0x9569A65A : 2,
+                 0x569A65A9 : 2,
+                 0x69A65A95 : 2,
+                 0x9A65A956 : 2,
+                 0xA65A9569 : 2,
+                 0x65A9569A : 2,
+                 0x5A9569A6 : 2,
+                 
+                 0xD4AB4D32 : 3,
+                 0x4AB4D32D : 3,
+                 0xAB4D32D4 : 3,
+                 0xB4D32D4A : 3,
+                 0x4D32D4AB : 3,
+                 0xD32D4AB4 : 3,
+                 0x32D4AB4D : 3,
+                 0x2D4AB4D3 : 3 }
+                
     # the map is for convenient lookup but I don't
     # use them in the module functions for speed
     map = { 'CTLRESET' : 0x0,
@@ -28,7 +69,6 @@ class PueoHSAlign(dev_submod):
             'BITSLP' : 0xC }
 
     def __init__(self, dev, base,
-                 lockable = False,
                  bit_width = 32,
                  max_idelay_taps = 63,
                  eye_tap_width = 26,
@@ -38,7 +78,7 @@ class PueoHSAlign(dev_submod):
 
         self.bit_width = bit_width
         self.lockable = lockable
-        self.max_taps = max_taps
+        self.max_taps = max_idelay_taps
         self.eye_tap_width = eye_tap_width
         self.train_map = train_map
 
