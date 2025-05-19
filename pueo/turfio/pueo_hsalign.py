@@ -21,45 +21,41 @@ class PueoHSAlign(dev_submod):
                 0x35 : 1
                 0x6A : 0 }
 
-    # The 32-bit map only needs the 4 bit-rotated values
-    # and their nybble rotations. We don't need to distinguish
-    # between the nybble rotations because we lock to
-    # the proper pattern.
     BW32_MAP = { 0xa55a6996 : 0,
-                 0x55a6996a : 0,
-                 0x5a69965a : 0,
-                 0xa6996a55 : 0,
-                 0x6996a55a : 0,
-                 0x996a55a6 : 0,
-                 0x96a55a69 : 0,
-                 0x6a55a699 : 0,
+                 0x55a6996a : 4,
+                 0x5a69965a : 8,
+                 0xa6996a55 : 12,
+                 0x6996a55a : 16,
+                 0x996a55a6 : 20,
+                 0x96a55a69 : 24,
+                 0x6a55a699 : 28,
 
                  0x52AD34CB : 1,
-                 0x2AD34CB5 : 1,
-                 0xAD34CB52 : 1,
-                 0xD34CB52A : 1,
-                 0x34CB52AD : 1,
-                 0x4CB52AD3 : 1,
-                 0xCB52AD34 : 1,
-                 0xB52AD34C : 1,
+                 0x2AD34CB5 : 5,
+                 0xAD34CB52 : 9,
+                 0xD34CB52A : 13,
+                 0x34CB52AD : 17,
+                 0x4CB52AD3 : 21,
+                 0xCB52AD34 : 25,
+                 0xB52AD34C : 29,
                  
                  0xA9569A65 : 2,
-                 0x9569A65A : 2,
-                 0x569A65A9 : 2,
-                 0x69A65A95 : 2,
-                 0x9A65A956 : 2,
-                 0xA65A9569 : 2,
-                 0x65A9569A : 2,
-                 0x5A9569A6 : 2,
+                 0x9569A65A : 6,
+                 0x569A65A9 : 10,
+                 0x69A65A95 : 14,
+                 0x9A65A956 : 18,
+                 0xA65A9569 : 22,
+                 0x65A9569A : 26,
+                 0x5A9569A6 : 30,
                  
                  0xD4AB4D32 : 3,
-                 0x4AB4D32D : 3,
-                 0xAB4D32D4 : 3,
-                 0xB4D32D4A : 3,
-                 0x4D32D4AB : 3,
-                 0xD32D4AB4 : 3,
-                 0x32D4AB4D : 3,
-                 0x2D4AB4D3 : 3 }
+                 0x4AB4D32D : 7,
+                 0xAB4D32D4 : 11,
+                 0xB4D32D4A : 15,
+                 0x4D32D4AB : 19,
+                 0xD32D4AB4 : 23,
+                 0x32D4AB4D : 27,
+                 0x2D4AB4D3 : 31 }
                 
     # the map is for convenient lookup but I don't
     # use them in the module functions for speed
