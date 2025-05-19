@@ -7,6 +7,14 @@ import struct
 # implements the SURFTURF class
 class SURFTURF(dev_submod):
     BANKLEN = 49152
+    map = { 'CTRL' : 0x0,
+            'FWUPDATE' : 0x4,
+            'RUNCMD' : 0x8,
+            'TRIG' : 0xC,
+            'LIVE' : 0x10,
+            'TRAININ' : 0x14,
+            'TRAINOUT' : 0x18,
+            'TRAINCMPL' : 0x1C }
     
     def __init__(self, dev, base):
         super().__init__(dev, base)
