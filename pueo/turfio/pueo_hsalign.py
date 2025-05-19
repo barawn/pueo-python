@@ -73,7 +73,6 @@ class PueoHSAlign(dev_submod):
             raise Exception("must provide a training map of values to slips")
 
         self.bit_width = bit_width
-        self.lockable = lockable
         self.max_taps = max_idelay_taps
         self.eye_tap_width = eye_tap_width
         self.train_map = train_map
