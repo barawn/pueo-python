@@ -92,7 +92,7 @@ class PueoHSAlign(dev_submod):
         cur_bitno = None
         for i in range(len(scan)):
             val = scan[i]
-            if val[0] and val[1] is not None:
+            if val[0] == 0 and val[1] is not None:
                 # data OK
                 if cur_bitno is None:
                     cur_bitno = val[1]
