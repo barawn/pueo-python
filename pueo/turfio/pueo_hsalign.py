@@ -18,7 +18,7 @@ class PueoHSAlign(dev_submod):
                 0xA6 : 4,
                 0x4D : 3,
                 0x9A : 2,
-                0x35 : 1
+                0x35 : 1,
                 0x6A : 0 }
 
     BW32_MAP = { 0xa55a6996 : 0,
