@@ -126,7 +126,7 @@ elif len(commonEye):
 for i in range(4):
     for j in range(7):
         if surfEyes[i][j] is not None:
-            eye = (surfEyes[i][j][commonEye], commonEye)
+            eye = (surfEyes[i][j][usingEye], usingEye)
             tio[i].dalign[j].apply_alignment(eye)
 
 if args.enable:
