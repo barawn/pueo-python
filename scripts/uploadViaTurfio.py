@@ -39,7 +39,7 @@ for s in surfs:
     surf.firmware_loading = 1
     hsk.send(HskPacket(s[1], 'eDownloadMode', data=[1]))
     surfList.append(surf)
-    surfAddrDict[s] = s[1]
+    surfAddrDict[surf] = s[1]
 try:
     tio.surfturf.uploader.upload(surfList, args.filename)
 except:
