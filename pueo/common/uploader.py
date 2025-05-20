@@ -75,7 +75,7 @@ class Uploader:
         # If you don't give me a new destination, it's going
         # in /home/root.
         if not destfn:
-            destfn = '/home/root' + os.path.basename(fn)
+            destfn = '/home/root/' + os.path.basename(fn)
         # ALL OF THIS could be done ahead of time, like you
         # literally break the entire file up into bank chunks.
         # WHATEVER.
