@@ -1,3 +1,4 @@
+from .bf import bf
 import struct
 import os
 
