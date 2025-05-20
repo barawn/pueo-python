@@ -26,7 +26,7 @@ class PueoDOUTAlign(PueoHSAlign):
     @enable.setter
     def enable(self, value):
         r = self.read(0) & 0xFFFFFEFF
-        r |= 0x10 if value else 0
+        r |= 0x100 if value else 0
         self.write(0, r)
 
     def apply_alignment(self, eye, verbose=False):
