@@ -38,8 +38,11 @@ for s in surfs:
     surf = PueoSURF((tio, s[0]), 'TURFIO')
     surf.firmware_loading = 1
     hsk.send(HskPacket(s[1], 'eDownloadMode', data=[1]))
+    pkt = hsk.receive()
+    print("eDownloadMode response:", pkt.pretty())
     surfList.append(surf)
     surfAddrDict[surf] = s[1]
+
 try:
     tio.surfturf.uploader.upload(surfList, args.filename)
 except:
@@ -47,5 +50,7 @@ except:
 
 for s in surfList:
     hsk.send(HskPacket(surfAddrDict[s], 'eDownloadMode', data=[0]))
+    pkt = hsk.receive()
+    print("eDownloadMode response:", pkt.pretty())
     s.firmware_loading = 0
 
