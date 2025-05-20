@@ -157,9 +157,9 @@ if args.enable:
                 print(f'Expected {hex(tioCompleteMask[i])}')
                 print(f'Got : {hex(tio[i].surfturf.surf_live & tioCompleteMask[i])}')
                 sys.exit(1)
-        if tio[i].surfturf.surf_misaligned & tioCompleteMask[i]:
-            print('A trained SURF is misaligned: {hex(tio[i].surfturf.surf_misaligned & tioCompleteMask[i])}')
-            sys.exit(1)
+            if tio[i].surfturf.surf_misaligned & tioCompleteMask[i]:
+                print('A trained SURF is misaligned: {hex(tio[i].surfturf.surf_misaligned & tioCompleteMask[i])}')
+                sys.exit(1)
             
     for surfAddr in trainedSurfs:
         tn = surfAddr[0]
