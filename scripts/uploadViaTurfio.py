@@ -35,10 +35,10 @@ tio = PueoTURFIO((dev, tios[0]), 'TURFGTP')
 surfList = []
 surfAddrDict = {}
 for s in surfs:
-    s = PueoSURF((tio, s[0]), 'TURFIO')
-    s.firmware_loading = 1
+    surf = PueoSURF((tio, s[0]), 'TURFIO')
+    surf.firmware_loading = 1
     hsk.send(HskPacket(s[1], 'eDownloadMode', data=[1]))
-    surfList.append(s)
+    surfList.append(surf)
     surfAddrDict[s] = s[1]
 try:
     tio.surfturf.uploader.upload(surfList, args.filename)
