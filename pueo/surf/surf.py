@@ -516,7 +516,7 @@ class PueoSURF:
 
     @property
     def firmware_loading(self):
-        return (self.read(0xC) >> 8) & 0x1
+        return (self.read(0xC) >> 7) & 0x1
 
     @firmware_loading.setter
     def firmware_loading(self, value):
