@@ -126,11 +126,14 @@ if len(commonEye) > 1:
 elif len(commonEye):
     usingEye = list(commonEye)[0]
 
+trainedSurfs = []
+
 for i in range(4):
     for j in range(7):
         if surfEyes[i][j] is not None:
             eye = (surfEyes[i][j][usingEye], usingEye)
             tio[i].dalign[j].apply_alignment(eye)
+            trainedSurfs.append( (i, j) )
 
 # Enabling is a bit tricky, because we CANNOT
 # enable the data path UNTIL the SURF exits
