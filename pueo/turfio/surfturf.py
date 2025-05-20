@@ -109,7 +109,7 @@ class SURFTURF(dev_submod):
                     print("%s -> %s : writing %d bytes into bank %d, %d/%d written" %
                           (fn, destfn, toRead, bank, written, flen))
                 d += f.read(toRead)
-                padBytes = len(d) % 4
+                padBytes = (4-(len(d) % 4)) if (len(d) % 4) else 0
                 d += padBytes*b'\x00'
                 fmt = ">%dI" % (len(d) // 4)
                 il = struct.unpack(fmt, d)
