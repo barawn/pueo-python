@@ -154,6 +154,16 @@ class PueoHSAlign(dev_submod):
         self.write(0, rv)
 
     @property
+    def oserdes_reset(self):
+        return (self.read(0) >> 4) & 0x1
+
+    @oserdes_reset.setter
+    def oserdes_reset(self, value):
+        rv = self.read(0) & 0xffffffef
+        rv |= 0x10 if value else 0
+        self.write(0, rv)
+        
+    @property
     def train_enable(self):
         return (self.read(0) >> 10) & 0x1
 
