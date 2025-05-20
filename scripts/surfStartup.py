@@ -126,11 +126,14 @@ if len(commonEye) > 1:
 elif len(commonEye):
     usingEye = list(commonEye)[0]
 
+trainedSurfs = []
+
 for i in range(4):
     for j in range(7):
         if surfEyes[i][j] is not None:
             eye = (surfEyes[i][j][usingEye], usingEye)
             tio[i].dalign[j].apply_alignment(eye)
+            trainedSurfs.append( (i, j) )
 
 # Enabling is a bit tricky, because we CANNOT
 # enable the data path UNTIL the SURF exits
@@ -157,9 +160,9 @@ if args.enable:
                 print(f'Expected {hex(tioCompleteMask[i])}')
                 print(f'Got : {hex(tio[i].surfturf.surf_live & tioCompleteMask[i])}')
                 sys.exit(1)
-        if tio[i].surfturf.surf_misaligned & tioCompleteMask[i]:
-            print('A trained SURF is misaligned: {hex(tio[i].surfturf.surf_misaligned & tioCompleteMask[i])}')
-            sys.exit(1)
+            if tio[i].surfturf.surf_misaligned & tioCompleteMask[i]:
+                print('A trained SURF is misaligned: {hex(tio[i].surfturf.surf_misaligned & tioCompleteMask[i])}')
+                sys.exit(1)
             
     for surfAddr in trainedSurfs:
         tn = surfAddr[0]
