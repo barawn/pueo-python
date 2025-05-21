@@ -1,6 +1,7 @@
 from .bf import bf
 import struct
 import os
+from hashlib import md5
 
 pb2 = None
 uwidgets = None
@@ -44,13 +45,32 @@ class Uploader:
                  mark_func):
         self.fwupd = fwupd_func
         self.mark = mark_func
-                 
+
+    @staticmethod
+    def hash_bytestr_iter(bytesiter, hasher, ashexstr=False):
+        for block in bytesiter:
+            hasher.update(block)
+        return hasher.hexdigest() if ashexstr else hasher.digest()
+
+    @staticmethod
+    def file_as_blockiter(afile, blocksize=65536):
+        with afile:
+            block = afile.read(blocksize)
+            while len(block) > 0:
+                yield block
+                block = afile.read(blocksize)
+
+    @staticmethod
+    def filemd5(fn):
+        return hash_bytestr_iter(file_as_blockiter(open(fn, 'rb')),
+                                 hashlib.md5(),
+                                 ashexstr=True)        
+        
     @staticmethod
     def fwupdHeader(fn, size):
         """
         generates a header for a PYFW upload.
-        there's another header for a PYEX upload.
-        will implement that soon.
+        there's another header for a PYEX.
         """
         hdr = bytearray(b'PYFW')
         flen = size
@@ -59,7 +79,82 @@ class Uploader:
         hdr += b'\x00'
         hdr += (256 - (sum(hdr) % 256)).to_bytes(1, 'big')
         return (hdr, flen)
+
+    @staticmethod
+    def fwexHeader(fn, size, timeout):
+        """
+        generates a header for a PYEX execution.
+        This takes the SYSTEM filename.
+        """
+        hdr = bytearray(b'PYEX')
+        flen = size
+        hdr += struct.pack(">I", flen)
+        hdr += struct.pack(">I", timeout)
+        hdr + = self.filemd5(fn).encode()
+        hdr += b'\x00'
+        hdr += (256 - (sum(hdr) % 256)).to_bytes(1, 'big')
+        return (hdr, flen)
+
+    def execute(self, surf, fn, timeout=120, bank=0, verbose=False):
+        """
+        Executes a script via the commanding path.
+        See notes on upload.
+        """
+        if timeout is None:
+            timeout = 0
+        if not isinstance(surf, list):
+            surf = [surf]
+        # ALL OF THIS could be done ahead of time, like you
+        # literally break the entire file up into bank chunks.
+        # WHATEVER.
+        if not os.path.isfile(fn):
+            raise ValueError("%s is not a regular file" % fn)
+        hdr, flen = self.fwupdHeader(fn, os.path.getsize(fn), timeout)
+        toRead = self.BANKLEN - len(hdr)
+        toRead = flen if flen < toRead else toRead
+        print("Executing %s with timeout %d" % (fn, timeout))
+        # these are here to make the loop work
+        d = hdr
+        written = 0
+
+        if pb2:
+            uploadbar = make_bar(flen, uwidgets).start()
+            update = lambda v, n : uploadbar.update(v)
+            finish = uploadbar.finish
+        else:
+            update = lambda v, n : print("%d/%d" % (v, n))
+            finish = lambda : None
             
+        with open(fn, "rb") as f:
+            while written < flen:
+                if verbose:
+                    print("%s -> %s : writing %d bytes into bank %d, %d/%d written" %
+                          (fn, destfn, toRead, bank, written, flen))
+                d += f.read(toRead)
+                padBytes = (4-(len(d) % 4)) if (len(d) % 4) else 0
+                d += padBytes*b'\x00'
+                fmt = ">%dI" % (len(d) // 4)
+                il = struct.unpack(fmt, d)
+                # check to see if that bank is ready
+                testIdx = bank + 14
+                for s in surf:
+                    rv = bf(s.read(0xC))
+                    while not rv[testIdx]:
+                        rv = bf(s.read(0xC))
+                for val in il:
+                    self.fwupd(val)
+                self.mark(bank)
+                bank = bank ^ 1
+                update(written, flen)
+                written += toRead
+                remain = flen - written
+                toRead = remain if remain < self.BANKLEN else self.BANKLEN
+                # empty d b/c we add to it above
+                d = b''
+        finish()
+        return bank
+        
+        
     def upload(self, surf, fn, destfn=None, bank=0, verbose=False):
         """
         Uploads a file via the commanding path.
