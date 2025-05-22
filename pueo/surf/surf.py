@@ -82,8 +82,11 @@ class PueoSURF:
         elif type == self.AccessType.TURFIO:
             turfio = accessInfo[0]
             slot = accessInfo[1]
-            # I dunno, test something here.
-            # Probably check the errors or something
+            # At least check to see if rxclk is
+            # enabled.
+            r = turfio.surfturf.rxclk_enable
+            if not r & (1<<slot):
+                raise Exception(f'RXCLK is off on SURF slot {slot}: {hex(r)}')
             self.dev = turfio.surfbridge[slot]
             self.read = self.dev.read
             self.write = self.dev.write
