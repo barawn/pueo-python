@@ -513,6 +513,16 @@ class PueoSURF:
         r = self.read(0xC)
         r |= (1<<22)
         self.write(0xC, r)
+
+    @property
+    def firmware_loading(self):
+        return (self.read(0xC) >> 7) & 0x1
+
+    @firmware_loading.setter
+    def firmware_loading(self, value):
+        r = self.read(0xC) & 0xFFFFFF7F
+        r |= 0x80 if value else 0
+        self.write(0xC, r)
         
     # set the bit offset to a value
     def turfioSetOffset(self, val):

@@ -11,7 +11,8 @@ from ..common.genshift import GenShift
 from ..common.genspi import GenSPI
 from ..common import pueo_utils
 
-from .pueo_hsalign import PueoHSAlign
+from .pueo_cinalign import PueoCINAlign
+from .pueo_doutalign import PueoDOUTAlign
 from .surfbridge import SURFBridge
 from .turfio_i2c_bb import PueoTURFIOI2C
 from .surfturf import SURFTURF
@@ -175,20 +176,13 @@ class PueoTURFIO:
                              self.SHIFT_SPICSB_GPIO,
                              prescale=2)
         
-        # set up the HSAligns
-        # first, the COUTs. I don't know why these were marked as
-        # non-lockable, of course they are??
-        self.calign = []
-        for i in range(8):
-            self.calign.append(PueoHSAlign(self, self.map['SURFTURF']+0x40*i,
-                                           lockable=True,
-                                           bw=PueoHSAlign.BitWidth.BITWIDTH_32))
-        # now the DOUTs
-        self.dalign = []
-        for i in range(7):
-            self.dalign.append(PueoHSAlign(self, self.map['SURFDOUT']+0x40*i,
-                                           lockable=False,
-                                           bw=PueoHSAlign.BitWidth.BITWIDTH_8))
+        # set up the HSAligns.
+        self.cinalign = PueoCINAlign(self, self.map['SURFTURF'])
+        for i in range(7):            
+            # now the DOUTs
+            self.dalign = []
+            for i in range(7):
+                self.dalign.append(PueoDOUTAlign(self, self.map['SURFDOUT']+0x40*i))
 
         # now the SURFbridges
         self.surfbridge = []
