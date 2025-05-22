@@ -60,11 +60,11 @@ class Uploader:
                 yield block
                 block = afile.read(blocksize)
 
-    @staticmethod
-    def filemd5(fn):
-        return hash_bytestr_iter(file_as_blockiter(open(fn, 'rb')),
-                                 hashlib.md5(),
-                                 ashexstr=True)        
+    @classmethod
+    def filemd5(cls, fn):
+        return cls.hash_bytestr_iter(cls.file_as_blockiter(open(fn, 'rb')),
+                                     md5(),
+                                     ashexstr=True)        
         
     @staticmethod
     def fwupdHeader(fn, size):
@@ -80,8 +80,8 @@ class Uploader:
         hdr += (256 - (sum(hdr) % 256)).to_bytes(1, 'big')
         return (hdr, flen)
 
-    @staticmethod
-    def fwexHeader(fn, size, timeout):
+    @classmethod
+    def fwexHeader(cls, fn, size, timeout):
         """
         generates a header for a PYEX execution.
         This takes the SYSTEM filename.
@@ -90,7 +90,7 @@ class Uploader:
         flen = size
         hdr += struct.pack(">I", flen)
         hdr += struct.pack(">I", timeout)
-        hdr + = self.filemd5(fn).encode()
+        hdr += cls.filemd5(fn).encode()
         hdr += b'\x00'
         hdr += (256 - (sum(hdr) % 256)).to_bytes(1, 'big')
         return (hdr, flen)
@@ -109,7 +109,7 @@ class Uploader:
         # WHATEVER.
         if not os.path.isfile(fn):
             raise ValueError("%s is not a regular file" % fn)
-        hdr, flen = self.fwupdHeader(fn, os.path.getsize(fn), timeout)
+        hdr, flen = self.fwexHeader(fn, os.path.getsize(fn), timeout)
         toRead = self.BANKLEN - len(hdr)
         toRead = flen if flen < toRead else toRead
         print("Executing %s with timeout %d" % (fn, timeout))
