@@ -3,6 +3,26 @@ from pueo.turfio import PueoTURFIO
 from pueo.surf import PueoSURF
 from HskSerial import HskEthernet, HskPacket
 
+from hashlib import md5
+import time
+
+def hash_bytestr_iter(bytesiter, hasher, ashexstr=False):
+    for block in bytesiter:
+        hasher.update(block)
+    return hasher.hexdigest() if ashexstr else hasher.digest()
+
+def file_as_blockiter(afile, blocksize=65536):
+    with afile:
+        block = afile.read(blocksize)
+        while len(block) > 0:
+            yield block
+            block = afile.read(blocksize)
+            
+def filemd5(fn):
+    return hash_bytestr_iter(file_as_blockiter(open(fn, 'rb')),
+                             md5(),
+                             ashexstr=True)
+
 # TURFIOs and SURFs MUST BE CONFIGURED
 # AND ALIGNED. This uses the commanding path.
 # No alignment = no commanding path!
@@ -12,6 +32,8 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("filename")
 args = parser.parse_args()
+
+print(f'Sending {args.filename} : MD5 {filemd5(args.filename)}')
 
 # I SHOULD TAKE A JSON FILE TO CONFIGURE THIS
 # I NEED:
@@ -45,9 +67,16 @@ for s in surfs:
 
 try:
     tio.surfturf.uploader.upload(surfList, args.filename)
-except:
+except Exception as e:
     print("caught an exception during upload??")
-
+    print(repr(e))
+    
+time.sleep(0.1)
+for s in surfList:
+    hsk.send(HskPacket(surfAddrDict[s], 'eJournal', data="-u pyfwupd -o cat -n 1"))
+    pkt = hsk.receive()
+    print("eJournal:", pkt.pretty(asString=True))
+    
 for s in surfList:
     hsk.send(HskPacket(surfAddrDict[s], 'eDownloadMode', data=[0]))
     pkt = hsk.receive()
