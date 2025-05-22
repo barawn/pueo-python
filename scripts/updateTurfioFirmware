@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+
+from pueo.turfio import PueoTURFIO
+import argparse
+                                                      
+
+parser = argparse.ArgumentParser()
+parser.add_argument("turfionum", default=None,
+                    help="Link to TURFIO # [1,2,4, or 5]")
+parser.add_argument("--firmvers", default=None,
+                    help="if specified, use TURFIO firmware version # [of form v_r_p_]")
+parser.add_argument("--mcsloc", default='/home/pueo/imgs/',
+                    help="if specified, points to directory of .mcs file. Defaults to /home/pueo/imgs")
+args = parser.parse_args()
+
+PueoTURFIO(PueoTURFIO.find_serial_devices(int(args.turfionum))[0][0], 'SERIAL')
+
+print("Linked to TURFIO "+args.turfionum)
+
+if args.firmvers is not None:
+       PueoTURFIO.updateTurfioFirmware(args.firmvers,mcs_loc=args.mcsloc)
+else:
+       PueoTURFIO.updateTurfioFirmware(mcs_loc=args.mcsloc)
