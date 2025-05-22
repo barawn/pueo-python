@@ -19,6 +19,7 @@ from .surfturf import SURFTURF
 
 from enum import Enum
 import time
+import glob
 
 class PueoTURFIO:
     # the TURFIO debug interface has to muck around to get the upper bits (bits 24-21).
@@ -458,7 +459,39 @@ class PueoTURFIO:
         for i in range(len(self.surfbridge)):
             if self.surfbridge[i] == surf.dev:
                 return i
-        return None        
+        return None     
+
+    def updateTurfioFirmware(self, firmvers=None, mcs_loc='/home/pueo/imgs/'):
+        """
+        function to update TURFIO firmware after files have been copied into computer
+
+        Parameters
+        ----------
+        firmverse: string (optional)
+            if specified, use TURFIO firmware version # [of form v_r_p_]
+        mcs_loc: string (defaults to /home/pueo/imgs/)
+            specifies where TURFIO firmware is located
+        """
+        self.watchdog_disable = 1
+        
+        if firmvers is None:
+            mcs_list = glob.glob(mcs_loc+'pueo_turfio_*.mcs')
+            vers_list = []
+            for vers in mcs_list:
+                curr_vers = vers.split(mcs_loc+'pueo_turfio_')[1].split('.mcs')[0]
+                vers_list.append(curr_vers)
+            vers_list.sort()
+            mcs_vers = mcs_loc+'pueo_turfio_'+vers_list[-1]+'.mcs'
+            
+        else:
+            mcs_vers = mcs_loc+'pueo_turfio_'+firmvers+'.mcs'
+
+        print("Using TURFIO firmware "+mcs_vers)
+
+        with self.genspi as spi: 
+            spi.program_mcs(mcs_vers)   
+        
+        self.watchdog_disable = 0
 
     # class method to locate all USB-connected TURFIOs and return ttys/sns
     # only works if you have pyusb installed and are on Linux and have
