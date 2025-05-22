@@ -57,6 +57,16 @@ class SURFTURF(dev_submod):
     def surf_misaligned(self):
         return (self.read(0x10) >> 16) & 0x1FF
         
+    @property
+    def rxclk_enable(self):
+        return (self.read(0x0) >> 24) & 0xFF
+
+    @rxclk_enable.setter
+    def rxclk_enable(self, value):
+        r = self.read(0) & 0x00FFFFFF
+        r |= (value << 24)
+        self.write(0, r)        
+
     def mark(self, bank):
         rv = bf(self.read(0x0))
         if bank == 0:
@@ -72,11 +82,3 @@ class SURFTURF(dev_submod):
     # need to add runmode/trigger            
     def fwupd(self, val):
         self.write(0x4, val)
-
-    def rxclk(self, enable):
-        rv = bf(self.read(0x0))
-        if enable:
-            rv[31] = 0
-        else:
-            rv[31] = 1
-        self.write(0x0, int(rv))
