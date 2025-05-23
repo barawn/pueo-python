@@ -58,11 +58,11 @@ class SURFTURF(dev_submod):
         return (self.read(0x10) >> 16) & 0x1FF
         
     @property
-    def rxclk_enable(self):
+    def rxclk_disable(self):
         return (self.read(0x0) >> 24) & 0xFF
 
-    @rxclk_enable.setter
-    def rxclk_enable(self, value):
+    @rxclk_disable.setter
+    def rxclk_disable(self, value):
         r = self.read(0) & 0x00FFFFFF
         r |= (value << 24)
         self.write(0, r)        
