@@ -84,8 +84,8 @@ class PueoSURF:
             slot = accessInfo[1]
             # At least check to see if rxclk is
             # enabled.
-            r = turfio.surfturf.rxclk_enable
-            if not r & (1<<slot):
+            r = turfio.surfturf.rxclk_disable
+            if r & (1<<slot):
                 raise Exception(f'RXCLK is off on SURF slot {slot}: {hex(r)}')
             self.dev = turfio.surfbridge[slot]
             self.read = self.dev.read
