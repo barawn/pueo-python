@@ -76,7 +76,7 @@ class SURFTURF(dev_submod):
     def cout_offset(self, value):
         r = self.read(0x20) & 0xFFFFFFF0
         r |= value & 0xF
-        self.write(0, r)        
+        self.write(0x20, r)        
         
     def mark(self, bank):
         rv = bf(self.read(0x0))
