@@ -12,6 +12,7 @@ from ..common.genspi import GenSPI
 from ..common import pueo_utils
 
 from .pueo_cinalign import PueoCINAlign
+from .pueo_coutalign import PueoCOUTAlign
 from .pueo_doutalign import PueoDOUTAlign
 from .surfbridge import SURFBridge
 from .turfio_i2c_bb import PueoTURFIOI2C
@@ -179,11 +180,11 @@ class PueoTURFIO:
         
         # set up the HSAligns.
         self.cinalign = PueoCINAlign(self, self.map['SURFTURF'])
-        for i in range(7):            
-            # now the DOUTs
-            self.dalign = []
-            for i in range(7):
-                self.dalign.append(PueoDOUTAlign(self, self.map['SURFDOUT']+0x40*i))
+        self.dalign = []
+        self.calign = []
+        for i in range(7):
+            self.calign.append(PueoCOUTAlign(self, self.map['SURFTURF']+0x40+0x40*i)
+            self.dalign.append(PueoDOUTAlign(self, self.map['SURFDOUT']+0x40*i))
 
         # now the SURFbridges
         self.surfbridge = []
