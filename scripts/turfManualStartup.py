@@ -98,21 +98,21 @@ for i in range(4):
         while not ok and trials < 1000:
             try:
                 tios[i].cinalign.apply_alignment(eye)
+                tios[i].cinalign.enable(True)
+                dev.ctl.tio[i].train_enable(False)
                 ok = True
             except Exception:
                 trials = trials + 1
         if trials == 1000:
             print(f'CIN alignment on TURFIO#{i} failed?!?')
         else:
-            print(f'CIN aligned on TURFIO#{i} after {trials} attempts')
+            print(f'CIN aligned and running on TURFIO#{i} after {trials} attempts')
             aligned_turfios.append(tios[i])
+            
 
 for tio in aligned_turfios:    
-    tios[i].cinalign.enable(True)
-    dev.ctl.tio[i].train_enable(False)
-    tios[i].syncdelay = 8        
-    tios[i].extsync = True
-    print(f'CIN is running on TURFIO#{i}')
+    tio.syncdelay = 8        
+    tio.extsync = True
     
 dev.trig.runcmd(dev.trig.RUNCMD_SYNC)
 for tio in aligned_turfios:
