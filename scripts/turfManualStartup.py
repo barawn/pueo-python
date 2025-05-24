@@ -87,21 +87,35 @@ if usingEye is None:
 
 print(f'Using eye: {usingEye}')
 
-enabled_turfios = []
+aligned_turfios = []
 for i in range(4):
     if tioEyes[i] is not None:
         eye = (tioEyes[i][usingEye], usingEye)
         print(f'CIN alignment on TURFIO#{i}: tap {eye[0]} offset {eye[1]}')
-        tios[i].cinalign.apply_alignment(eye)
-        tios[i].cinalign.enable(True)
-        dev.ctl.tio[i].train_enable(False)
-        tios[i].syncdelay = 8        
-        tios[i].extsync = True
-        enabled_turfios.append(tios[i])
-        print(f'CIN is running on TURFIO#{i}')
+        # I HATE YOU XILINX WHY DOESN'T THIS WORK CLEANLY
+        trials = 0
+        ok = False
+        while not ok and trials < 1000:
+            try:
+                tios[i].cinalign.apply_alignment(eye)
+                ok = True
+            except Exception:
+                trials = trials + 1
+        if trials == 1000:
+            print(f'CIN alignment on TURFIO#{i} failed?!?')
+        else:
+            print(f'CIN aligned on TURFIO#{i} after {trials} attempts')
+            aligned_turfios.append(tios[i])
+
+for tio in aligned_turfios:    
+    tios[i].cinalign.enable(True)
+    dev.ctl.tio[i].train_enable(False)
+    tios[i].syncdelay = 8        
+    tios[i].extsync = True
+    print(f'CIN is running on TURFIO#{i}')
     
 dev.trig.runcmd(dev.trig.RUNCMD_SYNC)
-for tio in enabled_turfios:
+for tio in aligned_turfios:
     tio.extsync = False
 
 print(f'TURFIO sync complete')
