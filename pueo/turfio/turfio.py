@@ -183,7 +183,7 @@ class PueoTURFIO:
         self.dalign = []
         self.calign = []
         for i in range(7):
-            self.calign.append(PueoCOUTAlign(self, self.map['SURFTURF']+0x40+0x40*i)
+            self.calign.append(PueoCOUTAlign(self, self.map['SURFTURF']+0x40+0x40*i))
             self.dalign.append(PueoDOUTAlign(self, self.map['SURFDOUT']+0x40*i))
 
         # now the SURFbridges
