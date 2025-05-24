@@ -14,7 +14,8 @@ class SURFTURF(dev_submod):
             'LIVE' : 0x10,
             'TRAININ' : 0x14,
             'TRAINOUT' : 0x18,
-            'TRAINCMPL' : 0x1C }
+            'TRAINCMPL' : 0x1C,
+            'COUTCTRL' : 0x20 }
     
     def __init__(self, dev, base):
         super().__init__(dev, base)
@@ -67,6 +68,16 @@ class SURFTURF(dev_submod):
         r |= (value << 24)
         self.write(0, r)        
 
+    @property
+    def cout_offset(self):
+        return self.read(0x20) & 0xF
+
+    @cout_offset.setter
+    def cout_offset(self, value):
+        r = self.read(0x20) & 0xFFFFFFF0
+        r |= value & 0xF
+        self.write(0, r)        
+        
     def mark(self, bank):
         rv = bf(self.read(0x0))
         if bank == 0:
