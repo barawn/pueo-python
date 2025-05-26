@@ -50,7 +50,7 @@ class PueoTURFIOBit(dev_submod):
 
     # process a coarse eyescan
     @staticmethod
-    def process_coarse(scan):
+    def process_coarse(scan, verbose=False):
         # A coarse eyescan gives you a list of triplets:
         # index, number of errors, and bit offset #
         # We need to process it to find where the bit changes
@@ -69,7 +69,8 @@ class PueoTURFIOBit(dev_submod):
                 else:
                     start = val[0]
         if start is not None and stop is not None:
-            print("start is", start, "stop is", stop)
+            if verbose:
+                print("start is", start, "stop is", stop)
             return (start, stop)
         return None
 
@@ -127,7 +128,7 @@ class PueoTURFIOBit(dev_submod):
     def find_eyeedge(scan):
         return scan.index(max(scan))
 
-    def locate_eyecenter(self):
+    def locate_eyecenter(self, verbose=False):
         pars = self.getParameters()
         sc = self.coarse_eyescan()
         ss = self.process_coarse(sc)
@@ -137,20 +138,30 @@ class PueoTURFIOBit(dev_submod):
             print(sc)
             return
         coarseEdge = ((ss[0] + ss[1])/2)*200.0
-        print("Coarse eye edge is at", coarseEdge)
+        if verbose:
+            print("Coarse eye edge is at", coarseEdge)
         fs = self.fine_eyescan(coarseEdge-200.0, coarseEdge+200.0)
         fineEdgeIdx = self.find_eyeedge(fs)
         fineEdge = (coarseEdge-200.0)+(fineEdgeIdx*pars[1])
-        print("Fine eye edge is at", fineEdge, end='')        
+        if verbose:            
+            print("Fine eye edge is at", fineEdge, end='')        
         eye = []
         if fineEdge < 1000.0:
             # move into the stop-side eye
             eye = (fineEdge+1000.0, sc[ss[1]][2])
         else:
             eye = (fineEdge-1000.0, sc[ss[0]][2])
-        print("sample center is at", eye[0], "with bit offset", eye[1])
+        if verbose:
+            print("sample center is at", eye[0], "with bit offset", eye[1])
         return eye
             
+    def apply_eye(self, eye):
+        self.setDelay(eye[0])
+        for i in range(eye[1]):
+            self.write(0xC0, 1)
+        r = self.read(0xC0)
+        if r != pueo_utils.train32:
+            raise IOError(f'Readback {hex(r)} not {hex(pueo_utils.train32)} after applying eye!')        
     
     def getParameters(self):
         # The monitor delay is "close enough" to the
