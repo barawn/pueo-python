@@ -122,8 +122,13 @@ class PueoHSAlign(dev_submod):
         for edge in edges:
             edge_val = int((edge[0] + edge[1])/2)
             eye_center = edge_val - (eye_width//2)
-            if eye_center > 0 and scan[eye_center] is not None:
-                eyes[scan[eye_center][1]] = eye_center
+            if eye_center > 0:
+                if scan[eye_center][1] is not None:
+                    eyes[scan[eye_center][1]] = eye_center
+                else:
+                    print(f'Weird eye scan! Center should be at {eye_center} but eye value is None??')
+                    print(f'Scan: {scan}')
+                    print(f'Edges: {edges}')
         last_eye_center = edge_val + (eye_width//2)
         if last_eye_center < max_width and scan[last_eye_center] is not None:
             eyes[scan[last_eye_center][1]] = last_eye_center
