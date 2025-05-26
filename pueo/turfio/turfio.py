@@ -306,36 +306,47 @@ class PueoTURFIO:
         self.genshift.gpio(self.SHIFT_LMKLE_GPIO, self.genshift.GpioState.GPIO_LOW)
 
         
-    def program_sysclk(self, source=ClockSource.TURF, boost=True):        
+    def program_sysclk(self,
+                       source=ClockSource.TURF,
+                       boost=True,
+                       verbose=False):        
         self.genshift.enable(self.SHIFT_LMK_DEV, prescale=1)
         reg = bf(0)
         reg[31] = 1
-        print("LMK program: ", hex(int(reg)))
+        if verbose:
+            print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg)
         # OK now program each one in turn
         reg[31] = 0       # no reset
         reg[18:17] = 1    # output is divided
         reg[15:8] = 8     # divide by 16
         reg[16] = 1       # enabled
-        print("LMK program: ", hex(int(reg)))
+        if verbose:
+            print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg) # R0
         reg[3:0] = 1
-        print("LMK program: ", hex(int(reg)))
+        if verbose:
+            print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg) # R1
         reg[3:0] = 2
-        print("LMK program: ", hex(int(reg)))
+        if verbose:
+            print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg) # R2
         reg[3:0] = 4
-        print("LMK program: ", hex(int(reg)))
+        if verbose:
+            print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg) # R4
         reg[3:0] = 5
-        print("LMK program: ", hex(int(reg)))
+        if verbose:
+            print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg) # R5
         reg[3:0] = 6
-        print("LMK program: ", hex(int(reg)))
+        if verbose:
+            print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg) # R6
         reg[3:0] = 7
-        print("LMK program: ", hex(int(reg)))
+        if verbose:
+            print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg) # R7
         reg = bf(0)
         reg[17] = 1
@@ -344,20 +355,23 @@ class PueoTURFIO:
         reg[11] = 1
         reg[9] = 1
         reg[3:0] = 9
-        print("LMK program: ", hex(int(reg)))
+        if verbose:
+            print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg)
         reg = bf(0)
         reg[16] = 1
         reg[18:17] = 0    # bypass
         reg[3:0] = 3
-        print("LMK program: ", hex(int(reg)))
+        if verbose:
+            print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg) # R3
         reg = bf(0)
         reg[27] = 1  # global enable
         reg[30] = 1  # must be 1
         reg[29] = source.value # clock source
         reg[3:0] = 14 # register
-        print("LMK program: ", hex(int(reg)))
+        if verbose:
+            print("LMK program: ", hex(int(reg)))
         self.program_lmk(reg)
         self.genshift.gpio(self.SHIFT_LMKOE_GPIO, self.genshift.GpioState.GPIO_HIGH)
         self.genshift.disable()
