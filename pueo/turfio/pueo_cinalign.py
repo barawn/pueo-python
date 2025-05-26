@@ -134,4 +134,6 @@ class PueoCINAlign(PueoHSAlign):
             self.lock_req = 1
             if not self.locked:
                 raise Exception("CIN did not lock on training pattern?")
-            
+        else:
+            self.lock_rst = 1
+            self.lock_rst = 0
