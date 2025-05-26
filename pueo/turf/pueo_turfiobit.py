@@ -196,4 +196,18 @@ class PueoTURFIOBit(dev_submod):
         
         # enable VTC
         self.write(self.map['BITCTRL'], 0)
-            
+
+    # note note note: enable SHOULD NOT be set until
+    # AFTER the SURFs exit training on CIN *or*
+    # you don't enable triggers until afterwards too.
+    @property
+    def enable(self):
+        return (self.read(0) >> 4) & 0x1
+
+    @enable.setter
+    def enable(self, value):
+        r = self.read(0) & 0xFFFFFFEF
+        r |= 0x10 if value else 0
+        self.write(0, r)
+        
+        
