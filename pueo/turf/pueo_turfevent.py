@@ -16,7 +16,7 @@ class PueoTURFEvent(dev_submod):
         b = self.map['NDWORDS0']
         s = []
         for i in range(4):
-            r = self.read(b)
+            r = self.read(b+0x4*i)
             if verbose:
                 print(f'TURFIO{i} : {4*r} bytes received')
             s.append(4*r)
