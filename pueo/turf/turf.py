@@ -121,17 +121,23 @@ class PueoTURF:
             dnaval = (dnaval << 1) | val
         return dnaval
 
-    def status(self):
-        self.identify()
-        print("SYSCLK:", self.read(self.map['SYSCLKMON']))
-        print("GBECLK:", self.read(self.map['GBECLKMON']))
-        print("DDR0CLK:", self.read(self.map['DDR0CLKMON']))
-        print("DDR1CLK:", self.read(self.map['DDR1CLKMON']))
-        print("AURCLK:", self.read(self.map['AURCLKMON']))
-        print("GRXCLK:", self.read(self.map['GRXCLKMON']))
-        print("GTXCLK:", self.read(self.map['GTXCLKMON']))
+    def status(self, verbose=True):
+        # start off with the identify dictionary
+        d = self.identify(verbose=verbose)
+        # add clocks
+        d['SYSCLK'] = self.read(self.map['SYSCLKMON'])
+        d['GBECLK'] = self.read(self.map['GBECLKMON'])
+        d['DDR0CLK'] = self.read(self.map['DDR0CLKMON'])
+        d['DDR1CLK'] = self.read(self.map['DDR1CLKMON'])
+        d['AURCLK'] = self.read(self.map['AURCLKMON'])
+        d['GRXCLK'] = self.read(self.map['GRXCLKMON'])
+        d['GTXCLK'] = self.read(self.map['GTXCLKMON'])
+        if verbose:
+            for k in d.keys():
+                print(f'{k}: {d[k]}')
+        return d
         
-    def identify(self):
+    def identify(self, verbose=True):
         def str4(num):
             id = str(chr((num>>24)&0xFF))
             id += chr((num>>16)&0xFF)
@@ -139,13 +145,18 @@ class PueoTURF:
             id += chr(num & 0xFF)
             return id
 
-        fid = str4(self.read(self.map['FPGA_ID']))
-        print("FPGA:", fid, end=' ')
-        if fid == "TURF":
-            fdv = self.DateVersion(self.read(self.map['FPGA_DATEVERSION']))
-            print(fdv, end=' ')
-            dna = self.dna()
-            print(hex(dna))
+        id = {}
+        id['FPGA'] = str4(self.read(self.map['FPGA_ID']))
+        if verbose:
+            print("FPGA:", id['FPGA'], end=' ')
+        if id['FPGA'] == 'TURF':
+            id['DateVersion'] = self.DateVersion(self.read(self.map['FPGA_DATEVERSION']))
+            id['DNA'] = self.dna()
+            if verbose:
+                print(id['DateVersion'], end=' ')
+                print(hex(id['DNA']))
         else:
-            print('')
+            if verbose:
+                print('')
+        return id
             
