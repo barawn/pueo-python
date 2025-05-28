@@ -122,9 +122,8 @@ class PueoTURF:
         return dnaval
 
     def status(self, verbose=True):
-        # start off with the identify dictionary
-        d = self.identify(verbose=verbose)
-        # add clocks
+        id_dict = self.identify(verbose=verbose)
+        d = {}
         d['SYSCLK'] = self.read(self.map['SYSCLKMON'])
         d['GBECLK'] = self.read(self.map['GBECLKMON'])
         d['DDR0CLK'] = self.read(self.map['DDR0CLKMON'])
@@ -135,7 +134,8 @@ class PueoTURF:
         if verbose:
             for k in d.keys():
                 print(f'{k}: {d[k]}')
-        return d
+        # combine to return        
+        return { **id_dict, **d }
         
     def identify(self, verbose=True):
         def str4(num):
