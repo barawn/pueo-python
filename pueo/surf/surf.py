@@ -135,12 +135,12 @@ class PueoSURF:
     def status(self, verbose=True):
         id_dict = self.identify(verbose)
         d = {}
-        d['ACLK'] = self.read(self.map['ACLKMON']))
-        d['GTPCLK'] = self.read(self.map['GTPCLKMON']))
-        d['RXCLK'] = self.read(self.map['RXCLKMON']))
-        d['CLK300'] = self.read(self.map['CLK300MON']))
-        d['IFCLK'] = self.read(self.map['IFCLKMON']))
-        d['RACKCLK']= self.read(self.map['RACKCLKMON']))
+        d['ACLK'] = self.read(self.map['ACLKMON'])
+        d['GTPCLK'] = self.read(self.map['GTPCLKMON'])
+        d['RXCLK'] = self.read(self.map['RXCLKMON'])
+        d['CLK300'] = self.read(self.map['CLK300MON'])
+        d['IFCLK'] = self.read(self.map['IFCLKMON'])
+        d['RACKCLK']= self.read(self.map['RACKCLKMON'])
         if verbose:
             for k in d.keys():
                 print(f'{k}: {d[k]}')
