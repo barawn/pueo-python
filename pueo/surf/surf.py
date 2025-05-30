@@ -109,32 +109,44 @@ class PueoSURF:
             dnaval = (dnaval << 1) | val
         return dnaval
 
-    def identify(self):
+    def identify(self, verbose=True):
         def str4(num):
             id = str(chr((num>>24)&0xFF))
-            id += chr((num>>16) & 0xFF)
-            id += chr((num>>8) & 0xFF)
+            id += chr((num>>16)&0xFF)
+            id += chr((num>>8)&0xFF)
             id += chr(num & 0xFF)
             return id
 
-        fid = str4(self.read(self.map['FPGA_ID']))
-        print("FPGA:", fid, end=' ')
-        if fid == "SURF":
-            fdv = self.DateVersion(self.read(self.map['FPGA_DATEVERSION']))
-            print(fdv, end=' ')
-            dna = self.dna()
-            print(hex(dna))
+        id = {}
+        id['FPGA'] = str4(self.read(self.map['FPGA_ID']))
+        if verbose:
+            print("FPGA:", id['FPGA'], end=' ')
+        if id['FPGA'] == 'SURF':
+            id['DateVersion'] = self.DateVersion(self.read(self.map['FPGA_DATEVERSION']))
+            id['DNA'] = self.dna()
+            if verbose:
+                print(id['DateVersion'], end=' ')
+                print(hex(id['DNA']))
         else:
-            print('')
+            if verbose:
+                print('')
+        return id
             
-    def status(self):
-        self.identify()
-        print("ACLK:", self.read(self.map['ACLKMON']))
-        print("GTPCLK:", self.read(self.map['GTPCLKMON']))
-        print("RXCLK:", self.read(self.map['RXCLKMON']))
-        print("CLK300:", self.read(self.map['CLK300MON']))
-        print("IFCLK:", self.read(self.map['IFCLKMON']))
-        print("RACKCLK:", self.read(self.map['RACKCLKMON']))
+    def status(self, verbose=True):
+        id_dict = self.identify(verbose)
+        d = {}
+        d['ACLK'] = self.read(self.map['ACLKMON']))
+        d['GTPCLK'] = self.read(self.map['GTPCLKMON']))
+        d['RXCLK'] = self.read(self.map['RXCLKMON']))
+        d['CLK300'] = self.read(self.map['CLK300MON']))
+        d['IFCLK'] = self.read(self.map['IFCLKMON']))
+        d['RACKCLK']= self.read(self.map['RACKCLKMON']))
+        if verbose:
+            for k in d.keys():
+                print(f'{k}: {d[k]}')
+        # combine to return        
+        return { **id_dict, **d }
+        
         
     def getDelayParameters(self):
         # the '700.0' here is the value we spec'd

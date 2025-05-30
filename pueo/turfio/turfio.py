@@ -240,7 +240,7 @@ class PueoTURFIO:
         return dnaval
 
 
-    def identify(self):
+    def identify(self, verbose=True):
         def str4(num):
             id = str(chr((num>>24)&0xFF))
             id += chr((num>>16) & 0xFF)
@@ -248,33 +248,40 @@ class PueoTURFIO:
             id += chr(num & 0xFF)
             return id
 
-        fid = str4(self.read(self.map['FPGA_ID']))
-        print("FPGA:", fid, end=' ')
-        if fid == "TFIO":
-            fdv = self.DateVersion(self.read(self.map['FPGA_DATEVERSION']))
-            print(fdv, end=' ')
-            dna = self.dna()
-            print(hex(dna))
+        id = {}
+        id['FPGA'] = str4(self.read(self.map['FPGA_ID']))
+        if verbose:
+            print("FPGA:", id['FPGA'], end=' ')
+        if id['FPGA'] == "TFIO":
+            id['DateVersion'] = self.DateVersion(self.read(self.map['FPGA_DATEVERSION']))
+            id['DNA'] = self.dna()
+            if verbose:
+                print(id['DateVersion'], end='')
+                print(hex(id['DNA']))
         else:
             print('') 
-
-    def status(self):
-        self.identify()
+        return id
+    
+    def status(self, verbose=True):
+        id_dict = self.identify(verbose)
+        d = {}        
         rv = bf(self.read(self.map['CTRLSTAT']))
-        print("Crate Power Enable:", rv[2])
-        print("RACK 3.3V Enable:", rv[3])
-        print("Crate I2C Ready:", rv[4])
-        print("Local HSKBUS Override:", rv[5])
-        print("HSKBUS Crate Bridge Enable:", rv[6])
-        print("Housekeeping RX Byte Count:", rv[23:16])
-        # N.B.: These values are actually only 16 bit, but they're
-        # shifted so they're read out in Hz. If you really want
-        # to save space when storing the only non-zero bits are [29:14].
-        print("SYSCLK:", self.read(self.map['SYSCLKMON']))
-        print("GTPCLK:", self.read(self.map['GTPCLKMON']))
-        print("RXCLK:", self.read(self.map['RXCLKMON']))
-        print("HSRXCLK:", self.read(self.map['HSRXCLKMON']))
-        print("CLK200:", self.read(self.map['CLK200MON']))
+        d['Crate Power Enable'] = rv[2]
+        d['RACK 3.3V Enable'] = rv[3]
+        d['Crate I2C Ready'] = rv[4]
+        d['Local HSKBUS Override'] = rv[5]
+        d['HSKBUS Crate Bridge Enable'] = rv[6]
+        d['Housekeeping RX Byte Count'] = rv[23:16]
+        d['SYSCLK'] = self.read(self.map['SYSCLKMON'])
+        d['GTPCLK'] = self.read(self.map['GTPCLKMON'])
+        d['RXCLK'] = self.read(self.map['RXCLKMON'])
+        d['HSRXCLK'] = self.read(self.map['HSRXCLKMON'])
+        d['CLK200'] = self.read(self.map['CLK200MON'])
+        if verbose:
+            for k in d.keys():
+                print(f'{k}: {d[k]}')
+        # combine to return        
+        return { **id_dict, **d }        
 
     # auxVal is for debugging, it's *totally* not needed
     # just makes it easier to check that all bits are working
