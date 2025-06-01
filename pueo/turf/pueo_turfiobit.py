@@ -140,7 +140,13 @@ class PueoTURFIOBit(dev_submod):
         coarseEdge = ((ss[0] + ss[1])/2)*200.0
         if verbose:
             print("Coarse eye edge is at", coarseEdge)
-        fs = self.fine_eyescan(coarseEdge-200.0, coarseEdge+200.0)
+        
+        if coarseEdge < 200:
+            print('Coarse edge too close to zero. Setting min scan to zero')
+            minScan = 0
+        else:
+            minScan = coarseEdge - 200
+        fs = self.fine_eyescan(minScan, coarseEdge+200.0)
         fineEdgeIdx = self.find_eyeedge(fs)
         fineEdge = (coarseEdge-200.0)+(fineEdgeIdx*pars[1])
         if verbose:            
