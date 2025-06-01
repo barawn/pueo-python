@@ -128,8 +128,8 @@ class Uploader:
         with open(fn, "rb") as f:
             while written < flen:
                 if verbose:
-                    print("%s -> %s : writing %d bytes into bank %d, %d/%d written" %
-                          (fn, destfn, toRead, bank, written, flen))
+                    print("%s : writing %d bytes into bank %d, %d/%d written" %
+                          (fn, toRead, bank, written, flen))
                 d += f.read(toRead)
                 padBytes = (4-(len(d) % 4)) if (len(d) % 4) else 0
                 d += padBytes*b'\x00'
