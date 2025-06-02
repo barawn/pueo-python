@@ -7,7 +7,9 @@ class PueoTURFEvent(dev_submod):
             'NDWORDS0' : 0x10,
             'NDWORDS1' : 0x14,
             'NDWORDS2' : 0x18,
-            'NDWORDS3' : 0x1C }
+            'NDWORDS3' : 0x1C,
+            'OUTQWORDS': 0x20,
+            'OUTEVENTS': 0x24}
 
     def __init__(self, dev, base):
         super().__init__(dev, base)
@@ -20,6 +22,12 @@ class PueoTURFEvent(dev_submod):
             if verbose:
                 print(f'TURFIO{i} : {4*r} bytes received')
             s.append(4*r)
+        r = self.read(self.map['OUTQWORDS'])
+        t = self.read(self.map['OUTEVENTS'])
+        if verbose:
+            print(f'OUT : {8*r} bytes sent in {t} frames')
+        s.append(r)
+        s.append(t)
         return s
 
     def reset(self):
