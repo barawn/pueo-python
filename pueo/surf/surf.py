@@ -9,9 +9,17 @@
 from ..common.serialcobsdevice import SerialCOBSDevice
 from ..common import pueo_utils
 from ..common.bf import bf
+from ..common.dev_submod import dev_submod
+
 from enum import Enum
 import time
+import os
 
+try:
+    import pyrfdc
+    have_pyrfdc = True
+except ImportError:
+    have_pyrfdc = False
 
 class PueoSURF:
     class DateVersion:
@@ -59,10 +67,12 @@ class PueoSURF:
             'TIOMDLYCNTA' : 0x888,
             'TIOMDLYCNTB' : 0x88C}
         
-    def __init__(self, accessInfo, type=AccessType.SERIAL):
+    def __init__(self,
+                 accessInfo,
+                 type=AccessType.SERIAL,
+                 param_file='/usr/local/share/rfdc_gen3.pkl'):
         if type == self.AccessType.SPI:
-            from ..common.wbspi import WBSPI
-            
+            from ..common.wbspi import WBSPI            
             self.dev = WBSPI(path=accessInfo,
                              speed=10000000)
             self.read = self.dev.read
@@ -94,10 +104,30 @@ class PueoSURF:
         else:
             raise Exception("type must be one of",
                             [e.value for e in self.AccessType])
-            
+
+        self.rfdc_param_file = param_file
+        
         # clock monitor calibration
         self.clockMonValue = 100000000
         self.write(self.map['ACLKMON'], self.clockMonValue)
+
+        # add the rfdc
+        # note that libunivrfdc must be in your LD_LIBRARY_PATH!!
+        if have_pyrfdc:
+            try:                
+                self.rfdc = PyRFDC(dev_submod(self, 0x200000),
+                                   self.rfdc_param_file)
+                self.rfdc.configure()
+                # must be reftile = 1, since ADC tile 1 distributes
+                # the clock.
+                self.rfdc.MultiConverter_Init(self.rfdc.ConverterType.ADC,
+                                              refTile=1)                
+            except Exception as e:
+                print(f'Exception {repr(e)} creating PyRFDC: just using dev_submod')
+                self.rfdc = dev_submod(self, 0x200000)
+        else:
+            self.rfdc = dev_submod(self, 0x200000)
+            
         time.sleep(0.1)        
             
     def dna(self):
