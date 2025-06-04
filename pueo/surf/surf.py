@@ -230,7 +230,7 @@ class PueoSURF:
                 print("WARNING: eyes:", eyes)
             skew = (shift/672)*8
         else:
-            self.rxclkShift(int(userSkew*672/8))
+            self.rxclkShift(round(userSkew*672/8))
         # Now we need to check the alignment
         r = bf(self.read(self.map['TIOCTRL']))
         nreset = 0
