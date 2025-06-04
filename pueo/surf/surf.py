@@ -118,10 +118,6 @@ class PueoSURF:
                 self.rfdc = PyRFDC(dev_submod(self, 0x200000),
                                    self.rfdc_param_file)
                 self.rfdc.configure()
-                # must be reftile = 1, since ADC tile 1 distributes
-                # the clock.
-                self.rfdc.MultiConverter_Init(self.rfdc.ConverterType.ADC,
-                                              refTile=1)                
             except Exception as e:
                 print(f'Exception {repr(e)} creating PyRFDC: just using dev_submod')
                 self.rfdc = dev_submod(self, 0x200000)
