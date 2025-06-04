@@ -73,7 +73,7 @@ class PueoTURF:
         size , = struct.unpack(">Q", vals[8:16])
         return (base, size)
         
-    def __init__(self, accessInfo, type=AccessType.SERIAL):
+    def __init__(self, accessInfo=None, type=AccessType.ETH):
         if type == self.AccessType.SERIAL:
             self.dev = SerialCOBSDevice(accessInfo, 115200, addrbytes=4)
             self.reset = self.dev.reset

@@ -70,6 +70,12 @@ class PueoTURFAurora(dev_submod):
             print(f'Lane Up: {r[0]}')
         return rv
 
+    def linkerr_reset(self):
+        r = self.read(0x2000)
+        w = r | (1<<31)
+        self.write(w)
+        self.write(r)        
+    
     def up(self, linkno):
         return self.linkstat(linkno) & 0x1
     
