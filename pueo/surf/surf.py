@@ -16,7 +16,7 @@ import time
 import os
 
 try:
-    import pyrfdc
+    from pyrfdc import PyRFDC
     have_pyrfdc = True
 except ImportError:
     have_pyrfdc = False
