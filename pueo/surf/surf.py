@@ -600,7 +600,7 @@ class PueoSURF:
     def cal_use_rack(self):
         return (self.read(0xC) >> 3) & 0x1
 
-    @cal_use_pulse.setter
+    @cal_use_rack.setter
     def cal_use_rack(self, value):
         r = self.read(0xC) & 0xFFFFFFF7
         r |= 0x8 if value else 0
