@@ -597,11 +597,11 @@ class PueoSURF:
         self.write(0xC, r)
 
     @property
-    def cal_use_pulse(self):
+    def cal_use_rack(self):
         return (self.read(0xC) >> 3) & 0x1
 
     @cal_use_pulse.setter
-    def cal_use_pulse(self, value):
+    def cal_use_rack(self, value):
         r = self.read(0xC) & 0xFFFFFFF7
         r |= 0x8 if value else 0
         self.write(0xC, r)    
