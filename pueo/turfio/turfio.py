@@ -428,7 +428,27 @@ class PueoTURFIO:
         r = self.read(0x3000) & 0xFFFFFEFF
         r |= 0x100 if value else 0
         self.write(0x3000, r)
-        
+
+    @property
+    def cal_powerdown(self):
+        return (self.read(0xC) >> 11) & 0x1
+
+    @cal_powerdown.setter
+    def cal_powerdown(self, value):
+        r = self.read(0xC) & 0xfffff7ff
+        r |= 0x800 if value else 0
+        self.write(0xC, r)
+
+    @property
+    def cal_use_turf(self):
+        return (self.read(0xC) >> 10) & 0x1
+
+    @cal_use_turf.setter
+    def cal_use_turf(self, value):
+        r = self.read(0xC) & 0xfffffbff
+        r |= 0x400 if value else 0
+        self.write(0xC, r)
+
     def monitor(self, verbose=True):
         self.i2c.write(0x48, [0x5])
         time.sleep(0.5)
