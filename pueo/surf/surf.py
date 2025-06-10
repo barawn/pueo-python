@@ -584,8 +584,28 @@ class PueoSURF:
     def rfdc_reset(self, value):
         r = self.read(0xC) & (0xfdffffff)
         r |= (1<<25) if value else 0
-        self.write(0xC, r)        
-    
+        self.write(0xC, r)
+
+    @property
+    def cal_path_enable(self):
+        return (self.read(0xC) >> 4) & 0x1
+
+    @cal_path_enable.setter
+    def cal_path_enable(self, value):
+        r = self.read(0xC) & 0xFFFFFFEF
+        r |= 0x10 if value else 0
+        self.write(0xC, r)
+
+    @property
+    def cal_use_pulse(self):
+        return (self.read(0xC) >> 3) & 0x1
+
+    @cal_use_pulse.setter
+    def cal_use_pulse(self, value):
+        r = self.read(0xC) & 0xFFFFFFF7
+        r |= 0x8 if value else 0
+        self.write(0xC, r)    
+        
     # set the bit offset to a value
     def turfioSetOffset(self, val):
         # both bitslip reset and bitslip are flags
