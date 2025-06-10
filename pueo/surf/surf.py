@@ -564,6 +564,16 @@ class PueoSURF:
         r = self.read(0xC) & 0xFFFFFF7F
         r |= 0x80 if value else 0
         self.write(0xC, r)
+
+    @property
+    def hsk_packet_count(self):
+        """ not what you think, doesn't work yet """
+        return self.read(0x10) & 0xF
+
+    @property
+    def sysref_phase(self):
+        """ returns the value of the SYSREF output at each ifclk phase """
+        return self.read(0x14) & 0xFFFF
         
     # set the bit offset to a value
     def turfioSetOffset(self, val):
