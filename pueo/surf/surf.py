@@ -572,9 +572,20 @@ class PueoSURF:
 
     @property
     def sysref_phase(self):
-        """ returns the value of the SYSREF output at each ifclk phase """
+        """ value of the SYSREF output at each ifclk phase """
         return self.read(0x14) & 0xFFFF
-        
+
+    @property
+    def rfdc_reset(self):
+        """ state of the RFdc reset """
+        return (self.read(0xC) >> 25) & 0x1
+
+    @rfdc_reset.setter
+    def rfdc_reset(self, value):
+        r = self.read(0xC) & (0xfdffffff)
+        r |= (1<<25) if value else 0
+        self.write(0xC, r)        
+    
     # set the bit offset to a value
     def turfioSetOffset(self, val):
         # both bitslip reset and bitslip are flags
