@@ -29,11 +29,11 @@ class PueoTURFTime(dev_submod):
     same moment in time.
     """
     
-    map = [ 'CTRL' : 0x00,
+    map = { 'CTRL' : 0x00,
             'TRIM' : 0x04,
             'SECOND'  : 0x08,
             'LAST' : 0x0C,
-            'LLAST' : 0x10 ]
+            'LLAST' : 0x10 }
 
     @property
     def en_int_pps(self):
