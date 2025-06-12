@@ -96,4 +96,10 @@ class PueoTURFTime(dev_submod):
 
     @property
     def llast_pps(self, value):
+        """
+        Value of the cycle counter (reset at run start) at the PPS before
+        the last PPS. Must read current second first to capture this
+        and last_pps.
+        """
+        return self.read(0x10)
     
