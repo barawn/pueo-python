@@ -82,7 +82,7 @@ class PueoTURFTime(dev_submod):
         """ Current second. """
         return self.read(0x8)
 
-    @current_second.setter:
+    @current_second.setter
     def current_second(self, value):
         self.write(0x8, value)
 
