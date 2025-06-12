@@ -8,6 +8,7 @@ from .pueo_turfgbe import PueoTURFGBE
 from .pueo_cratebridge import PueoCrateBridge
 from .pueo_turfevent import PueoTURFEvent
 from .pueo_turftrig import PueoTURFTrig
+from .pueo_turftime import PueoTURFTime
 
 from ..common.pyaxibridge import PyAXIBridge
 from ..common.ethdevice import EthDevice
@@ -107,6 +108,8 @@ class PueoTURF:
         self.gbe = PueoTURFGBE(self.dev, 0x4000)
         self.event = PueoTURFEvent(self.dev, 0x18000)
         self.trig = PueoTURFTrig(self.dev, 0x1C000)
+        self.time = PueoTURFTime(self.dev, 0x1A000)
+        
         self.crate = PueoCrateBridge(self.dev, (1<<27))
         self.clockMonValue = 100000000
         self.write(self.map['SYSCLKMON'], self.clockMonValue)
