@@ -10,7 +10,8 @@ class PueoTURFTime(dev_submod):
          Bit 1 : use external PPS.
          Bits 31:16 : external PPS holdoff (also pulse length to PS)
     TRIM register (0x04):
-         16-bit signed value to adjust internal PPS length by.
+         16-bit signed value to adjust internal PPS length by. Trim up
+         reduces the internal PPS, trim down increases the internal PPS.
     SECOND register (0x08):
          Current second.
     LAST register (0x0C, read only):
@@ -70,7 +71,7 @@ class PueoTURFTime(dev_submod):
 
     @property
     def internal_pps_trim(self):
-        """ Adjusts the internal PPS by this (signed) value. """
+        """ Internal PPS adjustment. + decreases cycle count, - increases. """
         return (self.read(0x4) ^ 0x8000) - 0x8000
 
     @internal_pps_trim.setter
