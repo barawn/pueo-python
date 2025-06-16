@@ -4,13 +4,16 @@ import time
 import ipaddress
 
 class EthDevice:
+    DAQ_IP = "10.68.65.81"
+    
     def __init__(self,
-                 remote_ip = "10.68.65.81",
+                 remote_ip = None,
                  remote_rp = 21618,
                  remote_wp = 21623,
                  local_ip = "10.68.65.1",
                  local_port = 21362):
-
+        if remote_ip = None:
+            remote_ip = self.DAQ_IP
         self.remote_ip = ipaddress.ip_address(remote_ip)
         self.remote_readport = remote_rp
         self.remote_writeport = remote_wp
