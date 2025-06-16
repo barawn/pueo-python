@@ -12,7 +12,7 @@ class EthDevice:
                  remote_wp = 21623,
                  local_ip = "10.68.65.1",
                  local_port = 21362):
-        if remote_ip = None:
+        if remote_ip is None:
             remote_ip = self.DAQ_IP
         self.remote_ip = ipaddress.ip_address(remote_ip)
         self.remote_readport = remote_rp
