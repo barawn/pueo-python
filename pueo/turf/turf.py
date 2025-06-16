@@ -21,6 +21,7 @@ from enum import Enum
 
 class PueoTURF:
     """ TURF device. Note that the current Serial access path is deprecated """
+    DAQ_IP = EthDevice.DAQ_IP
     
     class DateVersion:
         def __init__(self, val):
