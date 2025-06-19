@@ -37,7 +37,7 @@ class PueoTURFEvent(dev_submod):
              4*self.ndwords3]
         if verbose:
             for i in range(4):
-                print(f'TURFIO{i} : {r} bytes received')
+                print(f'TURFIO{i} : {s[i]} bytes received')
         r = 8*self.outqwords
         t = self.outevents
         if verbose:
