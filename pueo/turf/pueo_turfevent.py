@@ -22,20 +22,21 @@ class PueoTURFEvent(dev_submod):
 # +------------------+------------+------+-----+------------+-------------------------------------------------+
     event_reset      =    bitfield(0x000,  0,       0x0001, "Force event core into reset.")
     mask             =    bitfield(0x000,  8,       0x000F, "TURFIO event mask - if set data from TURFIO is ignored")
-    ndwords          =[register_ro(0x010,                   "Number of dwords received from TURFIO 0"),
-                       register_ro(0x014,                   "Number of dwords received from TURFIO 1"),
-                       register_ro(0x018,                   "Number of dwords received from TURFIO 2"),
-                       register_ro(0x01C,                   "Number of dwords received from TURFIO 3")]
+    ndwords0         = register_ro(0x010,                   "Number of dwords received from TURFIO 0")
+    ndwords1         = register_ro(0x014,                   "Number of dwords received from TURFIO 1")
+    ndwords2         = register_ro(0x018,                   "Number of dwords received from TURFIO 2")
+    ndwords3         = register_ro(0x01C,                   "Number of dwords received from TURFIO 3")
     outqwords        = register_ro(0x020,                   "Number of qwords sent to Ethernet")
     outevents        = register_ro(0x024,                   "Number of events sent to Ethernet")
 
     def statistics(self, verbose=True):
         """ Get event statistics """
-        s = []
-        for i in range(4):
-            r = 4*self.ndwords[i]
-            s.append(r)
-            if verbose:
+        s = [4*self.ndwords0,
+             4*self.ndwords1,
+             4*self.ndwords2,
+             4*self.ndwords3]
+        if verbose:
+            for i in range(4):
                 print(f'TURFIO{i} : {r} bytes received')
         r = 8*self.outqwords
         t = self.outevents
