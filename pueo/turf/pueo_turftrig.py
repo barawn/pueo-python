@@ -22,15 +22,6 @@ class PueoTURFTrig(dev_submod):
     def __init__(self, dev, base):
         super().__init__(dev, base)
 
-    def runcmd(self, val):
-        self.write(0, val)
-
-    def fwu_data(self, data):
-        self.write(0x4, data)
-
-    def fwu_mark(self, buffer):
-        self.write(0x4, (buffer & 0x1) | (1<<31))
-
 ################################################################################################################
 # REGISTER SPACE                                                                                               #
 # +------------------+------------+------+-----+------------+-------------------------------------------------+
@@ -51,7 +42,16 @@ class PueoTURFTrig(dev_submod):
 #   soft_trig             function(0x110,                   "Write anything to this address for soft trigger")
     holdoff          =    bitfield(0x118,  0,       0xFFFF, "Minimum time (in 4 ns cycles) between triggers")
     event_count      = register_ro(0x11C,                   "Number of events since run start")
-   
+
+    def runcmd(self, val):
+        self.write(0, val)
+
+    def fwu_data(self, data):
+        self.write(0x4, data)
+
+    def fwu_mark(self, buffer):
+        self.write(0x4, (buffer & 0x1) | (1<<31))
+    
     def soft_trig(self):
         """ value doesn't matter """
         self.write(0x110, 1)
