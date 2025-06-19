@@ -1,5 +1,5 @@
 from ..common.bf import bf
-from ..common.dev_submod import dev_submod
+from ..common.dev_submod import dev_submod, bitfield, register, bitfield_ro, register_ro
 
 class PueoTURFEvent(dev_submod):
     """ Event control and statistics core """
@@ -14,37 +14,39 @@ class PueoTURFEvent(dev_submod):
     def __init__(self, dev, base):
         super().__init__(dev, base)
 
+################################################################################################################
+# REGISTER SPACE                                                                                               #
+# +------------------+------------+------+-----+------------+-------------------------------------------------+
+# |                  |            |      |start|            |                                                 |
+# | name             |    type    | addr | bit |     mask   | description                                     |
+# +------------------+------------+------+-----+------------+-------------------------------------------------+
+    event_reset      =    bitfield(0x000,  0,       0x0001, "Force event core into reset.")
+    mask             =    bitfield(0x000,  8,       0x000F, "TURFIO event mask - if set data from TURFIO is ignored")
+    ndwords          =[register_ro(0x010,                   "Number of dwords received from TURFIO 0"),
+                       register_ro(0x014,                   "Number of dwords received from TURFIO 1"),
+                       register_ro(0x018,                   "Number of dwords received from TURFIO 2"),
+                       register_ro(0x01C,                   "Number of dwords received from TURFIO 3")]
+    outqwords        = register_ro(0x020,                   "Number of qwords sent to Ethernet")
+    outevents        = register_ro(0x024,                   "Number of events sent to Ethernet")
+
     def statistics(self, verbose=True):
-        b = self.map['NDWORDS0']
+        """ Get event statistics """
         s = []
         for i in range(4):
-            r = self.read(b+0x4*i)
+            r = 4*self.ndwords[i]
+            s.append(r)
             if verbose:
-                print(f'TURFIO{i} : {4*r} bytes received')
-            s.append(4*r)
-        r = self.read(self.map['OUTQWORDS'])
-        t = self.read(self.map['OUTEVENTS'])
+                print(f'TURFIO{i} : {r} bytes received')
+        r = 8*self.outqwords
+        t = self.outevents
         if verbose:
-            print(f'OUT : {8*r} bytes sent in {t} frames')
+            print(f'OUT : {r} bytes sent in {t} frames')
         s.append(r)
         s.append(t)
         return s
 
     def reset(self):
-        rv = bf(self.read(0))
-        rv[0] = 1
-        self.write(0, int(rv))
-        rv[0] = 0
-        self.write(0, int(rv))
+        """ Reset the event path """
+        self.event_reset = 1
+        self.event_reset = 0
 
-    @property
-    def mask(self):
-        rv = bf(self.read(0))
-        return rv[12:8]
-
-    @mask.setter
-    def mask(self, value):
-        value = value & 0xF
-        rv = bf(self.read(0))
-        rv[12:8] = value
-        self.write(0, int(rv))
