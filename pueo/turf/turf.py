@@ -57,6 +57,7 @@ class PueoTURF:
         SERIAL = 'Serial'
         ETH = 'Ethernet'
         AXI = 'AXI'
+        DUMMY = 'DUMMY'
 
     # search device tree nodes to grab base/size
     DT_PATH = "/sys/firmware/devicetree/base/axi/"
@@ -99,7 +100,21 @@ class PueoTURF:
             self.read = self.dev.read
             self.write = self.dev.write
             self.writeto = self.dev.write
-            self.reset = lambda : None            
+            self.reset = lambda : None
+        elif type == self.AccessType.DUMMY:
+            class Dummy:
+                def read(self, addr):
+                    print(f'read: address {hex(addr)}')
+                    return 0
+
+                def write(self, addr, value):
+                    print(f'write: address {hex(addr)} value {hex(value)}')
+                    
+            self.dev = Dummy()
+            self.read = self.dev.read
+            self.write = self.dev.write
+            self.writeto = self.dev.write
+            self.reset = lambda : None
         else:
             raise Exception("type must be one of",
                             [e.value for e in self.AccessType])
