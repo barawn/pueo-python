@@ -23,7 +23,7 @@ class PueoTURFTrig(dev_submod):
     def __init__(self, dev, base):
         super().__init__(dev, base)
 
-        self.scaler = PueoTURFScaler(self.dev, 0x300)
+        self.scaler = PueoTURFScaler(self.dev, base+0x300)
         
 ################################################################################################################
 # REGISTER SPACE                                                                                               #
