@@ -1,6 +1,6 @@
 from ..common.bf import bf
 from ..common.dev_submod import dev_submod, bitfield, register, bitfield_ro, register_ro
-from pueo_turfscaler import PueoTURFScaler
+from .pueo_turfscaler import PueoTURFScaler
 
 class PueoTURFTrig(dev_submod):
     """ Trigger core. """
