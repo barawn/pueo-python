@@ -1,5 +1,5 @@
 from ..common.bf import bf
-from ..common.dev_submod import dev_submod
+from ..common.dev_submod import dev_submod, bitfield, register, bitfield_ro, register_ro
 
 class PueoTURFTime(dev_submod):
     """
@@ -36,71 +36,16 @@ class PueoTURFTime(dev_submod):
             'LAST' : 0x0C,
             'LLAST' : 0x10 }
 
-    @property
-    def en_int_pps(self):
-        return self.read(0) & 0x1
-
-    @en_int_pps.setter
-    def en_int_pps(self, value):
-        """ Start up the internal PPS. """
-        r = self.read(0) & 0xFFFFFFFE
-        r |= 0x1 if value else 0
-        self.write(0, r)
-
-    @property
-    def use_ext_pps(self):
-        """ Use external PPS. """
-        return (self.read(0) >> 1) & 0x1
-
-    @use_ext_pps.setter
-    def use_ext_pps(self, value):
-        r = self.read(0) & 0xFFFFFFFD
-        r |= 0x2 if value else 0
-        self.write(0, r)
-
-    @property
-    def pps_holdoff(self):
-        """ Number of cycles to hold off a new PPS. Also pulse length to PS. """
-        return (self.read(0) >> 16) & 0xFFFF
-
-    @pps_holdoff.setter
-    def pps_holdoff(self, value):
-        r = self.read(0) & 0xFFFF
-        r |= (value << 16)
-        self.write(0, r)
-
-    @property
-    def internal_pps_trim(self):
-        """ Internal PPS adjustment. + decreases cycle count, - increases. """
-        return (self.read(0x4) ^ 0x8000) - 0x8000
-
-    @internal_pps_trim.setter
-    def internal_pps_trim(self, value):
-        self.write(0x4, value & 0xFFFF)        
-        
-    @property
-    def current_second(self):
-        """ Current second. """
-        return self.read(0x8)
-
-    @current_second.setter
-    def current_second(self, value):
-        self.write(0x8, value)
-
-    @property
-    def last_pps(self):
-        """
-        Value of the cycle counter (reset at run start) at the last PPS.
-        Must read current_second first to capture this and llast_pps.
-        """
-        return self.read(0xC)
-
-    @property
-    def llast_pps(self):
-        """
-        Value of the cycle counter (reset at run start) at the PPS before
-        the last PPS. Must read current second first to capture this
-        and last_pps.
-        """
-        return self.read(0x10)
-    
+#################################################################################################################
+#  REGISTER SPACE                                                                                               #
+#  +------------------+------------+------+-----+------------+-------------------------------------------------+
+#  |                  |            |      |start|            |                                                 |
+#  | name             |    type    | addr | bit |     mask   | description                                     |
+#  +------------------+------------+------+-----+------------+-------------------------------------------------+    
+    en_int_pps        =    bitfield(0x000,  0,       0x0001, "Enable the internal PPS counter")
+    use_ext_pps       =    bitfield(0x000,  1,       0x0001, "Use the external PPS source")
+    pps_holdoff       =    bitfield(0x000, 16,       0xFFFF, "Set holdoff/pulse length for ext. PPS in 32.768us units")
+    internal_pps_trim =    bitfield(0x004,  0,       0xFFFF, "Adjust internal PPS counter (pos = longer, neg=shorter)", signed=True)
+    current_second    =    register(0x008,                   "Current second")
+    last_pps          = register_ro(0x00C,                   "Cycles @ last PPS. Read current_second to capture w/llast_pps")
+    llast_pps         = register_ro(0x010,                   "Cycles @ PPS prior to last. Read current second to capture w/last_pps")
