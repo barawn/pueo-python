@@ -6,7 +6,7 @@ class PueoTURFScaler(dev_submod):
     map = { 'SCAL_BASE' : 0x00,
             'GATE_CTRL' : 0x80,
             'GATE_EN'   : 0x84 }
-    
+
     scaler_map = {
             0  : 'TFIO0 Slot 0',
             1  : 'TFIO0 Slot 1',
@@ -67,7 +67,7 @@ class PueoTURFScaler(dev_submod):
         # create a map number to name inside f string --> say what it is
         if verbose:
             for i in range(16):
-                print(f'{scaler_map[2*i]}: {r[2*i]}\t\t{scaler_map[2*i+1]}: {r[2*i+1]}')
+                print(f'{self.scaler_map[2*i]}: {r[2*i]}\t\t\t{self.scaler_map[2*i+1]}: {r[2*i+1]}')
         return r
 
     def scaler(self, idx):
