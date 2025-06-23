@@ -12,13 +12,25 @@ class PueoTURFTrig(dev_submod):
             'PPS_TRIGGER' : 0x108,
             'EXT_TRIGGER' : 0x10C,
             'SOFT_TRIGGER' : 0x110,
-            'HOLDOFF' : 0x118,
+            'OCCUPANCY' : 0x114,
+            'HOLDOFF_ERR' : 0x118,
             'EVENT_COUNT' : 0x11C }
 
     RUNCMD_NOOP_LIVE = 0
     RUNCMD_SYNC = 1
     RUNCMD_RESET = 2
     RUNCMD_STOP = 3
+
+    class GpiSelect(int, Enum):
+        """ select identifiers for ext_trig_select/gate_select. PPS is pointless for ext_trig_select """
+        NONE = 0
+        TIN0 = 1
+        TIN1 = 2
+        TURFIO0 = 3
+        TURFIO1 = 4
+        TURFIO2 = 5
+        TURFIO3 = 6
+        PPS = 7
     
     def __init__(self, dev, base):
         super().__init__(dev, base)
@@ -43,7 +55,10 @@ class PueoTURFTrig(dev_submod):
     ext_trig_select  =    bitfield(0x10C,  8,       0x0007, "Select the source for the EXT trigger")
     ext_offset       =    bitfield(0x10C, 16,       0xFFFF, "Negative adjustment to EXT trigger time")
 #   soft_trig             function(0x110,                   "Write anything to this address for soft trigger")
+    occupancy        = register_ro(0x114,                   "Buffer occupancy from last second")
     holdoff          =    bitfield(0x118,  0,       0xFFFF, "Minimum time (in 4 ns cycles) between triggers")
+    surf_err         =    bitfield(0x118, 16,       0x0001, "Set when SURF/TURFIO sends unknown event")
+    turf_err         =    bitfield(0x118, 17,       0x0001, "Set when TURF issues trigger when dead")
     event_count      = register_ro(0x11C,                   "Number of events since run start")
 
     def runcmd(self, val):
