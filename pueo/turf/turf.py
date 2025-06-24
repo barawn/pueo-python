@@ -183,7 +183,7 @@ class PueoTURF:
         print('Event Statistics: ')
         self.event.statistics()
         print(f'Reset status: {self.event.event_in_reset} (Force reset = {self.event.event_reset})')
-        print(f'Mask is: {bin(self.event.mask)}') 
+        print(f'Event (TURFIO) mask is: {bin(self.event.mask)}') 
         print(f'Running status: {self.trig.running}')
         print(f'Trigger count: {self.trig.trigger_count}')
 
