@@ -179,7 +179,7 @@ class PueoTURF:
                 print('')
         return id
     
-    def evStatus(self): 
+    def evstatus(self): 
         mask = self.event.mask
         reset = self.event.event_in_reset
         run = self.trig.running
