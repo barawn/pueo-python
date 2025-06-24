@@ -57,11 +57,12 @@ class PueoTURFTrig(dev_submod):
     ext_trig_select  =    bitfield(0x10C,  8,       0x0007, "Select the source for the EXT trigger")
     ext_offset       =    bitfield(0x10C, 16,       0xFFFF, "Negative adjustment to EXT trigger time")
 #   soft_trig             function(0x110,                   "Write anything to this address for soft trigger")
+    running          = bitfield_ro(0x110, 16,       0x0001, "Master trigger run status (1 = active, 0 = inactive)")
     occupancy        = register_ro(0x114,                   "Buffer occupancy from last second")
     holdoff          =    bitfield(0x118,  0,       0xFFFF, "Minimum time (in 4 ns cycles) between triggers")
     surf_err         =    bitfield(0x118, 16,       0x0001, "Set when SURF/TURFIO sends unknown event")
     turf_err         =    bitfield(0x118, 17,       0x0001, "Set when TURF issues trigger when dead")
-    event_count      = register_ro(0x11C,                   "Number of events since run start")
+    trigger_count    = register_ro(0x11C,                   "Number of triggers since run start")
 
     def runcmd(self, val):
         self.write(0, val)
