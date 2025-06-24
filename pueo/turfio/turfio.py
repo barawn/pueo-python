@@ -449,7 +449,12 @@ class PueoTURFIO:
         r |= 0x400 if value else 0
         self.write(0xC, r)
 
-    def monitor(self, verbose=True):
+    def monitor(self, force = False, verbose=True):
+        if not force:
+            print('ONLY USE IF YOU KNOW WHAT YOU ARE DOING!')
+            print('You have been warned')
+            print('If you want to keep going, set force = True')
+            return
         self.i2c.write(0x48, [0x5])
         time.sleep(0.5)
         stat = True
