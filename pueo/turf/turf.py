@@ -180,6 +180,6 @@ class PueoTURF:
         return id
     
     def idk(self): 
-        mask = self.dev.event.mask
+        mask = self.event.mask
         print(mask)
             
