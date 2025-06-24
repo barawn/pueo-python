@@ -179,11 +179,11 @@ class PueoTURF:
                 print('')
         return id
     
-    def idk(self): 
+    def triggerStat(self): 
         mask = self.event.mask
         reset = self.event.event_in_reset
-        stats = self.event.statistics
-        run = self.trig.running()
+        stats = self.event.statistics()
+        run = self.trig.running
         count = self.trig.trigger_count
         print(f'Reset status: {reset}')
         print(f'Mask is: {bin(mask)}') 
