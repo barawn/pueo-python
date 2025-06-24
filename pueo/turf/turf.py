@@ -178,4 +178,8 @@ class PueoTURF:
             if verbose:
                 print('')
         return id
+    
+    def idk(self): 
+        mask = self.dev.event.mask
+        print(mask)
             
