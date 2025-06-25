@@ -30,7 +30,7 @@ class PueoTURFEvent(dev_submod):
     outqwords        = register_ro(0x020,                   "Number of qwords sent to Ethernet")
     outevents        = register_ro(0x024,                   "Number of events sent to Ethernet")
     ack_count        =    bitfield(0x028,  0,       0x0FFF, "Number of available DDR storage slots")
-    allow_count      =    bitfield(0x02C, 16,       0x01FF, "Current number of remaining allowed events in flight")
+    allow_count      =    bitfield(0x028, 16,       0x01FF, "Current number of remaining allowed events in flight")
 
     def statistics(self, verbose=True):
         """ Get event statistics """
