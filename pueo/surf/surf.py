@@ -618,3 +618,10 @@ class PueoSURF:
         for i in range(val):
             self.write(self.map['TIOCTRL'], int(r))
             
+    def get_attenuator(self, ch):
+        base = 0x14244 + (ch//2)*0x4000 + 0x4*(ch%2)
+        r = self.rfdc.read(base) & 0x1f
+        return 27 - r
+
+    
+        
