@@ -623,5 +623,18 @@ class PueoSURF:
         r = self.rfdc.read(base) & 0x1f
         return 27 - r
 
-    
+    def set_attenuator(self, ch, value):
+        base = 0x14244 + (ch//2)*0x400 + 0x4*(ch%2)
+        if value > 27:
+            raise ValueError("the dial only goes up to 27")
+        value = int(27-value)
+        r = self.rfdc.read(base) & 0x3f
+        r | = (value | 0x20)
+        self.rfdc.write(base, r)
+        # trigger the shit
+        upd = 0x14254 + (ch//2)*0x400
+        r = self.rfdc.read(upd)
+        r |= 0x1
+        self.rfdc.write(upd, r)
+        
         
