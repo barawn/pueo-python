@@ -186,6 +186,6 @@ class PueoTURF:
         print(f'Event (TURFIO) mask is: {bin(self.event.mask)}') 
         print(f'Running status: {self.trig.running}')
         print(f'Trigger count: {self.trig.trigger_count}')
-
-
-            
+        print(f'Ack FIFO count: {self.event.ack_count}')
+        print(f'Allow counter: {self.event.allow_count}')
+        
