@@ -189,3 +189,18 @@ class PueoTURF:
         print(f'Ack FIFO count: {self.event.ack_count}')
         print(f'Allow counter: {self.event.allow_count}')
         
+    def tstatus(self, verbose=True):
+        if verbose:
+            print('Time Statistics:')
+        d = {}
+        d['current_second'] = self.time.current_second
+        d['last_pps'] = self.time.last_pps
+        d['llast_pps'] = self.time.llast_pps
+        d['last_dead'] = self.time.last_dead
+        d['llast_dead'] = self.time.llast_dead
+        d['panic_counter'] = self.time.panic_counter
+        d['frequency'] = (d['last_pps']-d['llast_pps']) & 0xFFFFFFFF
+        d['dead_fraction'] = ((d['last_dead']-d['llast_dead']) & 0xFFFFFFFF)/(d['frequency'])
+        for key in d:
+            print(f'{key}: {d[key]}')
+        
