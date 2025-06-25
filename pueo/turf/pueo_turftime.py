@@ -51,3 +51,4 @@ class PueoTURFTime(dev_submod):
     llast_pps         = register_ro(0x010,                   "Cycles @ PPS prior to last. Read current second to capture w/other timing regs")
     last_dead         = register_ro(0x014,                   "Dead cycles @ last PPS. Read current second to capture w/other timing regs")
     llast_dead        = register_ro(0x018,                   "Dead cycles @ PPS prior to last. Read current second to capture w/other timing regs")
+    panic_counter     = register_ro(0x01C,                   "Value of panic counter after last pps")

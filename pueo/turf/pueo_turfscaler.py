@@ -61,7 +61,7 @@ class PueoTURFScaler(dev_submod):
         """ Return all the scalers. To access one see the scaler() method """
         r = []
         for i in range(32):
-            d = self.read(i)
+            d = self.read(4 * i)
             r.append(d)
         # create a map number to name inside f string --> say what it is
         if verbose:
