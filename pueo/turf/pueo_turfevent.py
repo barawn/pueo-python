@@ -34,7 +34,8 @@ class PueoTURFEvent(dev_submod):
     error0           = register_ro(0x02C,                   "Error reg 0 for the event process")
     error1           = register_ro(0x030,                   "Error reg 1 for the event process")
     error2           = register_ro(0x034,                   "Error reg 2 for the event process")
-
+    completion_count = register_ro(0x038,                   "Number of occupied DDR storage slots pending readout")
+    
     def statistics(self, verbose=True):
         """ Get event statistics """
         s = [4*self.ndwords0,
