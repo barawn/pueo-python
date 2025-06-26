@@ -62,7 +62,7 @@ class PueoTURFEvent(dev_submod):
     def decode_errs(cls, errs):
         """ pass a tuple of error0/error1/error2 """
         print(f'Width err: {bin(errs[0] & 0xF)}')
-        print(f'Length err: {bin((errs[0]>>4 & 0xF)))}')
+        print(f'Length err: {bin((errs[0]>>4 & 0xF))}')
         print(f'Input overflow err: {bin((errs[0]>>8 & 0xF))}')
         print(f'Command overflow: {bin(errs[1] & 0xF)}')
         print(f'Done overflow: {(bin(errs[1]>>4 & 0xF))}')
