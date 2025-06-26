@@ -31,7 +31,9 @@ class PueoTURFEvent(dev_submod):
     outevents        = register_ro(0x024,                   "Number of events sent to Ethernet")
     ack_count        =    bitfield(0x028,  0,       0x0FFF, "Number of available DDR storage slots")
     allow_count      =    bitfield(0x028, 16,       0x01FF, "Current number of remaining allowed events in flight")
-    full_error       = register_ro(0x02C,                   "Full error for the event process (decode with decode_error())")
+    error0           = register_ro(0x02C,                   "Error reg 0 for the event process")
+    error1           = register_ro(0x030,                   "Error reg 1 for the event process")
+    error2           = register_ro(0x034,                   "Error reg 2 for the event process")
 
     def statistics(self, verbose=True):
         """ Get event statistics """
@@ -56,19 +58,13 @@ class PueoTURFEvent(dev_submod):
         self.event_reset = 0
 
     @classmethod
-    def decode_error(cls, err):
-        for i in range(4):
-            aclkerr = (err >> 2*i) & 0x3
-            width_err = aclkerr & 0x1
-            length_err = (aclkerr >> 1) & 0x1
-            print(f'TURFIO{i}: width err {width_err} length err {length_err}')
-            memclkerr = ((err >> 8) >> 5*i)
-            uram_overflow = memclkerr & 0x1
-            cmd_overflow = (memclkerr >> 1) & 0x1
-            done_overflow = (memclkerr >> 2) & 0x1
-            cmpl_overflow = (memclkerr >> 3) & 0x1
-            done_underflow = (memclkerr >> 4) & 0x1
-            print(f'TURFIO{i}: uram overflow {uram_overflow} cmd_overflow {cmd_overflow} done_overflow {done_overflow}')
-            print(f'TURFIO{i}: cmpl overflow {cmpl_overflow} done_underflow {done_underflow}')
-        readout_err = (err >> 28) & 0x1
-        print(f'Readout err: {readout_err}')
+    def decode_errs(cls, errs):
+        """ pass a tuple of error0/error1/error2 """
+        print(f'Width err: {bin(errs[0] & 0xF)}')
+        print(f'Length err: {bin((errs[0]>>4 & 0xF)))}')
+        print(f'Input overflow err: {bin((errs[0]>>8 & 0xF))}')
+        print(f'Command overflow: {bin(errs[1] & 0xF)}')
+        print(f'Done overflow: {(bin(errs[1]>>4 & 0xF))}')
+        print(f'Completion overflow: {(bin(errs[1]>>8 & 0xF))}')
+        print(f'Done underflow: {(bin(errs[1]>>12 & 0xF))}')
+        print(f'Readout err: {(bin(errs[2]))}')
