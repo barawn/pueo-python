@@ -629,7 +629,7 @@ class PueoSURF:
             raise ValueError("the dial only goes up to 27")
         value = int(27-value)
         r = self.rfdc.read(base) & 0x3f
-        r | = (value | 0x20)
+        r |= (value | 0x20)
         self.rfdc.write(base, r)
         # trigger the shit
         upd = 0x14254 + (ch//2)*0x400
