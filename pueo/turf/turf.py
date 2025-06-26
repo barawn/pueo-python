@@ -187,8 +187,9 @@ class PueoTURF:
         print(f'Running status: {self.trig.running}')
         print(f'Trigger count: {self.trig.trigger_count}')
         print(f'Ack FIFO count: {self.event.ack_count}')
+        print(f'Completion FIFO count: {self.event.completion_count}')
         print(f'Allow counter: {self.event.allow_count}')
-        print(f'Occupancy: {self.trig.occupancy/25e6}')
+        print(f'Occupancy: {self.trig.occupancy/125e6}')
         
     def tstatus(self, verbose=True):
         if verbose:
