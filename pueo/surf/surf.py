@@ -9,7 +9,7 @@
 from ..common.serialcobsdevice import SerialCOBSDevice
 from ..common import pueo_utils
 from ..common.bf import bf
-from ..common.dev_submod import dev_submod
+from ..common.dev_submod import dev_submod, bitfield, bitfield_ro, register, register_ro
 
 from enum import Enum
 import time
@@ -125,7 +125,69 @@ class PueoSURF:
             self.rfdc = dev_submod(self, 0x200000)
             
         time.sleep(0.1)        
-            
+
+################################################################################################################
+# REGISTER SPACE                                                                                               #
+# +------------------+------------+------+-----+------------+-------------------------------------------------+
+# |                  |            |      |start|            |                                                 |
+# | name             |    type    | addr | bit |     mask   | description                                     |
+# +------------------+------------+------+-----+------------+-------------------------------------------------+
+    event_reset      =    bitfield(0x000,  0,       0x0001, "Force event core into reset.")
+    reset_lol        =    bitfield(0x00C,  0,       0x0001, "Reset PLL Loss-of-Lock.")
+    fp_led           =    bitfield(0x00C,  1,       0x0003, "Front-panel LED control.")
+    cal_use_rack     =    bitfield(0x00C,  3,       0x0001, "Use the RACK calibration input, not local SURF")
+    cal_path_enable  =    bitfield(0x00C,  4,       0x0001, "Switch the inputs to the calibration path.")
+    firmware_loading =    bitfield(0x00C,  7,       0x0001, "SURF firmware loading mode.")
+    lol              = bitfield_ro(0x00C, 13,       0x0001, "PLL Loss-of-Lock.")
+    sync_offset      =    bitfield(0x00C, 16,       0x001F, "Delay from SYNC reception to actual sync.")
+    live_seen        =    bitfield(0x00C, 22,       0x0001, "NOOP_LIVE from TURF has been seen.")
+    sync_seen        =    bitfield(0x00C, 23,       0x0001, "SYNC request from TURF has been seen.")
+    rfdc_reset       =    bitfield(0x00C, 25,       0x0001, "Value of the RFdc reset.")    
+    sysref_phase     = bitfield_ro(0x014,  0,       0xFFFF, "Value of the SYSREF output at each ifclk phase")
+    cal_freeze       =    bitfield(0x018,  0,       0x00FF, "Bitfield of channels to put in calibration freeze.")
+    cal_frozen       = bitfield_ro(0x018,  8,       0x00FF, "Bitfield of channels with frozen calibration.")
+    adc_sigdet       = bitfield_ro(0x018, 12,       0x00FF, "Bitfield of individual channel signal detector output.")
+        
+    # these are all of the simple controls
+    @property
+    def turfio_lock_req(self):
+        return (self.read(0x800) >> 11) & 0x1
+
+    @turfio_lock_req.setter
+    def turfio_lock_req(self, value):
+        r = bf(self.read(0x800))
+        r[11] = 1 if value else 0
+        self.write(0x800, int(r))
+
+    @property
+    def turfio_locked_or_running(self):
+        return (self.read(0x800) >> 12) & 0x1
+
+    @property
+    def turfio_cin_active(self):
+        return (self.read(0x800) >> 7) & 0x1
+
+    # trying to write *anything* to this resets it
+    @turfio_cin_active.setter
+    def turfio_cin_active(self, value):
+        r = self.read(0x800) & ~0x80
+        self.write(0x800, r)
+    
+    @property
+    def turfio_train_enable(self):
+        return (self.read(0x800) >> 6) & 0x1
+
+    @turfio_train_enable.setter
+    def turfio_train_enable(self, value):
+        r = bf(self.read(0x800))
+        r[6] = 1 if value else 0
+        self.write(0x800, int(r))
+
+    @property
+    def hsk_packet_count(self):
+        """ not what you think, doesn't work yet """
+        return self.read(0x10) & 0xF
+
     def dna(self):
         self.write(self.map['DNA'], 0x80000000)
         dnaval=0
@@ -487,125 +549,6 @@ class PueoSURF:
             print("sample center is at", eye[0], "with bit offset", eye[1])
         return eye
 
-    # these are all of the simple controls
-    @property
-    def turfio_lock_req(self):
-        return (self.read(0x800) >> 11) & 0x1
-
-    @turfio_lock_req.setter
-    def turfio_lock_req(self, value):
-        r = bf(self.read(0x800))
-        r[11] = 1 if value else 0
-        self.write(0x800, int(r))
-
-    @property
-    def turfio_locked_or_running(self):
-        return (self.read(0x800) >> 12) & 0x1
-
-    @property
-    def turfio_cin_active(self):
-        return (self.read(0x800) >> 7) & 0x1
-
-    # trying to write *anything* to this resets it
-    @turfio_cin_active.setter
-    def turfio_cin_active(self, value):
-        r = self.read(0x800) & ~0x80
-        self.write(0x800, r)
-    
-    @property
-    def turfio_train_enable(self):
-        return (self.read(0x800) >> 6) & 0x1
-
-    @turfio_train_enable.setter
-    def turfio_train_enable(self, value):
-        r = bf(self.read(0x800))
-        r[6] = 1 if value else 0
-        self.write(0x800, int(r))
-
-    @property
-    def sync_offset(self):
-        return (self.read(0xC) >> 16) & 0x1F
-
-    @sync_offset.setter
-    def sync_offset(self, value):
-        r = bf(self.read(0xC))
-        value &= 0x1F
-        r[20:16] = value
-        self.write(0xC, int(r))
-
-    @property
-    def sync_seen(self):
-        return (self.read(0xC) >> 23) & 0x1
-
-    # write anything to reset
-    @sync_seen.setter
-    def sync_seen(self, value):
-        r = self.read(0xC)
-        r |= (1<<23)
-        self.write(0xC, r)
-
-    @property
-    def live_seen(self):
-        return (self.read(0xC) >> 22) & 0x1
-
-    #write anything to reset
-    @live_seen.setter
-    def live_seen(self, value):
-        r = self.read(0xC)
-        r |= (1<<22)
-        self.write(0xC, r)
-
-    @property
-    def firmware_loading(self):
-        return (self.read(0xC) >> 7) & 0x1
-
-    @firmware_loading.setter
-    def firmware_loading(self, value):
-        r = self.read(0xC) & 0xFFFFFF7F
-        r |= 0x80 if value else 0
-        self.write(0xC, r)
-
-    @property
-    def hsk_packet_count(self):
-        """ not what you think, doesn't work yet """
-        return self.read(0x10) & 0xF
-
-    @property
-    def sysref_phase(self):
-        """ value of the SYSREF output at each ifclk phase """
-        return self.read(0x14) & 0xFFFF
-
-    @property
-    def rfdc_reset(self):
-        """ state of the RFdc reset """
-        return (self.read(0xC) >> 25) & 0x1
-
-    @rfdc_reset.setter
-    def rfdc_reset(self, value):
-        r = self.read(0xC) & (0xfdffffff)
-        r |= (1<<25) if value else 0
-        self.write(0xC, r)
-
-    @property
-    def cal_path_enable(self):
-        return (self.read(0xC) >> 4) & 0x1
-
-    @cal_path_enable.setter
-    def cal_path_enable(self, value):
-        r = self.read(0xC) & 0xFFFFFFEF
-        r |= 0x10 if value else 0
-        self.write(0xC, r)
-
-    @property
-    def cal_use_rack(self):
-        return (self.read(0xC) >> 3) & 0x1
-
-    @cal_use_rack.setter
-    def cal_use_rack(self, value):
-        r = self.read(0xC) & 0xFFFFFFF7
-        r |= 0x8 if value else 0
-        self.write(0xC, r)    
-        
     # set the bit offset to a value
     def turfioSetOffset(self, val):
         # both bitslip reset and bitslip are flags
