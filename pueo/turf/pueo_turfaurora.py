@@ -1,5 +1,5 @@
 from ..common.bf import bf
-from ..common.dev_submod import dev_submod
+from ..common.dev_submod import dev_submod, bitfield, bitfield_ro, register, register_ro
 from ..common.uspeyescan import USPEyeScan
 
 from enum import Enum
@@ -32,6 +32,21 @@ class PueoTURFAurora(dev_submod):
                                             partial(self.eyescanreset, i),
                                             partial(self.up, i),
                                             name="TURFIO"+str(i)))
+
+
+################################################################################################################
+# REGISTER SPACE                                                                                               #
+# +------------------+------------+------+-----+------------+-------------------------------------------------+
+# |                  |            |      |start|            |                                                 |
+# | name             |    type    | addr | bit |     mask   | description                                     |
+# +------------------+------------+------+-----+------------+-------------------------------------------------+
+    linkstat_0       = register_ro(0x0000,                   "Aurora link status for TURFIO port 0")
+    linkstat_1       = register_ro(0x0800,                   "Aurora link status for TURFIO port 1")
+    linkstat_2       = register_ro(0x1000,                   "Aurora link status for TURFIO port 2")
+    linkstat_3       = register_ro(0x1800,                   "Aurora link status for TURFIO port 3")
+    reset_all_links  =    bitfield(0x2000,   0,      0x0001, "Issue an Aurora reset to all links")
+    reset_linkerr    =    bitfield(0x2000,  31,      0x0001, "Clear all sticky link errors")
+    reset_user       =    bitfield(0x2000,   8,      0x0001, "Reset the user (register bridge) path")
             
     def enableEyeScan(self, waittime=1):
         enableWasNeeded = False
@@ -71,10 +86,9 @@ class PueoTURFAurora(dev_submod):
         return rv
 
     def linkerr_reset(self):
-        r = self.read(0x2000)
-        w = r | (1<<31)
-        self.write(w)
-        self.write(r)        
+        """ Reset the sticky link errors on all Aurora links """
+        self.reset_linkerr = 1
+        self.reset_linkerr = 0
     
     def up(self, linkno):
         return self.linkstat(linkno) & 0x1
@@ -85,12 +99,15 @@ class PueoTURFAurora(dev_submod):
         self.write(0x800*linkno, int(rv))
     
     def reset(self):
-        rv = bf(self.read(0x2000))
-        rv[0] = 1
-        self.write(0x2000, int(rv))
-        rv[0] = 0
-        self.write(0x2000, int(rv))
+        """ Toggle the reset on all Aurora links """
+        self.reset_all_links = 1
+        self.reset_all_links = 0
 
+    def user_reset(self):
+        """ Toggle the user reset to reset crate register bridge """
+        self.reset_user = 1
+        self.reset_user = 0
+        
     def pretty_eyescan(self,
                        linkno,
                        prescale = 9,
