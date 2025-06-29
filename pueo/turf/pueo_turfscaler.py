@@ -51,7 +51,7 @@ class PueoTURFScaler(dev_submod):
 # | name             |    type    | addr | bit |     mask   | description                                     |
 # +------------------+------------+------+-----+------------+-------------------------------------------------+
 #   scalers          =      memory(0x000,
-#                                  0x03C,                   "32 total 16-bit scalers.")
+#                                  0x07C,                   "32 total 16-bit scalers.")
     gate_sel         =    bitfield(0x080,  0,       0x0007, "Gate source input select.")
     pps_gatelen      =    bitfield(0x080, 16,       0xFFFF, "Length in 8 ns clocks of PPS-based gate")
     gate_en          =    register(0x084,                   "Enable gate for selected scaler inputs")    
@@ -71,8 +71,6 @@ class PueoTURFScaler(dev_submod):
 
     def scaler(self, idx):
         """ Returns a single scaler. """
-        d = self.read(idx//2)
-        shift = (idx % 2)*16
-        return (d>>shift) & 0xFFFF
+        return self.read(idx)
 
     
