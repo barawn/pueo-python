@@ -22,7 +22,9 @@ class PueoTURFEvent(dev_submod):
 # +------------------+------------+------+-----+------------+-------------------------------------------------+
     event_reset      =    bitfield(0x000,  0,       0x0001, "Force event core into reset.")
     event_in_reset   = bitfield_ro(0x000,  1,       0x0001, "Event path is currently in reset.")
-    mask             =    bitfield(0x000,  8,       0x000F, "TURFIO event mask - if set data from TURFIO is ignored")
+    current_mask     = bitfield_ro(0x000,  4,       0x000F, "Current TURFIO event mask - if bit is set, data is ignored")
+    mask             =    bitfield(0x000,  8,       0x000F, "TURFIO event mask to be applied at next run start")
+    track_err        = bitfield_ro(0x000, 12,       0x000F, "Event not received from expected TURFIO")
     ndwords0         = register_ro(0x010,                   "Number of dwords received from TURFIO 0")
     ndwords1         = register_ro(0x014,                   "Number of dwords received from TURFIO 1")
     ndwords2         = register_ro(0x018,                   "Number of dwords received from TURFIO 2")
