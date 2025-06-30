@@ -190,6 +190,8 @@ class PueoTURF:
         print(f'Completion FIFO count: {self.event.completion_count}')
         print(f'Allow counter: {self.event.allow_count}')
         print(f'Occupancy: {self.trig.occupancy/125e6}')
+        print(f'Track error: {bin(self.event.track_err)}')
+        print(f'Event path errors: {hex(self.event.error0)}, {hex(self.event.error1)}, {hex(self.event.error2)}')
         
     def tstatus(self, verbose=True):
         if verbose:
