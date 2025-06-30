@@ -1,5 +1,5 @@
 from ..common.bf import bf
-from ..common.dev_submod import dev_submod
+from ..common.dev_submod import dev_submod, bitfield, bitfield_ro, register, register_ro
 from ..common.uploader import Uploader
 import os
 import struct
@@ -22,61 +22,22 @@ class SURFTURF(dev_submod):
         self.uploader = Uploader(self.fwupd,
                                  self.mark)
 
-    @property
-    def autotrain(self):
-        return (self.read(0x14) >> 16) & 0x1FF
-
-    @autotrain.setter
-    def autotrain(self, value):
-        r = self.read(0x14) & 0xFFFF
-        r |= (value & 0x01FF) << 16
-        self.write(0x14, r)
-
-    @property
-    def train_complete(self):
-        return self.read(0x1C) & 0x1FF
-
-    @train_complete.setter
-    def train_complete(self, value):
-        r = self.read(0x1C) & 0xFFFFFE00
-        r |= (value & 0x1FF)
-        self.write(0x1C, r)
-
-    @property
-    def train_out_rdy(self):
-        return self.read(0x18) & 0x1FF
-
-    @property
-    def train_in_req(self):
-        return self.read(0x14) & 0x1FF
-
-    @property
-    def surf_live(self):
-        return self.read(0x10) & 0x1FF
-
-    @property
-    def surf_misaligned(self):
-        return (self.read(0x10) >> 16) & 0x1FF
-        
-    @property
-    def rxclk_disable(self):
-        return (self.read(0x0) >> 24) & 0xFF
-
-    @rxclk_disable.setter
-    def rxclk_disable(self, value):
-        r = self.read(0) & 0x00FFFFFF
-        r |= (value << 24)
-        self.write(0, r)        
-
-    @property
-    def cout_offset(self):
-        return self.read(0x20) & 0xF
-
-    @cout_offset.setter
-    def cout_offset(self, value):
-        r = self.read(0x20) & 0xFFFFFFF0
-        r |= value & 0xF
-        self.write(0x20, r)        
+################################################################################################################
+# REGISTER SPACE                                                                                               #
+# +------------------+------------+------+-----+------------+-------------------------------------------------+
+# |                  |            |      |start|            |                                                 |
+# | name             |    type    | addr | bit |     mask   | description                                     |
+# +------------------+------------+------+-----+------------+-------------------------------------------------+
+    rxclk_disable    =    bitfield(0x000, 24,       0x00FF, "Disable RXCLK to specified SURF")
+    surf_live        = bitfield_ro(0x010,  0,       0x007F, "SURF has been marked live.")
+    surf_misaligned  = bitfield_ro(0x010, 16,       0x007F, "SURF data is misaligned.")
+    livedet_reset    =    bitfield(0x010, 31,       0x0001, "Reset the SURF live/trainin/trainout status")
+    train_in_req     = bitfield_ro(0x014,  0,       0x007F, "SURF is requesting training.")
+    autotrain        =    bitfield(0x014, 16,       0x007F, "Enable autotrain for specified SURF")
+    train_out_rdy    = bitfield_ro(0x018,  0,       0x007F, "SURF outputs are ready to be trained on")
+    train_complete   =    bitfield(0x01C,  0,       0x007F, "SURF training is complete")
+    boot_seen        = bitfield_ro(0x01C, 16,       0x007F, "SURF boot has been seen")
+    cout_offset      =    bitfield(0x020,  0,       0x000F, "Offset in cycles expected on COUT")
         
     def mark(self, bank):
         rv = bf(self.read(0x0))
