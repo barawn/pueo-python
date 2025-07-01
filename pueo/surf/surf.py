@@ -132,11 +132,11 @@ class PueoSURF:
 # |                  |            |      |start|            |                                                 |
 # | name             |    type    | addr | bit |     mask   | description                                     |
 # +------------------+------------+------+-----+------------+-------------------------------------------------+
-    event_reset      =    bitfield(0x000,  0,       0x0001, "Force event core into reset.")
     reset_lol        =    bitfield(0x00C,  0,       0x0001, "Reset PLL Loss-of-Lock.")
     fp_led           =    bitfield(0x00C,  1,       0x0003, "Front-panel LED control.")
     cal_use_rack     =    bitfield(0x00C,  3,       0x0001, "Use the RACK calibration input, not local SURF")
     cal_path_enable  =    bitfield(0x00C,  4,       0x0001, "Switch the inputs to the calibration path.")
+    trig_clock_en    =    bitfield(0x00C,  6,       0x0001, "Turn on the clock to the L1 trigger module.") 
     firmware_loading =    bitfield(0x00C,  7,       0x0001, "SURF firmware loading mode.")
     lol              = bitfield_ro(0x00C, 13,       0x0001, "PLL Loss-of-Lock.")
     sync_offset      =    bitfield(0x00C, 16,       0x001F, "Delay from SYNC reception to actual sync.")
