@@ -1,6 +1,6 @@
 from ..common.serialcobsdevice import SerialCOBSDevice
 from ..common.bf import bf
-from ..common.dev_submod import dev_submod
+from ..common.dev_submod import dev_submod, register, bitfield, register_ro, bitfield_ro
 
 from .pueo_turfctl import PueoTURFCTL
 from .pueo_turfaurora import PueoTURFAurora
@@ -130,6 +130,23 @@ class PueoTURF:
         self.clockMonValue = 100000000
         self.write(self.map['SYSCLKMON'], self.clockMonValue)
         time.sleep(0.1)
+
+
+        class GpoSelect(int, Enum):
+            """ select identifiers for the GPO (TOUT) output """
+            SYNC = 0
+            RUN = 1
+            TRIG = 2            
+        
+################################################################################################################
+# REGISTER SPACE                                                                                               #
+# +------------------+------------+------+-----+------------+-------------------------------------------------+
+# |                  |            |      |start|            |                                                 |
+# | name             |    type    | addr | bit |     mask   | description                                     |
+# +------------------+------------+------+-----+------------+-------------------------------------------------+
+    gpo_select       =    bitfield(0x00C,  8,       0x0007, "Select the behavior of the TOUT output")
+    gpo_en           =    bitfield(0x00C, 15,       0x0001, "Enable the TOUT output")
+
         
     def dna(self):
         self.write(self.map['DNA'], 0x80000000)
