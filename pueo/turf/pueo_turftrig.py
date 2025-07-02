@@ -48,6 +48,7 @@ class PueoTURFTrig(dev_submod):
 #   runcmd                function(0x000,                   "Send desired run command.")
 #   fwu_data/fwu_mark     function(0x004,                   "Send FWU data or mark buffer.")
     cratepps_enable  =    bitfield(0x008,  0,       0x0001, "Enable sending the PPS to the crates")
+    rundly           =    bitfield(0x008,  8,       0x000F, "Delay for internal run start/stop on top of base 33-clock delay") 
     mask             =    register(0x100,                   "Trigger mask for individual SURFs")
     latency          =    bitfield(0x104,  0,       0xFFFF, "Time from desired trigger time to readout")
     offset           =    bitfield(0x104, 16,       0xFFFF, "Negative adjustment to input trigger time")    
