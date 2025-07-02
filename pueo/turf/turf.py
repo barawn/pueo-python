@@ -132,12 +132,12 @@ class PueoTURF:
         time.sleep(0.1)
 
 
-        class GpoSelect(int, Enum):
-            """ select identifiers for the GPO (TOUT) output """
-            SYNC = 0
-            RUN = 1
-            TRIG = 2
-            PPS = 3
+    class GpoSelect(int, Enum):
+        """ select identifiers for the GPO (TOUT) output """
+        SYNC = 0
+        RUN = 1
+        TRIG = 2
+        PPS = 3
         
 ################################################################################################################
 # REGISTER SPACE                                                                                               #
