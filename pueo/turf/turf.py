@@ -136,7 +136,8 @@ class PueoTURF:
             """ select identifiers for the GPO (TOUT) output """
             SYNC = 0
             RUN = 1
-            TRIG = 2            
+            TRIG = 2
+            PPS = 3
         
 ################################################################################################################
 # REGISTER SPACE                                                                                               #
