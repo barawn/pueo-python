@@ -55,6 +55,7 @@ class PueoTURFTrig(dev_submod):
     pps_trig_enable  =    bitfield(0x108,  0,       0x0001, "Enable for the PPS trigger")
     pps_offset       =    bitfield(0x108, 16,       0xFFFF, "Negative adjustment to PPS trigger time")
     ext_trig_enable  =    bitfield(0x10C,  0,       0x0001, "Enable for the EXT trigger")
+    ext_trig_edge    =    bitfield(0x10C,  1,       0x0001, "External trigger edge polarity (1=falling, 0=rising)")
     ext_trig_select  =    bitfield(0x10C,  8,       0x0007, "Select the source for the EXT trigger")
     ext_offset       =    bitfield(0x10C, 16,       0xFFFF, "Negative adjustment to EXT trigger time")
 #   soft_trig             function(0x110,                   "Write anything to this address for soft trigger")
