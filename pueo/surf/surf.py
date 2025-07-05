@@ -123,6 +123,8 @@ class PueoSURF:
                 self.rfdc = dev_submod(self, 0x200000)
         else:
             self.rfdc = dev_submod(self, 0x200000)
+
+        self.levelone = dev_submod(self, 0x008000)
             
         time.sleep(0.1)        
 
