@@ -5,7 +5,12 @@
 
 # property helper
 def _property_base(address, bf_params, doc="", signed=False, conversion=None, readonly=False):
-    """ Base helper for bitfield/bitfield_ro/register/register_ro. Factored out for less screwups. """
+    """
+    Base helper for bitfield/bitfield_ro/register/register_ro. Factored out for less screwups.
+    The 'conversion' function takes 2 parameters - the value, and a bool for inversion.
+    If inversion, convert the *readback* value to its *physical* value.
+    If not, convert the *physical* value to a *write* value.
+    """
     # we handle conversions in the creation to avoid runtime access costs
     if bf_params is None:
         twid = 0x80000000 if signed else 0

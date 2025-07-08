@@ -1,5 +1,7 @@
-from .pueo_hsalign import PueoHSAlign
 import time
+
+from .pueo_hsalign import PueoHSAlign
+from ..common.dev_submod import bitfield, bitfield_ro, register, register_ro
 
 class PueoCINAlign(PueoHSAlign):
     """
@@ -15,40 +17,22 @@ class PueoCINAlign(PueoHSAlign):
                          eye_tap_width=26,
                          train_map=our_map)
 
-    @property
-    def rxclk_phase(self):
-        return self.read(0)>>16
+################################################################################################################
+# REGISTER SPACE                                                                                               #
+# +------------------+------------+------+-----+------------+-------------------------------------------------+
+# |                  |            |      |start|            |                                                 |
+# | name             |    type    | addr | bit |     mask   | description                                     |
+# +------------------+------------+------+-----+------------+-------------------------------------------------+#
+########################### INHERITED FROM PueoHSAlign #########################################################
+#   iserdes_reset    =    bitfield(0x000,  2,       0x0001, "ISERDES reset")
+#   oserdes_reset    =    bitfield(0x000,  4,       0x0001, "OSERDES reset")
+#   train_enable     =    bitfield(0x000, 10,       0x0001, "Enable training")
+#   idelay_raw       =    register(0x004,                   "Raw value of the IDELAY setting.")
+    rxclk_phase      =    bitfield(0x000, 16,       0x00FF, "Phase of the RXCLK clock")
+    lock_req         =    bitfield(0x000,  8,       0x0001, "CIN lock request")
+    lock_rst         =    bitfield(0x000,  3,       0x0001, "CIN lock reset")
+    locked           = bitfield_ro(0x000,  9,       0x0001, "CIN locked status")
     
-    @rxclk_phase.setter
-    def rxclk_phase(self, value):
-        rv = self.read(0) & 0xFFFF
-        rv |= (value & 0xFFFF) << 16
-        self.write(0, rv)        
-
-    @property
-    def lock_req(self):
-        return (self.read(0)>>8) & 0x1
-
-    @lock_req.setter
-    def lock_req(self, value):
-        rv = self.read(0) & 0xFFFFFEFF
-        rv |= 0x100 if value else 0
-        self.write(0, rv)
-
-    @property
-    def lock_rst(self):
-        return (self.read(0)>>3) & 0x1
-
-    @lock_rst.setter
-    def lock_rst(self, value):
-        rv = self.read(0) & 0xFFFFFFF7
-        rv |= 0x8 if value else 0
-        self.write(0, rv)
-
-    @property
-    def locked(self):
-        return (self.read(0)>>9) & 0x1
-
     # rxclk eyescan
     def eyescan_rxclk(self, period=1024):
         slptime = period*8E-9
