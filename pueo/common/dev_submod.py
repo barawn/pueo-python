@@ -9,7 +9,7 @@ def _property_base(address, bf_params, doc="", signed=False, conversion=None, re
     # we handle conversions in the creation to avoid runtime access costs
     if bf_params is None:
         twid = 0x80000000 if signed else 0
-        if not conversion:
+        if conversion is None:
             fget = lambda self : (self.read(address) ^ twid) - twid
             fset = lambda self, v : self.write(address, int(v))
         else:
@@ -19,7 +19,7 @@ def _property_base(address, bf_params, doc="", signed=False, conversion=None, re
         start = bf_params[0]
         mask = bf_params[1]
         twid = ((mask+1)>>1)*int(signed)        
-        if not conversion:
+        if conversion is None:
             fget = lambda self : (((self.read(address) >> start) & mask) ^ twid) - twid
             fset = lambda self, v : (self.write(address, (self.read(address) & (~(mask<<start))) | ((int(v)&mask)<<start)))
         else:
