@@ -103,12 +103,19 @@ class PueoTURF:
             self.reset = lambda : None
         elif type == self.AccessType.DUMMY:
             class Dummy:
+                def __init__(self):
+                    self.regs = {}
+                    
                 def read(self, addr):
                     print(f'read: address {hex(addr)}')
-                    return 0
+                    if not addr in self.regs:
+                        return 0
+                    else:
+                        return self.regs[addr]
 
                 def write(self, addr, value):
                     print(f'write: address {hex(addr)} value {hex(value)}')
+                    self.regs[addr] = value
                     
             self.dev = Dummy()
             self.read = self.dev.read
