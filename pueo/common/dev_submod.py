@@ -13,8 +13,8 @@ def _property_base(address, bf_params, doc="", signed=False, conversion=None, re
             fget = lambda self : (self.read(address) ^ twid) - twid
             fset = lambda self, v : self.write(address, int(v))
         else:
-            fget = lambda self : conversion((self.read(address) ^ twid) - twid, False)
-            fset = lambda self, v : self.write(address, conversion(v,True))
+            fget = lambda self : conversion((self.read(address) ^ twid) - twid, True)
+            fset = lambda self, v : self.write(address, conversion(v,False))
     else:
         start = bf_params[0]
         mask = bf_params[1]
@@ -23,8 +23,8 @@ def _property_base(address, bf_params, doc="", signed=False, conversion=None, re
             fget = lambda self : (((self.read(address) >> start) & mask) ^ twid) - twid
             fset = lambda self, v : (self.write(address, (self.read(address) & (~(mask<<start))) | ((int(v)&mask)<<start)))
         else:
-            fget = lambda self : conversion((((self.read(address) >> start) & mask) ^ twid) - twid, False)
-            fset = lambda self, v : (self.write(address, (self.read(address) & (~(mask<<start))) | ((conversion(v,True)&mask) << start)))
+            fget = lambda self : conversion((((self.read(address) >> start) & mask) ^ twid) - twid, True)
+            fset = lambda self, v : (self.write(address, (self.read(address) & (~(mask<<start))) | ((conversion(v,False)&mask) << start)))
 
     if readonly:
         return property(fget=fget,
