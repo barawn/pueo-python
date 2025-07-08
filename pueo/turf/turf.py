@@ -104,6 +104,10 @@ class PueoTURF:
         elif type == self.AccessType.DUMMY:
             class Dummy:
                 def __init__(self):
+                    print("NOTE: This is a DUMMY device, not real.")
+                    print("If you want a TURFIO to work write 0x3F to:")
+                    print("TURFIO port 0: 0x8004\tTURFIO port 1: 0x8804")
+                    print("TURFIO port 2: 0x9004\tTURFIO port 3: 0x9804") 
                     self.regs = {}
                     
                 def read(self, addr):
