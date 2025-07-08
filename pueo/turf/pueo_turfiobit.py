@@ -2,7 +2,7 @@
 # AN INPUT BIT from a TURFIO
 
 from ..common.bf import bf
-from ..common.dev_submod import dev_submod
+from ..common.dev_submod import dev_submod, bitfield, bitfield_ro, register, register_ro
 from ..common import pueo_utils
 
 from enum import Enum
@@ -27,6 +27,23 @@ class PueoTURFIOBit(dev_submod):
     def __init__(self, dev, base):
         super().__init__(dev, base)
 
+################################################################################################################
+# REGISTER SPACE                                                                                               #
+# +------------------+------------+------+-----+------------+-------------------------------------------------+
+# |                  |            |      |start|            |                                                 |
+# | name             |    type    | addr | bit |     mask   | description                                     |
+# +------------------+------------+------+-----+------------+-------------------------------------------------+
+    rst              =    bitfield(0x000,  0,       0x0001, "ISERDES/OSERDES reset for this bit only")
+    dis_vtc          =    bitfield(0x000,  1,       0x0001, "Disable VTC for this bit only")
+    enable           =    bitfield(0x000,  4,       0x0001, "Enable sending triggers from this bit")
+    biterr_count     = register_ro(0x004,                   "Count of bit errors during training")
+    pdlycnta         =    register(0x080,                   "Delay of first primary IDELAY")
+    pdlycntb         =    register(0x084,                   "Delay of second primary IDELAY")
+    mdlycnta         = register_ro(0x088,                   "Delay of first monitor IDELAY")
+    mdlycntb         = register_ro(0x08C,                   "Delay of second monitor IDELAY")
+    # interval and bitslip have mixed read/write behavior, leave them alone
+    
+        
     # So dumb.
     # Each eye is fundamentally 2 ns wide. We only have a total "guaranteed
     # max" delay of around 2.2 ns so we *stupidly* need to do the whole thing.
@@ -90,7 +107,7 @@ class PueoTURFIOBit(dev_submod):
             bitno = None
             self.setDelay(200.0*i, Align_Delay, ps_per_tap)
             time.sleep(0.002)
-            errcnt = self.read(self.map['BITERR'])
+            errcnt = self.biterr_count
             if errcnt == 0:
                 val = self.read(self.map['BITSLIP'])
                 bitno = pueo_utils.check_eye(val)
@@ -112,7 +129,7 @@ class PueoTURFIOBit(dev_submod):
         for i in range(startIdx, stopIdx):
             self.setDelay(i, useRaw=True)
             time.sleep(0.001)
-            sc.append(self.read(self.map['BITERR']))
+            sc.append(self.biterr_count)
         return sc    
 
     # good enough!!
@@ -174,8 +191,8 @@ class PueoTURFIOBit(dev_submod):
         # cell above it that we can use it as the basis.
         # MDLYCNTA is Align_Delay + (700.0/ps_per_tap)
         # MDLYCNTB is (700.0/ps_per_tap)        
-        madly = self.read(self.map['MDLYCNTA'])
-        mbdly = self.read(self.map['MDLYCNTB'])
+        madly = self.mdlycnta        
+        mbdly = self.mdlycntb
         return (madly-mbdly, 700.0/mbdly)
 
     # target here is in **time**
@@ -192,28 +209,14 @@ class PueoTURFIOBit(dev_submod):
             pdlya = 511
                         
         # disable VTC
-        self.write(self.map['BITCTRL'], 2)
-        self.write(self.map['PDLYCNTA'], pdlya)
-        while self.read(self.map['PDLYCNTA']) != pdlya:
+        self.dis_vtc = 1
+        self.pdlycnta = pdlya
+        # it takes a moment to update
+        while self.pdlycnta != pdlya:
             pass
-        self.write(self.map['PDLYCNTB'], pdlyb)
-        while self.read(self.map['PDLYCNTB']) != pdlyb:
+        self.pdlycntb = pdlyb
+        # takes a moment to update
+        while self.pdlycntb != pdlyb:
             pass
-        
-        # enable VTC
-        self.write(self.map['BITCTRL'], 0)
+        self.dis_vtc = 0
 
-    # note note note: enable SHOULD NOT be set until
-    # AFTER the SURFs exit training on CIN *or*
-    # you don't enable triggers until afterwards too.
-    @property
-    def enable(self):
-        return (self.read(0) >> 4) & 0x1
-
-    @enable.setter
-    def enable(self, value):
-        r = self.read(0) & 0xFFFFFFEF
-        r |= 0x10 if value else 0
-        self.write(0, r)
-        
-        
