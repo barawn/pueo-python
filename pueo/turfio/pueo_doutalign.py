@@ -1,4 +1,5 @@
 from .pueo_hsalign import PueoHSAlign
+from ..common.dev_submod import bitfield, bitfield_ro, register, register_ro
 
 class PueoDOUTAlign(PueoHSAlign):
 
@@ -9,25 +10,19 @@ class PueoDOUTAlign(PueoHSAlign):
                          eye_tap_width=26,
                          train_map=PueoHSAlign.BW8_MAP)
 
-    @property
-    def dout_capture_phase(self):
-        return (self.read(0) >> 7) & 0x1
-
-    @dout_capture_phase.setter
-    def dout_capture_phase(self, value):
-        rv = self.read(0) & 0xFFFFFF7F
-        rv |= 0x80 if value else 0
-        self.write(0, rv)
-
-    @property
-    def enable(self):
-        return (self.read(0) >> 8) & 0x1
-
-    @enable.setter
-    def enable(self, value):
-        r = self.read(0) & 0xFFFFFEFF
-        r |= 0x100 if value else 0
-        self.write(0, r)
+################################################################################################################
+# REGISTER SPACE                                                                                               #
+# +------------------+------------+------+-----+------------+-------------------------------------------------+
+# |                  |            |      |start|            |                                                 |
+# | name             |    type    | addr | bit |     mask   | description                                     |
+# +------------------+------------+------+-----+------------+-------------------------------------------------+#
+########################### INHERITED FROM PueoHSAlign #########################################################
+#   iserdes_reset    =    bitfield(0x000,  2,       0x0001, "ISERDES reset")
+#   oserdes_reset    =    bitfield(0x000,  4,       0x0001, "OSERDES reset")
+#   train_enable     =    bitfield(0x000, 10,       0x0001, "Enable training")
+#   idelay_raw       =    register(0x004,                   "Raw value of the IDELAY setting.")
+    dout_capture_phase =  bitfield(0x000,  7,       0x0001, "Determines which of the 2 clock cycles DOUT is captured in")
+    enable           =    bitfield(0x000,  8,       0x0001, "Output data is enabled")
 
     def apply_alignment(self, eye, verbose=False):
         bs = eye[1]
