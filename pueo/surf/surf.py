@@ -140,6 +140,7 @@ class PueoSURF:
     cal_path_enable  =    bitfield(0x00C,  4,       0x0001, "Switch the inputs to the calibration path.")
     trig_clock_en    =    bitfield(0x00C,  6,       0x0001, "Turn on the clock to the L1 trigger module.") 
     firmware_loading =    bitfield(0x00C,  7,       0x0001, "SURF firmware loading mode.")
+    align_err        =    bitfield(0x00C,  8,       0x0001, "TURFIO alignment failure.")
     lol              = bitfield_ro(0x00C, 13,       0x0001, "PLL Loss-of-Lock.")
     sync_offset      =    bitfield(0x00C, 16,       0x001F, "Delay from SYNC reception to actual sync.")
     live_seen        =    bitfield(0x00C, 22,       0x0001, "NOOP_LIVE from TURF has been seen.")
