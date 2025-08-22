@@ -54,6 +54,7 @@ class PueoTURFIOBit(dev_submod):
         # A coarse eyescan gives you a list of triplets:
         # index, number of errors, and bit offset #
         # We need to process it to find where the bit changes
+        firstStart = None
         start = None
         stop = None
         curBitno = None
@@ -63,6 +64,7 @@ class PueoTURFIOBit(dev_submod):
                 if curBitno is None:
                     curBitno = val[2]
                     start = val[0]
+                    firstStart = val[0]
                 elif val[2] != curBitno:
                     stop = val[0]
                     break
@@ -72,6 +74,10 @@ class PueoTURFIOBit(dev_submod):
             if verbose:
                 print("start is", start, "stop is", stop)
             return (start, stop)
+        elif firstStart is not None:
+            if verbose:
+                print("could not find transition, but eye exists starting at: ", firstStart)
+            return (firstStart, None)
         return None
 
     # coarse eye scan
@@ -137,6 +143,12 @@ class PueoTURFIOBit(dev_submod):
             print("Coarse scan:")
             print(sc)
             return
+        if ss[1] is None:
+            roughCenter = ss[0]+4
+            roughCenterBitno = sc[ss[0]+4][2]            
+            print("Can't locate eye transition (eye is too well centered)")
+            print(f'Just using {roughCenterBitno*200.0}, it will be fine')
+            return (roughCenter, roughCenterBitno)
         coarseEdge = ((ss[0] + ss[1])/2)*200.0
         if verbose:
             print("Coarse eye edge is at", coarseEdge)
