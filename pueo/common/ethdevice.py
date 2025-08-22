@@ -32,6 +32,9 @@ class EthDevice:
         print("Connected to device: ", resp[0:4].decode())
         self.tag = 1
 
+    def close(self):
+        self.sock.close()
+        
     def read(self, addr):
         addr = (addr & 0xFFFFFFF) | (self.tag << 28)
         d = addr.to_bytes(4, 'little')

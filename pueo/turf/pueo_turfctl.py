@@ -27,7 +27,7 @@ class PueoTURFCTL(dev_submod):
         self.write(self.map['CONTROL'], int(rv))
         rv = bf(self.read(self.map['CONTROL']))
         if rv[8] or rv[9]:
-            print("failed?? (%x) - aborting", int(rv))
+            print(f'failed?? ({int(rv)}) - aborting')            
             return
         print("OK")
         print("Issuing reset: ", end='')
@@ -39,7 +39,7 @@ class PueoTURFCTL(dev_submod):
         self.write(self.map['CONTROL'], int(rv))
         rv = bf(self.read(self.map['CONTROL']))
         if rv[10] or rv[11]:
-            print("failed?? (%x) - aborting", int(rv))
+            print(f'failed?? ({int(rv)}) - aborting')
             return
         print("OK")
         # now restart clocks and check for lock
@@ -51,7 +51,7 @@ class PueoTURFCTL(dev_submod):
         time.sleep(0.001)
         rv = bf(self.read(self.map['CONTROL']))
         if not rv[8] or not rv[9]:
-            print("failed?? (%x) - aborting", int(rv))
+            print(f'failed?? ({int(rv)}) - aborting')
             return
         print("OK")
         # now release IDELAY reset and then IDELAYCTRL
@@ -73,7 +73,7 @@ class PueoTURFCTL(dev_submod):
         # forget to reset all the disable VTCs to 0.
         # So DON'T DO THAT
         if not rv[10] or not rv[11]:
-            print("failed?? (%x) - aborting", int(rv))
+            print(f'failed?? {int(rv)} - aborting')
             return
         print("OK")
         print("Restart complete")

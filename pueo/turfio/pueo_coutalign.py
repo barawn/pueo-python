@@ -1,4 +1,5 @@
 from .pueo_hsalign import PueoHSAlign
+from ..common.dev_submod import bitfield, bitfield_ro, register, register_ro
 
 class PueoCOUTAlign(PueoHSAlign):
 
@@ -9,12 +10,16 @@ class PueoCOUTAlign(PueoHSAlign):
                          eye_tap_width=26,
                          train_map=PueoHSAlign.BW32_MAP)
 
-    @property
-    def enable(self):
-        return (self.read(0) >> 8) & 0x1
-
-    @enable.setter
-    def enable(self, value):
-        r = self.read(0) & 0xFFFFFEFF
-        r |= 0x100 if value else 0
-        self.write(0, r)
+################################################################################################################
+# REGISTER SPACE                                                                                               #
+# +------------------+------------+------+-----+------------+-------------------------------------------------+
+# |                  |            |      |start|            |                                                 |
+# | name             |    type    | addr | bit |     mask   | description                                     |
+# +------------------+------------+------+-----+------------+-------------------------------------------------+#
+########################### INHERITED FROM PueoHSAlign #########################################################
+#   iserdes_reset    =    bitfield(0x000,  2,       0x0001, "ISERDES reset")
+#   oserdes_reset    =    bitfield(0x000,  4,       0x0001, "OSERDES reset")
+#   train_enable     =    bitfield(0x000, 10,       0x0001, "Enable training")
+#   idelay_raw       =    register(0x004,                   "Raw value of the IDELAY setting.")
+    enable           =    bitfield(0x000,  8,       0x0001, "Enable the COUT interface.")
+    

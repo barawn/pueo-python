@@ -1,6 +1,6 @@
 from ..common.serialcobsdevice import SerialCOBSDevice
 from ..common.bf import bf
-from ..common.dev_submod import dev_submod
+from ..common.dev_submod import dev_submod, register, bitfield, register_ro, bitfield_ro
 
 from .pueo_turfctl import PueoTURFCTL
 from .pueo_turfaurora import PueoTURFAurora
@@ -103,12 +103,23 @@ class PueoTURF:
             self.reset = lambda : None
         elif type == self.AccessType.DUMMY:
             class Dummy:
+                def __init__(self):
+                    print("NOTE: This is a DUMMY device, not real.")
+                    print("If you want a TURFIO to work write 0x3F to:")
+                    print("TURFIO port 0: 0x8004\tTURFIO port 1: 0x8804")
+                    print("TURFIO port 2: 0x9004\tTURFIO port 3: 0x9804") 
+                    self.regs = {}
+                    
                 def read(self, addr):
                     print(f'read: address {hex(addr)}')
-                    return 0
+                    if not addr in self.regs:
+                        return 0
+                    else:
+                        return self.regs[addr]
 
                 def write(self, addr, value):
                     print(f'write: address {hex(addr)} value {hex(value)}')
+                    self.regs[addr] = value
                     
             self.dev = Dummy()
             self.read = self.dev.read
@@ -130,6 +141,24 @@ class PueoTURF:
         self.clockMonValue = 100000000
         self.write(self.map['SYSCLKMON'], self.clockMonValue)
         time.sleep(0.1)
+
+
+    class GpoSelect(int, Enum):
+        """ select identifiers for the GPO (TOUT) output """
+        SYNC = 0
+        RUN = 1
+        TRIG = 2
+        PPS = 3
+        
+################################################################################################################
+# REGISTER SPACE                                                                                               #
+# +------------------+------------+------+-----+------------+-------------------------------------------------+
+# |                  |            |      |start|            |                                                 |
+# | name             |    type    | addr | bit |     mask   | description                                     |
+# +------------------+------------+------+-----+------------+-------------------------------------------------+
+    gpo_select       =    bitfield(0x00C,  8,       0x0007, "Select the behavior of the TOUT output")
+    gpo_en           =    bitfield(0x00C, 15,       0x0001, "Enable the TOUT output")
+
         
     def dna(self):
         self.write(self.map['DNA'], 0x80000000)

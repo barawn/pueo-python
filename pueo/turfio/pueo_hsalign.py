@@ -4,8 +4,9 @@
 # Note that some of the functions here are actually 'common'
 # between the two - for instance, the train enable (which
 # controls the output, not the inputs) sets on both.
-from ..common.dev_submod import dev_submod
 import time
+
+from ..common.dev_submod import dev_submod, bitfield, bitfield_ro, register, register_ro
 
 class PueoHSAlign(dev_submod):
     # maps are here for convenience
@@ -133,10 +134,21 @@ class PueoHSAlign(dev_submod):
         if last_eye_center < max_width and scan[last_eye_center] is not None:
             eyes[scan[last_eye_center][1]] = last_eye_center
         return eyes
+    
+################################################################################################################
+# REGISTER SPACE                                                                                               #
+# +------------------+------------+------+-----+------------+-------------------------------------------------+
+# |                  |            |      |start|            |                                                 |
+# | name             |    type    | addr | bit |     mask   | description                                     |
+# +------------------+------------+------+-----+------------+-------------------------------------------------+
+    iserdes_reset    =    bitfield(0x000,  2,       0x0001, "ISERDES reset")
+    oserdes_reset    =    bitfield(0x000,  4,       0x0001, "OSERDES reset")
+    train_enable     =    bitfield(0x000, 10,       0x0001, "Enable training")
+    idelay_raw       =    register(0x004,                   "Raw value of the IDELAY setting.")
 
     @property
     def idelay(self):
-        r = self.read(4)
+        r = self.idelay_raw
         if self.max_taps > 32:
             if r & 32:
                 r = (r & 63) - 1
@@ -146,37 +158,7 @@ class PueoHSAlign(dev_submod):
     def idelay(self, value):
         if self.max_taps > 32:
             value = value + 1 if value & 32 else value
-        self.write(0x4, value)
-
-    @property
-    def iserdes_reset(self):
-        return (self.read(0) >> 2) & 0x1
-
-    @iserdes_reset.setter
-    def iserdes_reset(self, value):
-        rv = self.read(0) & 0xFFFFFFFB
-        rv |= 0x4 if value else 0
-        self.write(0, rv)
-
-    @property
-    def oserdes_reset(self):
-        return (self.read(0) >> 4) & 0x1
-
-    @oserdes_reset.setter
-    def oserdes_reset(self, value):
-        rv = self.read(0) & 0xffffffef
-        rv |= 0x10 if value else 0
-        self.write(0, rv)
-        
-    @property
-    def train_enable(self):
-        return (self.read(0) >> 10) & 0x1
-
-    @train_enable.setter
-    def train_enable(self, value):
-        rv = self.read(0) & 0xfffffbff
-        rv |= 0x400 if value else 0
-        self.write(0, rv)
+        self.idelay_raw = value
 
     def bitslip(self, n):
         """

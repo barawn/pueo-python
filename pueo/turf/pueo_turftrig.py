@@ -48,14 +48,16 @@ class PueoTURFTrig(dev_submod):
 #   runcmd                function(0x000,                   "Send desired run command.")
 #   fwu_data/fwu_mark     function(0x004,                   "Send FWU data or mark buffer.")
     cratepps_enable  =    bitfield(0x008,  0,       0x0001, "Enable sending the PPS to the crates")
+    rundly           =    bitfield(0x008,  8,       0x000F, "Delay for internal run start/stop on top of base 33-clock delay") 
     mask             =    register(0x100,                   "Trigger mask for individual SURFs")
     latency          =    bitfield(0x104,  0,       0xFFFF, "Time from desired trigger time to readout")
-    offset           =    bitfield(0x104, 16,       0xFFFF, "Negative adjustment to input trigger time")    
+    offset           =    bitfield(0x104, 16,       0xFFFF, "Negative adjustment to input trigger time", signed=True)
     pps_trig_enable  =    bitfield(0x108,  0,       0x0001, "Enable for the PPS trigger")
-    pps_offset       =    bitfield(0x108, 16,       0xFFFF, "Negative adjustment to PPS trigger time")
+    pps_offset       =    bitfield(0x108, 16,       0xFFFF, "Negative adjustment to PPS trigger time", signed=True)
     ext_trig_enable  =    bitfield(0x10C,  0,       0x0001, "Enable for the EXT trigger")
+    ext_trig_edge    =    bitfield(0x10C,  1,       0x0001, "External trigger edge polarity (1=falling, 0=rising)")
     ext_trig_select  =    bitfield(0x10C,  8,       0x0007, "Select the source for the EXT trigger")
-    ext_offset       =    bitfield(0x10C, 16,       0xFFFF, "Negative adjustment to EXT trigger time")
+    ext_offset       =    bitfield(0x10C, 16,       0xFFFF, "Negative adjustment to EXT trigger time", signed=True)
 #   soft_trig             function(0x110,                   "Write anything to this address for soft trigger")
     running          = bitfield_ro(0x110, 16,       0x0001, "Master trigger run status (1 = active, 0 = inactive)")
     occupancy        = register_ro(0x114,                   "Buffer occupancy from last second")
@@ -63,7 +65,10 @@ class PueoTURFTrig(dev_submod):
     surf_err         =    bitfield(0x118, 16,       0x0001, "Set when SURF/TURFIO sends unknown event")
     turf_err         =    bitfield(0x118, 17,       0x0001, "Set when TURF issues trigger when dead")
     trigger_count    = register_ro(0x11C,                   "Number of triggers since run start")
-
+    ext_prescale     =    register(0x120,                   "External trigger prescale (every N+1)")
+    photo_prescale   =    bitfield(0x124,  0,       0x00FF, "Every N+1 triggers send a photoshutter to GPS")
+    photo_en         =    bitfield(0x124, 16,       0x0001, "Enable the photoshutter output")
+    
     def runcmd(self, val):
         self.write(0, val)
 
