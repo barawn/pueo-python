@@ -164,8 +164,8 @@ class PueoTURFIOBit(dev_submod):
             roughCenter = ss[0]+4
             roughCenterBitno = sc[ss[0]+4][2]            
             print("Can't locate eye transition (eye is too well centered)")
-            print(f'Just using {roughCenterBitno*200.0}, it will be fine')
-            return (roughCenter, roughCenterBitno)
+            print(f'Just using {1100.0}, it will be fine')
+            return (1100.0, roughCenterBitno)
         coarseEdge = ((ss[0] + ss[1])/2)*200.0
         if verbose:
             print("Coarse eye edge is at", coarseEdge)
