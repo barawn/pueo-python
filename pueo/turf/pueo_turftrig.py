@@ -65,6 +65,7 @@ class PueoTURFTrig(dev_submod):
     surf_err         =    bitfield(0x118, 16,       0x0001, "Set when SURF/TURFIO sends unknown event")
     turf_err         =    bitfield(0x118, 17,       0x0001, "Set when TURF issues trigger when dead")
     leveltwo_logic   =    bitfield(0x118, 24,       0x0001, "0 = AND of SURF sectors, 1 = OR of SURF sectors")   
+    rf_trig_en       =    bitfield(0x118, 25,       0x0001, "1 = enable RF triggers, 0 = stop rf triggers")
     trigger_count    = register_ro(0x11C,                   "Number of triggers since run start")
     ext_prescale     =    register(0x120,                   "External trigger prescale (every N+1)")
     photo_prescale   =    bitfield(0x124,  0,       0x00FF, "Every N+1 triggers send a photoshutter to GPS")
