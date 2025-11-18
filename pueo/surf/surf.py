@@ -273,15 +273,15 @@ class PueoSURF:
     # After we find the eye, we have to align IFCLK
     # to RXCLK as well. We do that by forcibly
     # resetting the PLL until it aligns properly.
-    def align_rxclk(self, userSkew=None, verbose=False):
+    def align_rxclk(self, userSkew=None, verbose=False, eyeNumber=0):
         if userSkew is None:
             sc = self.eyescan_rxclk()
             eyes = self.process_eyescan(sc)
             if len(sc) == 0:
                 if verbose:
                     print("RXCLK alignment failed, no eyes found!")
-                    return None
-            thisEye =  eyes[0]
+                    return None            
+            thisEye = eyes[eyeNumber]
             if verbose:
                 print("Eyes:", eyes)
                 print("Choosing eye at",thisEye[0],"with width",thisEye[1])
