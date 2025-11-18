@@ -264,7 +264,7 @@ class PueoSURF:
         if ntrials == 0:
             print("IDELAYCTRL never became ready?!?")
             return
-    
+        
     # Which eye we pick for RXCLK alignment *does not matter*
     # so long as it's the *same* for all of the SURFs and
     # the skew between all of the SURFs is small enough.
@@ -273,26 +273,33 @@ class PueoSURF:
     # After we find the eye, we have to align IFCLK
     # to RXCLK as well. We do that by forcibly
     # resetting the PLL until it aligns properly.
-    def align_rxclk(self, userSkew=None, verbose=False, eyeNumber=0):
+    def align_rxclk(self, userSkew=None, verbose=False, eyeNumber=0):        
         if userSkew is None:
             sc = self.eyescan_rxclk()
             eyes = self.process_eyescan(sc)
             if len(sc) == 0:
                 if verbose:
                     print("RXCLK alignment failed, no eyes found!")
-                    return None            
+                    return None
+            # reorder them
+            minIdx=0
+            minVal=None
+            for i in range(len(eyes)):
+                if minVal is None:
+                    minVal = eyes[i][0]
+                    minIdx = 0
+                elif eyes[i][0] < minVal:
+                    minVal = eyes[i][0]
+                    minIdx = i
+                i = i+1
+            eyes = eyes[minIdx:] + eyes[0:minIdx]            
             thisEye = eyes[eyeNumber]
+            
             if verbose:
                 print("Eyes:", eyes)
                 print("Choosing eye at",thisEye[0],"with width",thisEye[1])
             self.rxclkShift(thisEye[0])
-            # wtf does this even do???
-            shift = thisEye[0] if abs(thisEye[0]-672)>thisEye[0] else (thisEye[0]-672)
-            if shift != thisEye[0]:
-                print("WARNING: WE FELL INTO THE WEIRD IF CLAUSE")
-                print("WARNING: thisEye[0]: %d" % thisEye[0])
-                print("WARNING: shift: %d" % shift)
-                print("WARNING: eyes:", eyes)
+            # No more negative skews!!!
             skew = (shift/672)*8
         else:
             self.rxclkShift(round(userSkew*672/8))
