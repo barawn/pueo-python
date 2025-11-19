@@ -563,15 +563,11 @@ class PueoSURF:
             # the CIN eye will match it.
             # are we closer if we jump forward? if so use that
             if abs(fineEdge + 1000.0 - seed) < abs(fineEdge - 1000.0 - seed):
-                target = fineEdge + 1000.0
-                if target > 2000.0:
-                    target = 2000.0
+                target = min(fineEdge + 1000.0, 2000.0)
                 eye = (target, sc[ss[1][2]])
             else:
                 # no, so jump backwards.
-                target = fineEdge - 1000.0
-                if target < 0.0:
-                    target = 0.0
+                target = max(fineEdge - 1000.0, 0.0)
                 eye = (target, sc[ss[0][2]])                
         if verbose:
             print("sample center is at", eye[0], "with bit offset", eye[1])
