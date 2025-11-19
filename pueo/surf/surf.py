@@ -299,6 +299,7 @@ class PueoSURF:
                 print("Eyes:", eyes)
                 print("Choosing eye at",thisEye[0],"with width",thisEye[1])
             self.rxclkShift(thisEye[0])
+            shift = thisEye[0]
             # No more negative skews!!!
             skew = (shift/672)*8
         else:
