@@ -531,7 +531,7 @@ class PueoSURF:
         else:
             return st
     
-    def locate_eyecenter(self, verbose=True):
+    def locate_eyecenter(self, verbose=True, seed=None):
         pars = self.getDelayParameters()
         sc = self.coarse_eyescan()
         ss = self.process_coarse(sc, verbose=verbose)
@@ -550,11 +550,29 @@ class PueoSURF:
         if verbose:
             print("Fine eye edge is at", fineEdge, end='')
         eye = []
-        if fineEdge < 1000.0:
-            # move into the stop-side eye
-            eye = (fineEdge + 1000.0, sc[ss[1]][2])
+        if seed is None:
+            if fineEdge < 1000.0:
+                # move into the stop-side eye
+                eye = (fineEdge + 1000.0, sc[ss[1]][2])
+            else:
+                eye = (fineEdge - 1000.0, sc[ss[0]][2])
         else:
-            eye = (fineEdge - 1000.0, sc[ss[0]][2])
+            # Use the seed value from the RXCLK shift. The sample
+            # point is always very close to the RXCLK shift, so
+            # assuming we get the right eye there (hopefully!!!)
+            # the CIN eye will match it.
+            # are we closer if we jump forward? if so use that
+            if abs(fineEdge + 1000.0 - seed) < abs(fineEdge - 1000.0 - seed):
+                target = fineEdge + 1000.0
+                if target > 2000.0:
+                    target = 2000.0
+                eye = (target, sc[ss[1][2]])
+            else:
+                # no, so jump backwards.
+                target = fineEdge - 1000.0
+                if target < 0.0:
+                    target = 0.0
+                eye = (target, sc[ss[0][2]])                
         if verbose:
             print("sample center is at", eye[0], "with bit offset", eye[1])
         return eye
