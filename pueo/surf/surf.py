@@ -565,11 +565,11 @@ class PueoSURF:
             # are we closer if we jump forward? if so use that
             if abs(fineEdge + 1000.0 - seed) < abs(fineEdge - 1000.0 - seed):
                 target = min(fineEdge + 1000.0, 2000.0)
-                eye = (target, sc[ss[1][2]])
+                eye = (target, sc[ss[1]][2])
             else:
                 # no, so jump backwards.
                 target = max(fineEdge - 1000.0, 0.0)
-                eye = (target, sc[ss[0][2]])                
+                eye = (target, sc[ss[0]][2])                
         if verbose:
             print("sample center is at", eye[0], "with bit offset", eye[1])
         return eye
