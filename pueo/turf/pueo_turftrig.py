@@ -48,7 +48,13 @@ class PueoTURFTrig(dev_submod):
 #   runcmd                function(0x000,                   "Send desired run command.")
 #   fwu_data/fwu_mark     function(0x004,                   "Send FWU data or mark buffer.")
     cratepps_enable  =    bitfield(0x008,  0,       0x0001, "Enable sending the PPS to the crates")
-    rundly           =    bitfield(0x008,  8,       0x000F, "Delay for internal run start/stop on top of base 33-clock delay") 
+    rundly           =    bitfield(0x008,  8,       0x000F, "Delay for internal run start/stop on top of base 33-clock delay")
+    hpol_notch0      =    bitfield(0x010,  0,       0x0FFF, "HPOL notch 0 state")
+    vpol_notch0      =    bitfield(0x010, 16,       0x0FFF, "VPOL notch 0 state")
+    hpol_notch1      =    bitfield(0x014,  0,       0x0FFF, "HPOL notch 1 state")
+    vpol_notch1      =    bitfield(0x014, 16,       0x0FFF, "VPOL notch 1 state")
+    notch_time       = register_ro(0x018,                   "Time at which the notch update was applied")     
+#   notch_update     =    function(0x01C,                   "Write anything to send desired notch state")    
     mask             =    register(0x100,                   "Trigger mask for individual SURFs")
     latency          =    bitfield(0x104,  0,       0xFFFF, "Time from desired trigger time to readout")
     offset           =    bitfield(0x104, 16,       0xFFFF, "Negative adjustment to input trigger time", signed=True)
@@ -70,6 +76,27 @@ class PueoTURFTrig(dev_submod):
     ext_prescale     =    register(0x120,                   "External trigger prescale (every N+1)")
     photo_prescale   =    bitfield(0x124,  0,       0x00FF, "Every N+1 triggers send a photoshutter to GPS")
     photo_en         =    bitfield(0x124, 16,       0x0001, "Enable the photoshutter output")
+
+    def notch_update(self, 
+                     notch0_hpol = None,
+                     notch0_vpol = None,
+                     notch1_hpol = None,
+                     notch1_vpol = None):
+        # this is all silliness for Python.
+        # You could update the notch registers all at once
+        # if you wanted. They can be freely read/written,
+        # they just won't update until register 0x01C
+        # is written to.
+        if notch0_hpol:
+            self.hpol_notch0 = notch0_hpol
+        if notch0_vpol:
+            self.vpol_notch0 = notch0_vpol
+        if notch1_hpol:
+            self.hpol_notch1 = notch1_hpol
+        if notch1_vpol:
+            self.vpol_notch1 = notch1_vpol
+        # literally anything written to this register will do it
+        self.write(0x1c, 1)
     
     def runcmd(self, val):
         self.write(0, val)
