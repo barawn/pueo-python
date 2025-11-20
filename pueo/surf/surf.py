@@ -146,6 +146,7 @@ class PueoSURF:
     live_seen        =    bitfield(0x00C, 22,       0x0001, "NOOP_LIVE from TURF has been seen.")
     sync_seen        =    bitfield(0x00C, 23,       0x0001, "SYNC request from TURF has been seen.")
     rfdc_reset       =    bitfield(0x00C, 25,       0x0001, "Value of the RFdc reset.")    
+    trigger_config   = register_ro(0x01C,                   "Build configuration of the trigger")
     sysref_phase     = bitfield_ro(0x014,  0,       0xFFFF, "Value of the SYSREF output at each ifclk phase")
     cal_freeze       =    bitfield(0x018,  0,       0x00FF, "Bitfield of channels to put in calibration freeze.")
     cal_frozen       = bitfield_ro(0x018,  8,       0x00FF, "Bitfield of channels with frozen calibration.")
