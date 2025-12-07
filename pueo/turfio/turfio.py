@@ -7,6 +7,7 @@
 #
 from ..common.serialcobsdevice import SerialCOBSDevice
 from ..common.bf import bf
+from ..common.dev_submod import dev_submod
 from ..common.genshift import GenShift
 from ..common.genspi import GenSPI
 from ..common import pueo_utils
@@ -66,6 +67,10 @@ class PueoTURFIO:
             'SURFDOUT' : 0x2050,
             # this is the base for the surfturf common
             'SURFTURFCOMMON' : 0x2800,
+            # this is the base for the hski2c
+            'HSKI2C' : 0x3000,
+            # this is the base for the aurora
+            'AURORA' : 0x4000,
             # this is the base for the SURFbridges
             'SURFBRIDGE' : 0x400000
            }
@@ -193,7 +198,12 @@ class PueoTURFIO:
                                               self.map['SURFBRIDGE']+0x400000*i))        
         # and common
         self.surfturf = SURFTURF(self, self.map['SURFTURFCOMMON'])
+
+        # just generate the hski2c space
+        self.hski2c = dev_submod(self, 0x3000)
         
+        # just generate the Aurora space
+        self.aurora = dev_submod(self, 0x4000)
             
         # Clock monitor calibration value is now just
         # straight frequency thanks to silly DSP tricks.
