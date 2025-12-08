@@ -38,7 +38,7 @@ class SURFTURF(dev_submod):
     train_complete   =    bitfield(0x01C,  0,       0x007F, "SURF training is complete")
     boot_seen        = bitfield_ro(0x01C, 16,       0x007F, "SURF boot has been seen")
     cout_offset      =    bitfield(0x020,  0,       0x000F, "Offset in cycles expected on COUT")
-        
+    read_holdoff     =    register(0x024,                   "Number of 16 ns intervals to hold off after a readout")
     def mark(self, bank):
         rv = bf(self.read(0x0))
         if bank == 0:
