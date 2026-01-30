@@ -91,58 +91,86 @@ def draw_surf(the_surf, the_display, label, mode='time'):
 def on_upload_change(change):
     me = change['owner']
     ed = me.the_display
+    if ed.the_file is not None:
+        ed.the_event = None
+        ed.cache = {}
+        ed.vdaq_selector.the_surf = None
+        ed.vdaq_selector.outbox.clear_output()
+        ed.vdaq_selector.value = None
+        
+        ed.hdaq_selector.the_surf = None
+        ed.hdaq_selector.outbox.clear_output()
+        ed.hdaq_selector.value = None
+
+        ed.lf_selector.the_surf = None
+        ed.lf_selector.outbox.clear_output()
+        ed.lf_selector.value = None
+    
+        ed.event_selector.value = None
+
     ed.file_name_label.value = ed.file_uploader.value[0].name
     uploaded_file = ed.file_uploader.value[0]
     ed.the_file = te.TelemFile(BytesIO(uploaded_file.content))
     ed.event_selector.options = ed.the_file.events.keys()
-    ed.event_selector.value = ed.event_selector.options[0]
+    ed.event_selector.value = ed.event_selector.options[0]    
 
 def on_event_change(change):
     me = change['owner']
     ed = me.the_display
-    e = ed.the_file.events[ed.event_selector.value]
-    ed.the_event = e
-
-    ed.event_info.value = repr(ed.the_event)
-    vdaq_surfs = sorted(e.vdaq.keys())
-    hdaq_surfs = sorted(e.hdaq.keys())
-    lf_surfs = sorted(e.lf.keys())
-
-    ed.vdaq_selector.the_surf = None
-    ed.hdaq_selector.the_surf = None
-    ed.lf_selector.the_surf = None
-    ed.cache = {}
+    if ed.event_selector.value is not None:
+        e = ed.the_file.events[ed.event_selector.value]
+        ed.the_event = e
     
-    if len(vdaq_surfs):
-        ed.vdaq_selector.options = vdaq_surfs
-        ed.vdaq_selector.disabled = False
-    else:
-        ed.vdaq_selector.options = []
-        ed.vdaq_selector.disabled = True
-    if len(hdaq_surfs):
-        ed.hdaq_selector.options = hdaq_surfs
-        ed.hdaq_selector.disabled = False
-    else:
-        ed.hdaq_selector.options = []
-        ed.hdaq_selector.disabled = True
-    if len(lf_surfs):
-        ed.lf_selector.options = lf_surfs
-        ed.lf_selector.disabled = False
-    else:
-        ed.lf_selector.options = []
-        ed.lf_selector.disabled = True
+        ed.event_info.value = repr(ed.the_event)
+        vdaq_surfs = sorted(e.vdaq.keys())
+        hdaq_surfs = sorted(e.hdaq.keys())
+        lf_surfs = sorted(e.lf.keys())
+    
+        ed.vdaq_selector.the_surf = None
+        ed.vdaq_selector.outbox.clear_output()
+        ed.vdaq_selector.value = None
+    
+        ed.hdaq_selector.the_surf = None
+        ed.hdaq_selector.outbox.clear_output()
+        ed.hdaq_selector.value = None
+        
+        ed.lf_selector.the_surf = None
+        ed.lf_selector.outbox.clear_output()
+        ed.lf_selector.value = None
+        
+        ed.cache = {}
+        
+        if len(vdaq_surfs):
+            ed.vdaq_selector.options = vdaq_surfs
+            ed.vdaq_selector.disabled = False
+        else:
+            ed.vdaq_selector.options = []
+            ed.vdaq_selector.disabled = True
+        if len(hdaq_surfs):
+            ed.hdaq_selector.options = hdaq_surfs
+            ed.hdaq_selector.disabled = False
+        else:
+            ed.hdaq_selector.options = []
+            ed.hdaq_selector.disabled = True
+        if len(lf_surfs):
+            ed.lf_selector.options = lf_surfs
+            ed.lf_selector.disabled = False
+        else:
+            ed.lf_selector.options = []
+            ed.lf_selector.disabled = True
 
 def on_surf_change(change, daqtype):
     me = change['owner']
     mode = me.mode.value
     ed = me.the_display
     new_surf = change['new']
-    me.the_surf = ed.the_event.__dict__[me.daq_type][new_surf]
-    # create a label for the cache, like 1504.3303.vdaq.7
-    label = f'{ed.the_event.run}.{ed.the_event.event}.{daqtype}.{new_surf}'
-    me.outbox.clear_output()
-    with me.outbox:
-        draw_surf(me.the_surf, ed, label, mode)
+    if new_surf is not None:
+        me.the_surf = ed.the_event.__dict__[me.daq_type][new_surf]
+        # create a label for the cache, like 1504.3303.vdaq.7
+        label = f'{ed.the_event.run}.{ed.the_event.event}.{daqtype}.{new_surf}'
+        me.outbox.clear_output()
+        with me.outbox:
+            draw_surf(me.the_surf, ed, label, mode)
 
 def on_mode_change(change, daqtype):
     me = change['owner']
@@ -152,9 +180,10 @@ def on_mode_change(change, daqtype):
     old_mode = change['old']
     if new_mode != old_mode:
         sel.outbox.clear_output()
-        label = f'{ed.the_event.run}.{ed.the_event.event}.{daqtype}.{sel.value}'
-        with sel.outbox:
-            draw_surf(sel.the_surf, ed, label, new_mode)
+        if ed.the_event is not None and sel.the_surf is not None:
+            label = f'{ed.the_event.run}.{ed.the_event.event}.{daqtype}.{sel.value}'
+            with sel.outbox:
+                draw_surf(sel.the_surf, ed, label, new_mode)
 
 class EventDisplay:
     def __init__(self):
