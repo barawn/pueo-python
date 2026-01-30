@@ -67,6 +67,9 @@ class TelemEvent:
     HEADER_FORMAT = "IIIIIIIIIIQ"
     HEADER_SIZE = struct.calcsize(HEADER_FORMAT)
     WAVEFORM_SIZE = 2048
+    CLOCK_VALUE = 125000000
+    CLOCK_MAX = 125000500
+
     def __init__(self, f):
         """ Pass a buffer to the *header* for the event to create it. """
         tup = struct.unpack(self.HEADER_FORMAT,
@@ -90,6 +93,20 @@ class TelemEvent:
         self.vdaq = {}
         self.lf = {}
         self.ramp = {}
+
+    def subsecond(self):
+        if self.event_time < self.last_pps:
+            self.event_time += (2**32)
+        diff = self.event_time - self.last_pps
+        if diff > self.CLOCK_MAX:
+            return None
+        return (diff/self.CLOCK_VALUE)
+        
+    def __repr__(self):
+        lines = [f'Run: {self.run} Event: {self.event}']
+        lines.append(f'Second: {self.second} Subsecond: {self.subsecond()}')
+        lines.append(f'Priority: {hex(self.priority) if priority else priority} Trigger Info: {hex(self.trigger_info)}')
+        return '\n'.join(lines)
         
     def add_channel(self, ch_id, f):
         # MAPPITY MAP MAP
