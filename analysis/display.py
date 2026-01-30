@@ -31,6 +31,8 @@ def surf_subplot(ymin, ymax):
     return ax
 
 def draw_surf(the_surf, the_display, label, mode='time'):
+    run, event, daq, surfno = label.split('.')
+    surfno = int(surfno)    
     # Channel ordering in the plots. Currently pointless but maybe
     # useful at some point.
     cmap = [0,1,2,3,4,5,6,7]
@@ -45,6 +47,10 @@ def draw_surf(the_surf, the_display, label, mode='time'):
         global_min = min(mins)
         ax = surf_subplot(global_min, global_max)
         for i in range(8):
+            if i == 0:
+                ax[i].set_title(f'{daq} Phi Sector {surfno*2}')
+            if i == 4:
+                ax[i].set_title(f'{daq} Phi Sector {surfno*2+1}')
             if cmap[i] in the_surf:
                 ax[i].plot(the_surf[cmap[i]])
     elif mode == 'freq':
