@@ -77,7 +77,9 @@ def draw_surf(the_surf, the_display, label, mode='time'):
         max_beam = np.argmax(maxes)
         fig, (ax1, ax2) = plt.subplots(nrows=2)
         ax1.tricontour(trigger.BEAM_AZIMUTH, trigger.BEAM_ELEVATION, maxes, cmap='Reds')
-        ax2.plot(the_display.cache[cacheval][max_beam])        
+        ax1.set_title(f'Beam envelope maxima')
+        ax2.plot(the_display.cache[cacheval][max_beam])
+        ax2.set_title(f'Beam {max_beam} trigger view')
     plt.show()
 
 def on_upload_change(change):
