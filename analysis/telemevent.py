@@ -103,7 +103,7 @@ class TelemEvent:
         # 
         ch = ch_id % 8
         surf = None
-        if ch_id < 47:
+        if ch_id < 48:
             surf = 5-int(ch_id/8)
             member_name = 'hdaq'
         elif ch_id < 56:
