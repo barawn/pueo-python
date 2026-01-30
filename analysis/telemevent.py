@@ -21,7 +21,7 @@ class TelemFile:
                     prio = struct.unpack("H", f.read(2))
                     full_evno = f'{ev.run}.{ev.event}'
                     if full_evno not in self.events:
-                        ev.priority = prio
+                        ev.priority = prio[0]
                         self.events[full_evno] = ev
                     ch = TelemChannel(f)
                     self.events[full_evno].add_channel(ch.channel_id, f)
