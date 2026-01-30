@@ -24,6 +24,7 @@ class TelemFile:
                         ev.priority = prio[0]
                         self.events[full_evno] = ev
                     ch = TelemChannel(f)
+                    self.events[full_evno].add_metadata(ch.channel_id, ch.surf_word)
                     self.events[full_evno].add_channel(ch.channel_id, f)
                 elif pkt.packet_type == 0xda7a:
                     # full event
@@ -32,6 +33,7 @@ class TelemFile:
                     self.events[full_evno] = ev
                     for i in range(224):
                         ch = TelemChannel(f)
+                        self.events[full_evno].add_metadata(ch.channel_id, ch.surf_word)
                         self.events[full_evno].add_channel(ch.channel_id, f)                        
             npkt = npkt + 1
         except EOFError:
@@ -94,6 +96,8 @@ class TelemEvent:
         self.lf = {}
         self.ramp = {}
 
+        self.metadata = {}
+    
     def subsecond(self):
         if self.event_time < self.last_pps:
             self.event_time += (2**32)
@@ -104,22 +108,22 @@ class TelemEvent:
         
     def __repr__(self):
         lines = [f'Run: {self.run} Event: {self.event}']
-        lines.append(f'Second: {self.second} Subsecond: {self.subsecond()}')
-        lines.append(f'Priority: {hex(self.priority) if priority else priority} Trigger Info: {hex(self.trigger_info)}')
+        lines.append(f'Second: {self.event_second} Subsecond: {self.subsecond()}')
+        lines.append(f'Priority: {hex(self.priority) if self.priority else self.priority} Trigger Info: {hex(self.trigger_info)}')
+        for k, v in self.metadata.items():
+            lines.append(f'{k} L1: {list(v.keys())}')            
         return '\n'.join(lines)
-        
-    def add_channel(self, ch_id, f):
-        # MAPPITY MAP MAP
-        # 7:0   => hdaq 5
-        # 15:8  => hdaq 4
-        # 23:16 => hdaq 3
-        # 31:24 => hdaq 2
-        # 39:32 => hdaq 1
-        # 47:40 => hdaq 0
-        # 55:48 => lf 0
-        # 
-        ch = ch_id % 8
-        surf = None
+
+    def add_metadata(self, ch_id, meta):
+        surf, member_name = self._ch_to_surfdaq(ch_id)
+        if meta != 0:
+            if not member_name in self.metadata:
+                self.metadata[member_name] = {}
+            if not surf in self.metadata[member_name]:
+                self.metadata[member_name][surf] = meta
+    
+    @classmethod
+    def _ch_to_surfdaq(cls, ch_id):
         if ch_id < 48:
             surf = 5-int(ch_id/8)
             member_name = 'hdaq'
@@ -144,6 +148,21 @@ class TelemEvent:
         else:
             surf = 1
             member_name = 'ramp'
+        return (surf, member_name)        
+    
+    def add_channel(self, ch_id, f):
+        # MAPPITY MAP MAP
+        # 7:0   => hdaq 5
+        # 15:8  => hdaq 4
+        # 23:16 => hdaq 3
+        # 31:24 => hdaq 2
+        # 39:32 => hdaq 1
+        # 47:40 => hdaq 0
+        # 55:48 => lf 0
+        # 
+        ch = ch_id % 8
+        surf, member_name = self._ch_to_surfdaq(ch_id)
+        
         if surf not in self.__dict__[member_name]:
             self.__dict__[member_name][surf] = {}
         self.__dict__[member_name][surf][ch] = np.frombuffer(f.read(self.WAVEFORM_SIZE),
