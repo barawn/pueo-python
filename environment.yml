@@ -5,3 +5,9 @@ channels:
 dependencies:
   - numpy
   - matplotlib
+  - bqplot
+  - ipympl
+  - ipyvolume
+  - scipy
+  - voila
+  
