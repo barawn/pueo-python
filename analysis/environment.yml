@@ -1,7 +1,0 @@
-name: eventdisplay-environment
-
-channels:
-  - defaults
-dependencies:
-  - numpy
-  - matplotlib
