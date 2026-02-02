@@ -1,22 +1,19 @@
 # Simple Event Display
 
 These guys are designed to run in a Jupyter notebook. You can literally
-do it on jupyter.org's Try Jupyter site. Or use Binder just by clicking here!
-**Note**: After it launches, click the Run icon (the triangle) to start
-things. I tried using Voila to autolaunch it, for some reason it doesn't
-work.
+do it on jupyter.org's Try Jupyter site. For _smaller_ files
+(less than 10 MB!) you can use Voila via Binder:
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/barawn/pueo-python/HEAD?urlpath=%2Fdoc%2Ftree%2Fanalysis%2Feventdisplay.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/barawn/pueo-python/HEAD?urlpath=voila%2Frender%2Fanalysis%2Feventdisplay.ipynb)
 
-Just upload these files, create a notebook, and do
+These are best for the individual waveform files (although you have to
+uncompress them, so ``gzip -d *`` on a directory full of them).
 
-```
-from display import EventDisplay
-ed = EventDisplay()
-ed.run()
-```
+For larger files with your own Jupyter instance, upload these files
+and launch the ``eventdisplay.ipynb`` notebook, then click Run to
+launch it.
 
-You can then upload either ".wf" or ".wfs" files (I think!). You can
+You can then upload either ".wf" or ".wfs" files. You can
 concatenate them together as well, it doesn't matter, it'll parse
 them all.
 
