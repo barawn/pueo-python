@@ -6,6 +6,24 @@ from io import BytesIO
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 from functools import partial
+import scipy.signal as signal
+
+# MUOS bandpass
+BPF_MUOS = signal.iirfilter(4, [350,400], analog=False, btype='band', ftype='butter',output='sos', fs=3000.)
+CHF_MUOS = signal.iirfilter(4, 3, btype='lowpass', rp=0.5, analog=False, fs=3000, ftype='cheby1', output='sos')
+CARRIER_MUOS = [362.5, 367.5, 372.5, 377.5]
+
+def fast_filt(d, sos):
+    # this filter generates a faster response by basically doing something similar
+    # to a forward/backwards filter (filtfilt). We first start with blank initial conditions,
+    # run it forward, then run the filter backwards and use those initial conditions
+    # to prime the filter. sosfilt_zi primes to a step function so it's not appropriate
+    # here.
+    zi = np.zeros((sos.shape[0], 2))
+    r, zf = signal.sosfilt(sos, x=d, zi=zi)
+    r, i2_zi = signal.sosfilt(sos, x=d[::-1], zi=zf)
+    r, zf = signal.sosfilt(sos, x=d, zi=i2_zi)
+    return r
 
 def surf_subplot(ymin, ymax):
     # we want to create a 4 row, 2 column plot, with only
@@ -86,6 +104,22 @@ def draw_surf(the_surf, the_display, label, mode='time'):
         ax1.set_title(f'Beam envelope maxima')
         ax2.plot(the_display.cache[cacheval][max_beam])
         ax2.set_title(f'Beam {max_beam} trigger view')
+    elif mode == 'MUOS':
+        cacheval = f'{label}muos'
+        if cacheval not in the_display.cache:
+            d = []
+            for i in range(8):
+                d.append(the_surf[i])
+            b = trigger.beamify(d, trigger_view=False)
+            envelopes = trigger.envelope(b)
+            maxes = []
+            for i in range(48):
+                maxes.append(np.max(envelopes[i]))
+            max_beam = np.argmax(maxes)
+            muos_beam = signal.sosfiltfilt(BPF_MUOS, x=b[max_beam])
+            the_display.cache[cacheval] = muos_beam
+        plt.plot(the_display.cache[cacheval])
+        plt.title('Beam with max envelope, MUOS band (350-400 MHz)')
     plt.show()
 
 def on_upload_change(change):
@@ -205,7 +239,7 @@ class EventDisplay:
 
         self.vdaq_selector = widgets.Dropdown(description='SURF',disabled=True)
         self.vdaq_mode = widgets.Dropdown(description='View Mode',
-                                          options=['time', 'freq', 'beam'])        
+                                          options=['time', 'freq', 'beam', 'MUOS'])        
         self.vdaq_selbox = widgets.HBox([self.vdaq_selector, self.vdaq_mode])
         self.vdaq_selector.the_display = self
         self.vdaq_selector.mode = self.vdaq_mode
@@ -217,7 +251,7 @@ class EventDisplay:
 
         self.hdaq_selector = widgets.Dropdown(description='SURF',disabled=True)
         self.hdaq_mode = widgets.Dropdown(description='View Mode',
-                                          options=['time', 'freq', 'beam'])        
+                                          options=['time', 'freq', 'beam', 'MUOS'])        
         self.hdaq_selbox = widgets.HBox([self.hdaq_selector, self.hdaq_mode])
         self.hdaq_selector.the_display = self
         self.hdaq_selector.mode = self.hdaq_mode
