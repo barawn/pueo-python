@@ -372,18 +372,23 @@ def beams(lb, rb, tb, real_values=True, offset=32):
                    third_addend[top_start:top_start+new_len] )
     return bb
 
-def beamify(channels):
+def beamify(channels, trigger_view=True):
     """
     Pass 8 channels in SURF order and this function returns the trigger beam waveforms.
     Units are always 0.25*rms.
     """
     dd = []
-    for c in channels:
-        dd.append(full_chain(c,real_values=False))
-    lb = sub_beams([dd[5],dd[6],dd[7]], LEFT_BEAMS, real_values=False)
-    rb = sub_beams([dd[1],dd[2],dd[3]], RIGHT_BEAMS, real_values=False)
-    tb = sub_beams([dd[0],dd[4]], TOP_BEAMS, real_values=False)
-    b = beams(lb, rb, tb, real_values=False)
+    real_values = False if trigger_view else True
+    if trigger_view:
+        for c in channels:
+            dd.append(full_chain(c,real_values=False))
+    else:
+        for i in range(8):
+            dd.append(channels[i])
+    lb = sub_beams([dd[5],dd[6],dd[7]], LEFT_BEAMS, real_values=real_values)
+    rb = sub_beams([dd[1],dd[2],dd[3]], RIGHT_BEAMS, real_values=real_values)
+    tb = sub_beams([dd[0],dd[4]], TOP_BEAMS, real_values=real_values)
+    b = beams(lb, rb, tb, real_values=real_values)
     return b        
     
 
